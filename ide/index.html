@@ -1,0 +1,33 @@
+<html>
+    <head>
+        
+        <!-- <script type="text/javascript">
+            function compile(){
+                const codePane = document.getElementById("code-pane");
+                const infoPane = document.getElementById("code-pane-info");
+                const gamePane = document.getElementById("game-pane");
+                
+                if (codePane == null || infoPane == null || gamePane == null){
+                    return;
+                }
+
+                const code = codePane.innerText;
+
+                const output = ide.run();
+                
+                infoPane.innerHTML = output;
+            }
+        </script> -->
+    </head>
+    <body>
+        <div id="ide-pane" style="display:flex; flex-direction: row;">
+            <div id="editor-pane">
+                <div id="code-pane" contenteditable="true" style="text-align:justify; overflow-x:auto; overflow-y:auto; background-color: beige; width:300px; height:300px;"></div>
+                <div id="code-pane-info" style="height:50px; background-color: aliceblue;"></div>
+            </div>
+            <button id="compile">Compile</button>
+            <div id="game-pane" style="background-color: beige; width:300px; height:300px;"></div>
+        </div>
+    </body>
+    <script type="text/javascript" src="./js/talon.js"></script>
+</html>

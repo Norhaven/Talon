@@ -1,0 +1,35 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",    
+    "tasks": [
+        {
+            "label": "Build TypeScript",
+            "type": "typescript",
+            "tsconfig": "tsconfig.json",
+            "problemMatcher": [
+                "$tsc"
+            ]
+        },
+        {
+            "label": "Run Browserify",
+            "dependsOn": [
+                "Build TypeScript"
+            ],
+            "type": "shell",
+            "command": [
+                "browserify .\\talon\\main.ts -p tsify --debug -o .\\ide\\js\\talon.js"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "npm",
+            "script": "test",
+            "group": "test",
+            "problemMatcher": []
+        }
+    ]
+}
