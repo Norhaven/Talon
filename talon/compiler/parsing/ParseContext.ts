@@ -40,6 +40,10 @@ export class ParseContext{
         return false;
     }
 
+    isTerminator(){
+        return this.currentToken.type == TokenType.Terminator;
+    }
+
     expectAnyOf(...tokenValues:string[]){
         if (!this.isAnyOf(...tokenValues)){
             throw new CompilationError("Expected tokens");
@@ -86,7 +90,23 @@ export class ParseContext{
 
     expectTerminator(){
         if (this.currentToken.type != TokenType.Terminator){
-            throw new CompilationError("Expected statement terminator");
+            throw new CompilationError("Expected expression terminator");
+        }
+
+        return this.consumeCurrentToken();
+    }
+
+    expectSemiTerminator(){
+        if (this.currentToken.type != TokenType.SemiTerminator){
+            throw new CompilationError("Expected semi expression terminator");
+        }
+
+        return this.consumeCurrentToken();
+    }
+
+    expectOpenMethodBlock(){
+        if (this.currentToken.type != TokenType.OpenMethodBlock){
+            throw new CompilationError("Expected open method block");
         }
 
         return this.consumeCurrentToken();

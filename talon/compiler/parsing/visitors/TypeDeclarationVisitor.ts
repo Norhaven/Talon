@@ -6,6 +6,8 @@ import { Token } from "../../lexing/Token";
 import { TypeDeclarationExpression } from "../expressions/TypeDeclarationExpression";
 import { FieldDeclarationVisitor } from "./FieldDeclarationVisitor";
 import { FieldDeclarationExpression } from "../expressions/FieldDeclarationExpression";
+import { WhenDeclarationExpression } from "../expressions/WhenDeclarationExpression";
+import { WhenDeclarationVisitor } from "./WhenDeclarationVisitor";
 
 export class TypeDeclarationVisitor extends Visitor{
     visit(context: ParseContext): Expression {
@@ -31,9 +33,19 @@ export class TypeDeclarationVisitor extends Visitor{
             fields.push(<FieldDeclarationExpression>field);
         }
 
+        const events:WhenDeclarationExpression[] = [];
+
+        while (context.is(Keywords.when)){
+            const whenVisitor = new WhenDeclarationVisitor();
+            const when = whenVisitor.visit(context);
+
+            events.push(<WhenDeclarationExpression>when);
+        }
+
         const typeDeclaration = new TypeDeclarationExpression(name, baseType);
 
         typeDeclaration.fields = fields;
+        typeDeclaration.events = events;
 
         return typeDeclaration;
     }

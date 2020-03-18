@@ -36,6 +36,11 @@ export class Keywords{
     static readonly and = "and";
     static readonly then = "then";
     static readonly else = "else";
+    static readonly when = "when";
+    static readonly enters = "enters";
+    static readonly exits = "exits";
+    static readonly stop = "stop";
+    static readonly dropping = "dropping";
 
     static getAll():Set<string>{
         type KeywordProperties = keyof Keywords;

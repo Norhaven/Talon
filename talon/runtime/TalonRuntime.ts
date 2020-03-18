@@ -110,6 +110,13 @@ export class TalonRuntime{
     }
 
     private runWith(command:string){
+        
+        // We're going to keep their command in the visual history to make things easier to understand.
+
+        this.userOutput.write(command);
+
+        // Now we can go ahead and process their command.
+        
         const instruction = this.thread!.currentInstruction;
 
         if (instruction?.opCode == OpCode.ReadInput){
@@ -141,7 +148,7 @@ export class TalonRuntime{
         const handler = this.handlers.get(instruction?.opCode!);
 
         if (handler == undefined){
-            throw new RuntimeError(`Encountered unsupported OpCode ${instruction?.opCode}`);
+            throw new RuntimeError(`Encountered unsupported OpCode '${instruction?.opCode}'`);
         }
         
         return handler?.handle(this.thread!);

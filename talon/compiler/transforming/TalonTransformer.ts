@@ -24,6 +24,10 @@ import { IfExpression } from "../parsing/expressions/IfExpression";
 import { ConcatenationExpression } from "../parsing/expressions/ConcatenationExpression";
 import { ContainsExpression } from "../parsing/expressions/ContainsExpression";
 import { FieldDeclarationExpression } from "../parsing/expressions/FieldDeclarationExpression";
+import { ActionsExpression } from "../parsing/expressions/ActionsExpression";
+import { Keywords } from "../lexing/Keywords";
+import { EventType } from "../../common/EventType";
+import { ExpressionTransformationMode } from "./ExpressionTransformationMode";
 
 export class TalonTransformer{
     private createSystemTypes(){
@@ -36,6 +40,7 @@ export class TalonTransformer{
         types.push(new Type(Place.typeName, Place.parentTypeName));
         types.push(new Type(BooleanType.typeName, BooleanType.parentTypeName));
         types.push(new Type(StringType.typeName, StringType.parentTypeName));
+        types.push(new Type(NumberType.typeName, NumberType.parentTypeName));
         types.push(new Type(Item.typeName, Item.parentTypeName));
         types.push(new Type(List.typeName, List.parentTypeName));
         types.push(new Type(Player.typeName, Player.parentTypeName));
@@ -116,7 +121,7 @@ export class TalonTransformer{
 
                         type?.fields.push(field);    
                     }
-
+                    
                     let isWorldObject = false;
 
                     for(let current = type;
@@ -139,6 +144,28 @@ export class TalonTransformer{
                         );
 
                         type?.methods.push(describe);
+
+                        let duplicateEventCount = 0;
+
+                        for (const event of child.events){
+                            const method = new Method();
+
+                            method.name = `<>event_${event.actor}_${event.eventKind}_${duplicateEventCount}`;
+                            method.eventType = this.transformEventKind(event.eventKind);
+
+                            duplicateEventCount++;
+
+                            const actions = <ActionsExpression>event.actions;
+
+                            for(const action of actions.actions){
+                                const body = this.transformExpression(action, ExpressionTransformationMode.IgnoreResultsOfSayExpression);
+                                method.body.push(...body);
+                            }
+
+                            method.body.push(Instruction.return());
+
+                            type?.methods.push(method);
+                        }
                     } 
                 }
             }
@@ -178,15 +205,26 @@ export class TalonTransformer{
         return Array.from(typesByName.values());
     }
 
-    private transformExpression(expression:Expression){
+    private transformEventKind(kind:string){
+        switch(kind){
+            case Keywords.enters:{
+                return EventType.PlayerEntersPlace;
+            }
+            default:{
+                throw new CompilationError(`Unable to transform unsupported event kind '${kind}'`);
+            }
+        }
+    }
+
+    private transformExpression(expression:Expression, mode?:ExpressionTransformationMode){
         const instructions:Instruction[] = [];
 
         if (expression instanceof IfExpression){            
-            const conditional = this.transformExpression(expression.conditional);
+            const conditional = this.transformExpression(expression.conditional, mode);
             instructions.push(...conditional);
 
-            const ifBlock = this.transformExpression(expression.ifBlock);
-            const elseBlock = this.transformExpression(expression.elseBlock);
+            const ifBlock = this.transformExpression(expression.ifBlock, mode);
+            const elseBlock = this.transformExpression(expression.elseBlock, mode);
 
             ifBlock.push(Instruction.branchRelative(elseBlock.length));
 
@@ -196,7 +234,10 @@ export class TalonTransformer{
         } else if (expression instanceof SayExpression){
             instructions.push(Instruction.loadString(expression.text));
             instructions.push(Instruction.print());
-            instructions.push(Instruction.loadString(expression.text));
+
+            if (mode != ExpressionTransformationMode.IgnoreResultsOfSayExpression){
+                instructions.push(Instruction.loadString(expression.text));
+            }
         } else if (expression instanceof ContainsExpression){
             instructions.push(
                 Instruction.loadNumber(expression.count),
@@ -210,8 +251,8 @@ export class TalonTransformer{
             
             // TODO: Load the left-hand side so it can be concatenated when the right side evaluates.
 
-            const left = this.transformExpression(expression.left!);
-            const right = this.transformExpression(expression.right!);
+            const left = this.transformExpression(expression.left!, mode);
+            const right = this.transformExpression(expression.right!, mode);
 
             instructions.push(...left);
             instructions.push(...right);

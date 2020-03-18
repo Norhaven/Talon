@@ -43,6 +43,10 @@ export class RuntimeWorldObject extends RuntimeAny{
         return instance;
     }
 
+    getContentsField():RuntimeList{
+        return this.getFieldAsList(WorldObject.contents);
+    }
+
     getFieldAsList(name:string):RuntimeList{
         return <RuntimeList>this.getFieldValueByName(name);
     }

@@ -30,6 +30,7 @@ describe('run', () => {
             "understand \"go\" as moving. " +
             "understand \"take\" as taking. " +
             "understand \"inv\" as inventory. " +
+            "understand \"drop\" as dropping. " +
 
             "a test is a kind of place. " +
             "it is where the player starts. " +
@@ -38,7 +39,11 @@ describe('run', () => {
             "it can reach the inn by going \"north\"." +
             
             "a inn is a kind of place. " +
-            "it is described as \"It's an inn.\"." +
+            "it is described as \"It's an inn.\". " +
+            "when the player enters:" +
+            "say \"You walk into the inn.\"; " +
+            "say \"It looks deserted.\"; " +
+            "and then stop. " +
 
             "say \"This is the middle.\"" +
             
@@ -52,7 +57,11 @@ describe('run', () => {
         runtime.sendCommand("look test");
         runtime.sendCommand("take Coin");
         runtime.sendCommand("look test");
-        runtime.sendCommand("go north");
         runtime.sendCommand("inv");
+        runtime.sendCommand("drop Coin");
+        runtime.sendCommand("inv");
+        runtime.sendCommand("look test");
+        runtime.sendCommand("go north");
+        runtime.sendCommand("look inn");
     });
 });

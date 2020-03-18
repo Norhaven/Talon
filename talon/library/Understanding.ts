@@ -9,6 +9,7 @@ export class Understanding{
     static direction = "<>direction";
     static taking = "<>taking";
     static inventory = "<>inventory";
+    static dropping = "<>dropping";
 
     static action = "<>action";
     static meaning = "<>meaning";  

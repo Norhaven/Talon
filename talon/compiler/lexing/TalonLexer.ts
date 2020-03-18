@@ -46,6 +46,10 @@ export class Tokenizer{
         for(let token of tokens){
             if (token.value == Punctuation.period){
                 token.type = TokenType.Terminator;
+            } else if (token.value == Punctuation.semicolon){
+                token.type = TokenType.SemiTerminator;
+            } else if (token.value == Punctuation.colon){
+                token.type = TokenType.OpenMethodBlock;
             } else if (Tokenizer.allKeywords.has(token.value)){
                 token.type = TokenType.Keyword;
             } else if (token.value.startsWith("\"") && token.value.endsWith("\"")){
@@ -86,7 +90,7 @@ export class Tokenizer{
                 }
             }
 
-            if (currentChar == " " || currentChar == "\n" || currentChar == Punctuation.period){
+            if (currentChar == " " || currentChar == "\n" || currentChar == Punctuation.period || currentChar == Punctuation.colon || currentChar == Punctuation.semicolon){
                 if (tokenChars.length == 0){
                     tokenChars.push(currentChar);
                 }

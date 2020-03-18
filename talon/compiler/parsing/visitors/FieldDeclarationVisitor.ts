@@ -87,9 +87,9 @@ export class FieldDeclarationVisitor extends Visitor{
 
             const direction = context.expectString();
 
-            field.name = `<>${direction.value.substring(1, direction.value.length - 1)}`;
+            field.name = `<>${direction.value}`;
             field.typeName = StringType.typeName;
-            field.initialValue = `"${placeName.value}"`;
+            field.initialValue = `${placeName.value}`;
         } else {
             throw new CompilationError("Unable to determine field");
         }

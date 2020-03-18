@@ -6,7 +6,7 @@ import { EntryPointAttribute } from "../library/EntryPointAttribute";
 import { Tokenizer } from "./lexing/TalonLexer";
 import { TalonParser } from "./parsing/TalonParser";
 import { TalonSemanticAnalyzer } from "./semantics/TalonSemanticAnalyzer";
-import { TalonTransformer } from "./tranforming/TalonTransformer";
+import { TalonTransformer } from "./transforming/TalonTransformer";
 import { Version } from "../common/Version";
 
 export class TalonCompiler{
