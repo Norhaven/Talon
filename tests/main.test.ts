@@ -43,13 +43,17 @@ describe('run', () => {
             "set \"value\" to 2; " +
             "and then stop. " +
             
-            "a inn is a kind of place. " +
+            "an inn is a kind of place. " +
             "it is described as \"It's an inn.\". " +
             "it can reach the test by going \"north\". " +
+            "it contains 1 fireplace. " +
             "when the player enters:" +
             "say \"You walk into the inn.\"; " +
             "say \"It looks deserted.\"; " +
             "and then stop. " +
+
+            "a fireplace is a kind of decoration. " +
+            "it is described as \"The fireplace is burning brightly. It's full of fire.\". " +
 
             "say \"This is the middle.\"." +
             
@@ -69,5 +73,6 @@ describe('run', () => {
         runtime.sendCommand("look test");
         runtime.sendCommand("go north");
         runtime.sendCommand("look inn");
+        runtime.sendCommand("look fireplace");
     });
 });

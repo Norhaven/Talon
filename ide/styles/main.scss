@@ -19,12 +19,13 @@
 
 .code-pane{
     @extend %pane;
+    cursor: text;
 }
 
 #game-pane{
     @extend %pane;
 
-    background-color: beige;
+    background-color: rgb(235, 235, 235);
 }
 
 #compilation-output{
@@ -44,4 +45,19 @@
 
 #log-pane{
     @extend %pane;
+
+    background-color: beige;
+}
+
+#user-command-text{
+    width: 400px;
+    height: 40px;
+    font-size: large;
+    margin:15px;
+}
+
+button{
+    height: 40px;
+    font-size: large;
+    margin: 15px;
 }

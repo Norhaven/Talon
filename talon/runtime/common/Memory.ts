@@ -22,6 +22,8 @@ import { RuntimeSay } from "../library/RuntimeSay";
 import { Method } from "../../common/Method";
 import { RuntimeInteger } from "../library/RuntimeInteger";
 import { NumberType } from "../../library/NumberType";
+import { RuntimeDecoration } from "../library/RuntimeDecoration";
+import { Decoration } from "../../library/Decoration";
 
 export class Memory{
     private static typesByName = new Map<string, Type>();
@@ -49,10 +51,12 @@ export class Memory{
         const place = RuntimePlace.type;
         const item = RuntimeItem.type;
         const player = RuntimePlayer.type;
+        const decoration = RuntimeDecoration.type;
 
         Memory.typesByName.set(place.name, place);
         Memory.typesByName.set(item.name, item);
         Memory.typesByName.set(player.name, player);  
+        Memory.typesByName.set(decoration.name, decoration);
         
         return Array.from(Memory.typesByName.values());
     }
@@ -193,7 +197,8 @@ export class Memory{
             case Item.typeName: return new RuntimeItem();
             case Player.typeName: return new RuntimePlayer();
             case List.typeName: return new RuntimeList([]);     
-            case Say.typeName: return new RuntimeSay();       
+            case Say.typeName: return new RuntimeSay();    
+            case Decoration.typeName: return new RuntimeDecoration();   
             default:{
                 throw new RuntimeError(`Unable to instantiate type '${typeName}'`);
             }

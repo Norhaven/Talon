@@ -24,7 +24,7 @@
 .code-pane, #game-pane, #compilation-output, #log-pane {
   border: 2px solid gray;
   padding: 10px;
-  background-color: #eeeeee;
+  background-color: #ffffff;
   width: 500px;
   height: 500px;
   margin: 10px;
@@ -34,12 +34,33 @@
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
+.code-pane {
+  cursor: text;
+}
+
 #game-pane {
-  background-color: beige;
+  background-color: #ebebeb;
 }
 
 #compilation-output {
   height: 100px;
   background-color: beige;
+}
+
+#log-pane {
+  background-color: beige;
+}
+
+#user-command-text {
+  width: 400px;
+  height: 40px;
+  font-size: large;
+  margin: 15px;
+}
+
+button {
+  height: 40px;
+  font-size: large;
+  margin: 15px;
 }
 /*# sourceMappingURL=main.css.map */

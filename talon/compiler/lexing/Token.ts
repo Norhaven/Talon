@@ -5,6 +5,7 @@ import { WorldObject } from "../../library/WorldObject";
 import { BooleanType } from "../../library/BooleanType";
 import { Item } from "../../library/Item";
 import { List } from "../../library/List";
+import { Decoration } from "../../library/Decoration";
 
 export class Token{
     static get empty():Token{
@@ -23,6 +24,10 @@ export class Token{
         return Token.getTokenWithTypeOf(Item.typeName, TokenType.Keyword);
     }
 
+    static get forDecoration():Token{
+        return Token.getTokenWithTypeOf(Decoration.typeName, TokenType.Keyword);
+    }
+    
     static get forWorldObject():Token{
         return Token.getTokenWithTypeOf(WorldObject.typeName, TokenType.Keyword);
     }

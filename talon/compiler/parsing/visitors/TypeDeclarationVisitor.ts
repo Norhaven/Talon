@@ -51,7 +51,7 @@ export class TypeDeclarationVisitor extends Visitor{
     }
 
     private expectBaseType(context:ParseContext){
-        if (context.isAnyOf(Keywords.place, Keywords.item)){
+        if (context.isAnyOf(Keywords.place, Keywords.item, Keywords.decoration)){
             return context.consumeCurrentToken();
         } else {
             return context.expectIdentifier();

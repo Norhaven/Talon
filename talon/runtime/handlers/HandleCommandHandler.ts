@@ -22,6 +22,7 @@ import { InstanceCallHandler } from "./InstanceCallHandler";
 import { EventType } from "../../common/EventType";
 import { RuntimeDelegate } from "../library/RuntimeDelegate";
 import { Variable } from "../library/Variable";
+import { RuntimeItem } from "../library/RuntimeItem";
 
 export class HandleCommandHandler extends OpCodeHandler{
     constructor(private readonly output:IOutput){
@@ -89,6 +90,11 @@ export class HandleCommandHandler extends OpCodeHandler{
                 break;
             }
             case Meaning.Taking: {
+                if (!(instance instanceof RuntimeItem)){
+                    this.output.write("I can't take that.");
+                    return super.handle(thread);
+                }
+
                 const list = thread.currentPlace!.getContentsField();
                 list.items = list.items.filter(x => x.typeName != target.name);
                 
@@ -130,9 +136,6 @@ export class HandleCommandHandler extends OpCodeHandler{
             const delegate = new RuntimeDelegate(method);
 
             thread.currentMethod.push(delegate);
-
-            // const eventCall = new InstanceCallHandler(event.name);
-            // eventCall.handle(thread);
         }
     }
 
@@ -187,25 +190,6 @@ export class HandleCommandHandler extends OpCodeHandler{
         describe.actualParameters.unshift(new Variable("~this", new Type(target?.typeName!, target?.parentTypeName!), target));
 
         thread.currentMethod.push(new RuntimeDelegate(describe));
-
-        // const description = target.fields.get(WorldObject.description)?.value;
-        // const contents = target.fields.get(WorldObject.contents)?.value;
-
-        // if (!(description instanceof RuntimeString)){
-        //     throw new RuntimeError("Unable to describe without a string");
-        // }
-
-        // this.output.write(description.value);
-
-        // if (isShallowDescription || contents === undefined){
-        //     return;
-        // }
-
-        // if (!(contents instanceof RuntimeList)){
-        //     throw new RuntimeError("Unable to describe contents without a list");
-        // }
-
-        // this.describeContents(contents);
     }
 
     private describeContents(executionPoint:Thread, target:RuntimeList){

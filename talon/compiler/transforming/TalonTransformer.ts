@@ -31,6 +31,7 @@ import { ExpressionTransformationMode } from "./ExpressionTransformationMode";
 import { IOutput } from "../../runtime/IOutput";
 import { SetVariableExpression } from "../parsing/expressions/SetVariableExpression";
 import { LiteralExpression } from "../parsing/expressions/LiteralExpression";
+import { Decoration } from "../../library/Decoration";
 
 export class TalonTransformer{
     constructor(private readonly out:IOutput){
@@ -52,6 +53,7 @@ export class TalonTransformer{
         types.push(new Type(List.typeName, List.parentTypeName));
         types.push(new Type(Player.typeName, Player.parentTypeName));
         types.push(new Type(Say.typeName, Say.parentTypeName));
+        types.push(new Type(Decoration.typeName, Decoration.parentTypeName));
 
         return new Map<string, Type>(types.map(x => [x.name, x]));
     }

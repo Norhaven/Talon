@@ -46,6 +46,8 @@ export class TalonCompiler{
         } catch(ex){
             if (ex instanceof CompilationError){
                 this.out.write(`Error: ${ex.message}`);
+            } else {
+                this.out.write(`Unhandled Error: ${ex}`);
             }
 
             return [];
