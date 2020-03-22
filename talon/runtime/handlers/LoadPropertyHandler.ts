@@ -2,6 +2,9 @@ import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
 import { MethodActivation } from "../MethodActivation";
 import { Variable } from "../library/Variable";
+import { InstanceCallHandler } from "./InstanceCallHandler";
+import { LoadThisHandler } from "./LoadThisHandler";
+import { EvaluationResult } from "../EvaluationResult";
 
 export class LoadPropertyHandler extends OpCodeHandler{
     constructor(private fieldName?:string){
@@ -20,14 +23,26 @@ export class LoadPropertyHandler extends OpCodeHandler{
 
         const value = field?.value!;
 
-        const getField = instance?.methods.get(`<>get_${this.fieldName}`);
+        const getField = instance?.methods.get(`~get_${this.fieldName}`);
 
-        thread.log?.debug(`ld.prop\t\t${instance?.typeName}::${this.fieldName} {get=${getField != undefined}} // ${value}`);
+        thread.log?.debug(`.ld.prop\t\t${instance?.typeName}::${this.fieldName} {get=${getField != undefined}} // ${value}`);
 
         if (getField){
-            getField.actualParameters.push(new Variable("<>value", field?.type!, value));
+            thread.currentMethod.push(value);
 
-            thread.activateMethod(getField);
+            const loadThis = new LoadThisHandler();
+            const result = loadThis.handle(thread);
+
+            if (result != EvaluationResult.Continue){
+                return result;
+            }
+            
+            const handler = new InstanceCallHandler(getField.name);
+            handler.handle(thread);
+
+            //getField.actualParameters.push(new Variable("~value", field?.type!, value));
+
+            //thread.activateMethod(getField);
         } else {
             thread.currentMethod.push(value);
         }

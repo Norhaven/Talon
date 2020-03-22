@@ -7,6 +7,8 @@ import { Memory } from "../common/Memory";
 
 export class ParseCommandHandler extends OpCodeHandler{
     handle(thread:Thread){
+        thread.log?.debug(`.handle.cmd.parse`);
+        
         const text = thread.currentMethod.pop();
 
         if (text instanceof RuntimeString){

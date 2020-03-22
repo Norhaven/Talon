@@ -14,7 +14,7 @@ export class StaticCallHandler extends OpCodeHandler{
         const type = thread.knownTypes.get(typeName)!;
         const method = type?.methods.find(x => x.name === methodName)!;       
         
-        thread.log?.debug(`call.static\t${typeName}::${methodName}()`);
+        thread.log?.debug(`.call.static\t${typeName}::${methodName}()`);
 
         thread.activateMethod(method);
 

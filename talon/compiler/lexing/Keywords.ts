@@ -41,6 +41,9 @@ export class Keywords{
     static readonly exits = "exits";
     static readonly stop = "stop";
     static readonly dropping = "dropping";
+    static readonly that = "that";
+    static readonly set = "set";
+    static readonly to = "to";
 
     static getAll():Set<string>{
         type KeywordProperties = keyof Keywords;

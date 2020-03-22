@@ -1,9 +1,9 @@
 import { Token } from "../lexing/Token";
 import { CompilationError } from "../exceptions/CompilationError";
 import { TokenType } from "../lexing/TokenType";
+import { IOutput } from "../../runtime/IOutput";
 
 export class ParseContext{
-    tokens:Token[] = [];
     index:number = 0;
 
     get isDone(){
@@ -14,8 +14,8 @@ export class ParseContext{
         return this.tokens[this.index];
     }
 
-    constructor(tokens:Token[]){
-        this.tokens = tokens;
+    constructor(private readonly tokens:Token[], private readonly out:IOutput){
+        this.out.write(`${tokens.length} tokens discovered, parsing...`);
     }
 
     consumeCurrentToken(){
@@ -28,6 +28,20 @@ export class ParseContext{
 
     is(tokenValue:string){
         return this.currentToken?.value == tokenValue;
+    }
+
+    isTypeOf(type:TokenType){
+        return this.currentToken.type == type;
+    }
+
+    isAnyTypeOf(...types:TokenType[]){
+        for(const type of types){
+            if (this.isTypeOf(type)){
+                return true;
+            }
+        }
+
+        return false;
     }
 
     isAnyOf(...tokenValues:string[]){

@@ -8,7 +8,7 @@ import { List } from "../../library/List";
 
 export class Token{
     static get empty():Token{
-        return Token.getTokenWithTypeOf("<>empty", TokenType.Unknown);
+        return Token.getTokenWithTypeOf("~empty", TokenType.Unknown);
     }
 
     static get forAny():Token{

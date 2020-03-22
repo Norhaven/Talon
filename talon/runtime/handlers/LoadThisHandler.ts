@@ -7,7 +7,7 @@ export class LoadThisHandler extends OpCodeHandler{
 
         thread.currentMethod.push(instance);
 
-        thread.log?.debug(`ld.this`);
+        thread.log?.debug(`.ld.this`);
 
         return super.handle(thread);
     }

@@ -8,7 +8,7 @@ export class Type{
     attributes:Attribute[] = [];
 
     get isSystemType(){
-        return this.name.startsWith("<>");
+        return this.name.startsWith("~");
     }
 
     get isAnonymousType(){

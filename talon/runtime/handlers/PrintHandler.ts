@@ -17,6 +17,7 @@ export class PrintHandler extends OpCodeHandler{
         const text = thread.currentMethod.pop();
 
         if (text instanceof RuntimeString){
+            thread.log?.debug(".print");
             this.output.write(text.value);
         } else {
             throw new RuntimeError("Unable to print, encountered a type on the stack other than string");

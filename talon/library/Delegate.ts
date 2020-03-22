@@ -1,6 +1,6 @@
 import { Any } from "./Any";
 
-export class BooleanType{
+export class Delegate{
+    static typeName = "~delegate";
     static parentTypeName = Any.typeName;
-    static typeName = "~boolean";
 }

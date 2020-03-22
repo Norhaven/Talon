@@ -1,6 +1,18 @@
 import { OpCode } from "./OpCode";
 
 export class Instruction{
+    static assign(){
+        return new Instruction(OpCode.Assign);
+    }
+
+    static invokeDelegate(){
+        return new Instruction(OpCode.InvokeDelegate);
+    }
+
+    static isTypeOf(typeName:string){
+        return new Instruction(OpCode.TypeOf, typeName);
+    }
+
     static loadNumber(value:number){
         return new Instruction(OpCode.LoadNumber, value);
     }

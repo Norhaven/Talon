@@ -2,9 +2,14 @@ import { Token } from "./Token";
 import { Keywords } from "./Keywords";
 import { Punctuation } from "./Punctuation";
 import { TokenType } from "./TokenType";
+import { IOutput } from "../../runtime/IOutput";
 
-export class Tokenizer{
+export class TalonLexer{
     private static readonly allKeywords = Keywords.getAll();
+
+    constructor(private readonly out:IOutput){
+
+    }
 
     tokenize(code:string):Token[]{
         let currentLine = 1;
@@ -50,7 +55,7 @@ export class Tokenizer{
                 token.type = TokenType.SemiTerminator;
             } else if (token.value == Punctuation.colon){
                 token.type = TokenType.OpenMethodBlock;
-            } else if (Tokenizer.allKeywords.has(token.value)){
+            } else if (TalonLexer.allKeywords.has(token.value)){
                 token.type = TokenType.Keyword;
             } else if (token.value.startsWith("\"") && token.value.endsWith("\"")){
                 token.type = TokenType.String;

@@ -4,7 +4,7 @@ import { Any } from "../../library/Any";
 export class RuntimeString extends RuntimeAny{
     value:string;
     parentTypeName = Any.typeName;
-    typeName = "<>string";
+    typeName = "~string";
 
     constructor(value:string){
         super();

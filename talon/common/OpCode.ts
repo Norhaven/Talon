@@ -1,5 +1,6 @@
-export enum OpCode{
+export enum OpCode {
     NoOp,
+    Assign,
     Print,
     LoadString,
     NewInstance,
@@ -19,5 +20,7 @@ export enum OpCode{
     LoadThis,
     InstanceCall,
     StaticCall,
-    ExternalCall
+    ExternalCall,
+    TypeOf,
+    InvokeDelegate
 }

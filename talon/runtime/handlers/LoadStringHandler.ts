@@ -11,7 +11,7 @@ export class LoadStringHandler extends OpCodeHandler{
             const stringValue = new RuntimeString(value);
             thread.currentMethod.push(stringValue);
 
-            thread.log?.debug(`ld.const.str\t"${value}"`);
+            thread.log?.debug(`.ld.const.str\t"${value}"`);
         } else {
             throw new RuntimeError("Expected a string");
         }

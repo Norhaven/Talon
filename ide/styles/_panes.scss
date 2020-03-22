@@ -1,0 +1,17 @@
+$width: 500px;
+$height: 500px;
+$background-color: #eeeeee;
+$default-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+%pane{
+    border: 2px solid gray;
+    padding:10px;
+    background-color: $background-color;
+    width: $width;
+    height: $height;
+    margin:10px;
+    text-align:justify; 
+    overflow-x:auto; 
+    overflow-y:auto;
+    font-family: $default-font;
+}

@@ -1,0 +1,47 @@
+@import 'containers';
+@import 'panes';
+
+#ide{
+    @extend %horizontal-container;
+}
+
+.dev-toolbar{
+    @extend %horizontal-container;
+}
+
+#dev-container{
+    @extend %vertical-container;
+}
+
+#test-container{
+    @extend %vertical-container;
+}
+
+.code-pane{
+    @extend %pane;
+}
+
+#game-pane{
+    @extend %pane;
+
+    background-color: beige;
+}
+
+#compilation-output{
+    @extend %pane;
+
+    height:100px;
+    background-color: beige;
+}
+
+#command-pane{
+    @extend %horizontal-container;
+}
+
+#runtime-pane{
+    @extend %horizontal-container;
+}
+
+#log-pane{
+    @extend %pane;
+}

@@ -3,6 +3,7 @@ import { ProgramExpression } from "../parsing/expressions/ProgramExpression";
 import { TypeDeclarationExpression } from "../parsing/expressions/TypeDeclarationExpression";
 import { Token } from "../lexing/Token";
 import { TokenType } from "../lexing/TokenType";
+import { IOutput } from "../../runtime/IOutput";
 
 export class TalonSemanticAnalyzer{
 
@@ -13,6 +14,10 @@ export class TalonSemanticAnalyzer{
     private readonly booleanType = new TypeDeclarationExpression(Token.forBoolean, Token.forAny);
     private readonly list = new TypeDeclarationExpression(Token.forList, Token.forAny);
 
+    constructor(private readonly out:IOutput){
+
+    }
+    
     analyze(expression:Expression):Expression{
         const types:TypeDeclarationExpression[] = [this.any, this.worldObject, this.place, this.booleanType, this.item];
 
@@ -29,8 +34,8 @@ export class TalonSemanticAnalyzer{
         for(const declaration of types){
             const baseToken = declaration.baseTypeNameToken;
 
-            if (baseToken.type == TokenType.Keyword && !baseToken.value.startsWith("<>")){
-                const name = `<>${baseToken.value}`;
+            if (baseToken.type == TokenType.Keyword && !baseToken.value.startsWith("~")){
+                const name = `~${baseToken.value}`;
                 declaration.baseType = typesByName.get(name);
             } else {
                 declaration.baseType = typesByName.get(baseToken.value);

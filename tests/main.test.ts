@@ -19,11 +19,11 @@ describe('run', () => {
     // });
 
     it('type compile', () => {
-        const compiler = new TalonCompiler();
+        const compiler = new TalonCompiler(new ConsoleOutput());
         const runtime = new TalonRuntime(new ConsoleOutput(), new ConsoleLogOutput());
 
         const types = compiler.compile(
-            "say \"This is the start.\"" +
+            "say \"This is the start.\"." +
             
             "understand \"look\" as describing. " +
             "understand \"north\" as directions. " +
@@ -36,21 +36,27 @@ describe('run', () => {
             "it is where the player starts. " +
             "it is described as \"It looks like a room.\" and if it contains 1 Coin then say \"There's also a coin here.\" else say \"There is just dust.\"." +
             "it contains 1 Coin." + 
-            "it can reach the inn by going \"north\"." +
+            "it can reach the inn by going \"north\". " +
+            "it has a \"value\" that is 1. " +
+            "when the player exits: " +
+            "say \"Goodbye!\"; " +
+            "set \"value\" to 2; " +
+            "and then stop. " +
             
             "a inn is a kind of place. " +
             "it is described as \"It's an inn.\". " +
+            "it can reach the test by going \"north\". " +
             "when the player enters:" +
             "say \"You walk into the inn.\"; " +
             "say \"It looks deserted.\"; " +
             "and then stop. " +
 
-            "say \"This is the middle.\"" +
+            "say \"This is the middle.\"." +
             
             "a Coin is a kind of item. " +
             "it is described as \"It's a small coin.\"." +
             
-            "say \"This is the end.\"");
+            "say \"This is the end.\".");
 
         runtime.loadFrom(types);
         runtime.start();

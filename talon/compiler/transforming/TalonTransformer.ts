@@ -28,8 +28,15 @@ import { ActionsExpression } from "../parsing/expressions/ActionsExpression";
 import { Keywords } from "../lexing/Keywords";
 import { EventType } from "../../common/EventType";
 import { ExpressionTransformationMode } from "./ExpressionTransformationMode";
+import { IOutput } from "../../runtime/IOutput";
+import { SetVariableExpression } from "../parsing/expressions/SetVariableExpression";
+import { LiteralExpression } from "../parsing/expressions/LiteralExpression";
 
 export class TalonTransformer{
+    constructor(private readonly out:IOutput){
+
+    }
+    
     private createSystemTypes(){
         const types:Type[] = [];
         
@@ -57,7 +64,7 @@ export class TalonTransformer{
             for(const child of expression.expressions){
                 if (child instanceof UnderstandingDeclarationExpression){
                     
-                    const type = new Type(`<~>${Understanding.typeName}_${dynamicTypeCount}`, Understanding.typeName);
+                    const type = new Type(`~${Understanding.typeName}_${dynamicTypeCount}`, Understanding.typeName);
                     
                     const action = new Field();
                     action.name = Understanding.action;
@@ -104,14 +111,12 @@ export class TalonTransformer{
 
                         if (fieldExpression.associatedExpressions.length > 0){
                             const getField = new Method();
-                            getField.name = `<>get_${field.name}`;
-                            getField.parameters.push(new Parameter("<>value", field.typeName));
+                            getField.name = `~get_${field.name}`;
+                            getField.parameters.push(new Parameter("~value", field.typeName));
                             getField.returnType = field.typeName;
                             
                             for(const associated of fieldExpression.associatedExpressions){
-                                for(const instruction of this.transformExpression(associated)){
-                                    getField.body.push(instruction);
-                                }
+                                getField.body.push(...this.transformExpression(associated));
                             }
 
                             getField.body.push(Instruction.return());
@@ -150,7 +155,7 @@ export class TalonTransformer{
                         for (const event of child.events){
                             const method = new Method();
 
-                            method.name = `<>event_${event.actor}_${event.eventKind}_${duplicateEventCount}`;
+                            method.name = `~event_${event.actor}_${event.eventKind}_${duplicateEventCount}`;
                             method.eventType = this.transformEventKind(event.eventKind);
 
                             duplicateEventCount++;
@@ -172,36 +177,36 @@ export class TalonTransformer{
 
             const globalSays = expression.expressions.filter(x => x instanceof SayExpression);
 
-            if (globalSays.length > 0){
-                const type = new Type(`<~>globalSays`, Say.typeName);
+            const type = new Type(`~globalSays`, Say.typeName);
 
-                const method = new Method();
-                method.name = Say.typeName;
-                method.parameters = [];
+            const method = new Method();
+            method.name = Say.typeName;
+            method.parameters = [];
 
-                const instructions:Instruction[] = [];
+            const instructions:Instruction[] = [];
 
-                for(const say of globalSays){
-                    const sayExpression = <SayExpression>say;
+            for(const say of globalSays){
+                const sayExpression = <SayExpression>say;
 
-                    instructions.push(
-                        Instruction.loadString(sayExpression.text),
-                        Instruction.print()
-                    );
-                }
-
-                instructions.push(Instruction.return());
-
-                method.body = instructions;
-
-                type.methods.push(method);
-
-                typesByName.set(type.name, type);                
+                instructions.push(
+                    Instruction.loadString(sayExpression.text),
+                    Instruction.print()
+                );
             }
+
+            instructions.push(Instruction.return());
+
+            method.body = instructions;
+
+            type.methods.push(method);
+
+            typesByName.set(type.name, type);  
         } else {
             throw new CompilationError("Unable to partially transform");
         }
 
+        this.out.write(`Created ${typesByName.size} types...`);
+        
         return Array.from(typesByName.values());
     }
 
@@ -209,6 +214,9 @@ export class TalonTransformer{
         switch(kind){
             case Keywords.enters:{
                 return EventType.PlayerEntersPlace;
+            }
+            case Keywords.exits:{
+                return EventType.PlayerExitsPlace;
             }
             default:{
                 throw new CompilationError(`Unable to transform unsupported event kind '${kind}'`);
@@ -248,9 +256,6 @@ export class TalonTransformer{
             );
             
         } else if (expression instanceof ConcatenationExpression){
-            
-            // TODO: Load the left-hand side so it can be concatenated when the right side evaluates.
-
             const left = this.transformExpression(expression.left!, mode);
             const right = this.transformExpression(expression.right!, mode);
 
@@ -259,9 +264,26 @@ export class TalonTransformer{
             instructions.push(Instruction.concatenate());
         } else if (expression instanceof FieldDeclarationExpression){
             instructions.push(
-                Instruction.loadInstance("<>it"),
+                Instruction.loadThis(),
                 Instruction.loadField(expression.name)
             );
+        } else if (expression instanceof SetVariableExpression){
+            const right = this.transformExpression(expression.evaluationExpression);
+
+            instructions.push(
+                ...right,
+                Instruction.loadThis(),
+                Instruction.loadField(expression.variableName),
+                Instruction.assign()
+            );
+        } else if (expression instanceof LiteralExpression){
+            if (expression.typeName == StringType.typeName){
+                instructions.push(Instruction.loadString(<string>expression.value));
+            } else if (expression.typeName == NumberType.typeName){
+                instructions.push(Instruction.loadNumber(Number(expression.value)));
+            } else {
+                throw new CompilationError(`Unable to transform unsupported literal expression '${expression}'`);
+            }
         } else {
             throw new CompilationError("Unable to transform unsupported expression");
         }

@@ -1,4 +1,5 @@
 export enum EventType{
     None,
-    PlayerEntersPlace
+    PlayerEntersPlace,
+    PlayerExitsPlace
 }

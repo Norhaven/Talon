@@ -10,7 +10,7 @@ export class LoadNumberHandler extends OpCodeHandler{
 
         thread.currentMethod.push(runtimeValue);
 
-        thread.log?.debug(`ld.const.num\t${value}`);
+        thread.log?.debug(`.ld.const.num\t${value}`);
 
         return super.handle(thread);
     }

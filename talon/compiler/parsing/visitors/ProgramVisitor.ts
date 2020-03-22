@@ -27,9 +27,14 @@ export class ProgramVisitor extends Visitor{
                 const sayExpression = new SayExpressionVisitor();
                 const expression = sayExpression.visit(context);
 
+                // At the top level, a say expression must have a terminator. We're evaluating it out here
+                // because a say expression normally doesn't require one.
+
+                context.expectTerminator();
+
                 expressions.push(expression);
             } else{
-                throw new CompilationError("Found unexpected token");
+                throw new CompilationError(`Found unexpected token '${context.currentToken.value}'`);
             }            
         }
 

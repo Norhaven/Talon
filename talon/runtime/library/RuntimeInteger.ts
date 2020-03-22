@@ -1,7 +1,7 @@
 import { RuntimeAny } from "./RuntimeAny";
 
 export class RuntimeInteger extends RuntimeAny{
-    constructor(public readonly value:number){
+    constructor(public value:number){
         super();
     }
 

@@ -12,6 +12,8 @@ import { List } from "../../../library/List";
 import { AndExpression } from "../expressions/AndExpression";
 import { ExpressionVisitor } from "./ExpressionVisitor";
 import { ConcatenationExpression } from "../expressions/ConcatenationExpression";
+import { TokenType } from "../../lexing/TokenType";
+import { NumberType } from "../../../library/NumberType";
 
 export class FieldDeclarationVisitor extends Visitor{
     visit(context: ParseContext): Expression {
@@ -62,6 +64,28 @@ export class FieldDeclarationVisitor extends Visitor{
             } else {
                 throw new CompilationError("Unable to determine property field");
             }
+        } else if (context.is(Keywords.has)){
+
+            context.expect(Keywords.has);
+            context.expect(Keywords.a);
+            
+            const name = context.expectString();
+
+            context.expect(Keywords.that);
+            context.expect(Keywords.is);
+
+            if (context.isTypeOf(TokenType.String)){
+                field.typeName = StringType.typeName;
+                field.initialValue = context.expectString().value;
+            } else if (context.isTypeOf(TokenType.Number)){
+                field.typeName = NumberType.typeName;
+                field.initialValue = context.expectNumber().value;
+            } else {
+                throw new CompilationError(`Expected a string or a number but found '${context.currentToken.value}'`);
+            }
+                
+            field.name = name.value;
+
         } else if (context.is(Keywords.contains)){
             
             context.expect(Keywords.contains);
@@ -87,7 +111,7 @@ export class FieldDeclarationVisitor extends Visitor{
 
             const direction = context.expectString();
 
-            field.name = `<>${direction.value}`;
+            field.name = `~${direction.value}`;
             field.typeName = StringType.typeName;
             field.initialValue = `${placeName.value}`;
         } else {

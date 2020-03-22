@@ -39,6 +39,9 @@ import { LoadThisHandler } from "./handlers/LoadThisHandler";
 import { BranchRelativeHandler } from "./handlers/BranchRelativeHandler";
 import { BranchRelativeIfFalseHandler } from "./handlers/BranchRelativeIfFalseHandler";
 import { ConcatenateHandler } from "./handlers/ConcatenateHandler";
+import { AssignVariableHandler } from "./handlers/AssignVariableHandler";
+import { TypeOfHandler } from "./handlers/TypeOfHandler";
+import { InvokeDelegateHandler } from "./handlers/InvokeDelegateHandler";
 
 export class TalonRuntime{
 
@@ -69,9 +72,17 @@ export class TalonRuntime{
         this.handlers.set(OpCode.BranchRelative, new BranchRelativeHandler());
         this.handlers.set(OpCode.BranchRelativeIfFalse, new BranchRelativeIfFalseHandler());
         this.handlers.set(OpCode.Concatenate, new ConcatenateHandler());
+        this.handlers.set(OpCode.Assign, new AssignVariableHandler());
+        this.handlers.set(OpCode.TypeOf, new TypeOfHandler());
+        this.handlers.set(OpCode.InvokeDelegate, new InvokeDelegateHandler());
     }
 
     start(){
+        if (this.thread?.allTypes.length == 0){
+            this.thread.log?.debug("Unable to start runtime without types.");
+            return;
+        }
+
         const places = this.thread?.allTypes
                         .filter(x => x.baseTypeName == Place.typeName)
                         .map(x => <RuntimePlayer>Memory.allocate(x));
@@ -95,6 +106,11 @@ export class TalonRuntime{
     }
 
     loadFrom(types:Type[]){
+        if (types.length == 0){
+            this.logOutput?.debug("No types were provided, unable to load runtime!");
+            return false;
+        }
+
         const loadedTypes = Memory.loadTypes(types);
 
         const entryPoint = loadedTypes.find(x => x.attributes.findIndex(attribute => attribute instanceof EntryPointAttribute) > -1);
@@ -103,6 +119,8 @@ export class TalonRuntime{
         
         this.thread = new Thread(loadedTypes, activation);  
         this.thread.log = this.logOutput;      
+
+        return true;
     }
 
     sendCommand(input:string){
@@ -116,7 +134,7 @@ export class TalonRuntime{
         this.userOutput.write(command);
 
         // Now we can go ahead and process their command.
-        
+
         const instruction = this.thread!.currentInstruction;
 
         if (instruction?.opCode == OpCode.ReadInput){
@@ -134,11 +152,20 @@ export class TalonRuntime{
             throw new RuntimeError("Unable to execute command, no instruction found");
         }
 
-        for(let instruction = this.evaluateCurrentInstruction();
-            instruction == EvaluationResult.Continue;
-            instruction = this.evaluateCurrentInstruction()){
+        try{
+            for(let instruction = this.evaluateCurrentInstruction();
+                instruction == EvaluationResult.Continue;
+                instruction = this.evaluateCurrentInstruction()){
 
-            this.thread?.moveNext();
+                this.thread?.moveNext();
+            }
+        } catch(ex){
+            if (ex instanceof RuntimeError){
+                this.logOutput?.debug(`Runtime Error: ${ex.message}`);
+                this.logOutput?.debug(`Stack Trace: ${ex.stack}`);
+            } else {
+                this.logOutput?.debug(`Encountered unhandled error: ${ex}`);
+            }          
         }
     }
 

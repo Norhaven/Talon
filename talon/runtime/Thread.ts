@@ -38,7 +38,7 @@ export class Thread{
         const activation = new MethodActivation(method);
         const current = this.currentMethod;
 
-        this.log?.debug(`${current.method?.name} ==> ${method.name}`);
+        this.log?.debug(`${current.method?.name} => ${method.name}`);
 
         this.methods.push(activation);
     }
@@ -55,7 +55,7 @@ export class Thread{
         const expectReturnType = this.currentMethod.method!.returnType != "";
         const returnedMethod = this.methods.pop();
 
-        this.log?.debug(`${this.currentMethod.method?.name} <== ${returnedMethod?.method?.name}`);
+        this.log?.debug(`${this.currentMethod.method?.name} <= ${returnedMethod?.method?.name}`);
 
         if (!expectReturnType){
             return new RuntimeEmpty();

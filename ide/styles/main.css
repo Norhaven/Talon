@@ -1,0 +1,45 @@
+#ide, .dev-toolbar, #command-pane, #runtime-pane {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+}
+
+#dev-container, #test-container {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+}
+
+.code-pane, #game-pane, #compilation-output, #log-pane {
+  border: 2px solid gray;
+  padding: 10px;
+  background-color: #eeeeee;
+  width: 500px;
+  height: 500px;
+  margin: 10px;
+  text-align: justify;
+  overflow-x: auto;
+  overflow-y: auto;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#game-pane {
+  background-color: beige;
+}
+
+#compilation-output {
+  height: 100px;
+  background-color: beige;
+}
+/*# sourceMappingURL=main.css.map */

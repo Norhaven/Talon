@@ -5,5 +5,5 @@ class Place {
 }
 exports.Place = Place;
 Place.parentTypeName = WorldObject_1.WorldObject.parentTypeName;
-Place.typeName = "<>place";
+Place.typeName = "~place";
 //# sourceMappingURL=Place.js.map

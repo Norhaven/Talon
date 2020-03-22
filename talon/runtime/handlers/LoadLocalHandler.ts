@@ -10,7 +10,7 @@ export class LoadLocalHandler extends OpCodeHandler{
 
         thread.currentMethod.push(parameter?.value!);
 
-        thread.log?.debug(`ld.param\t\t${localName}=${parameter?.value}`);
+        thread.log?.debug(`.ld.param\t\t${localName}=${parameter?.value}`);
 
         return super.handle(thread);
     }

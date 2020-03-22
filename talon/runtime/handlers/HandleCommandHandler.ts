@@ -20,6 +20,8 @@ import { LoadPropertyHandler } from "./LoadPropertyHandler";
 import { PrintHandler } from "./PrintHandler";
 import { InstanceCallHandler } from "./InstanceCallHandler";
 import { EventType } from "../../common/EventType";
+import { RuntimeDelegate } from "../library/RuntimeDelegate";
+import { Variable } from "../library/Variable";
 
 export class HandleCommandHandler extends OpCodeHandler{
     constructor(private readonly output:IOutput){
@@ -27,6 +29,7 @@ export class HandleCommandHandler extends OpCodeHandler{
     }
 
     handle(thread:Thread){
+        
         const command = thread.currentMethod.pop();
 
         if (!(command instanceof RuntimeCommand)){
@@ -36,86 +39,100 @@ export class HandleCommandHandler extends OpCodeHandler{
         const action = command.action!.value;
         const targetName = command.targetName!.value;
 
-        for(const type of thread.knownUnderstandings){
-            const actionField = type.fields.find(x => x.name == Understanding.action);
-            const meaningField = type.fields.find(x => x.name == Understanding.meaning);
+        thread.log?.debug(`.handle.cmd '${action} ${targetName}'`);
 
-            if (action != actionField?.defaultValue){
-                continue; 
-            }
+        const understandingsByAction = new Map<Object, Type>(thread.knownUnderstandings.map(x => [x.fields.find(field => field.name == Understanding.action)?.defaultValue!, x]));
 
-            const meaning = this.determineMeaningFor(<string>meaningField?.defaultValue!);
-            const actualTargetName = this.inferTargetFrom(thread, targetName, meaning);
-            
-            if (!actualTargetName){
-                this.output.write("I don't know how to do that.");
+        const understanding = understandingsByAction.get(action);
+
+        if (!understanding){
+            this.output.write("I don't know how to do that.");
+            return super.handle(thread);
+        }
+
+        const meaningField = understanding.fields.find(x => x.name == Understanding.meaning);
+
+        const meaning = this.determineMeaningFor(<string>meaningField?.defaultValue!);
+        const actualTargetName = this.inferTargetFrom(thread, targetName, meaning);
+        
+        if (!actualTargetName){
+            this.output.write("I don't know what you're referring to.");
+            return super.handle(thread);
+        }
+
+        const target = thread.knownTypes.get(actualTargetName);
+
+        if (!target){
+            throw new RuntimeError("Unable to locate type");
+        }
+
+        const instance = this.locateTargetInstance(thread, target, meaning);
+
+        if (!(instance instanceof RuntimeWorldObject)){
+            throw new RuntimeError("Unable to locate world type");
+        }
+
+        switch(meaning){
+            case Meaning.Describing:{
+                this.describe(thread, instance, false);
                 break;
             }
+            case Meaning.Moving: {    
+                const nextPlace = <RuntimePlace>instance;
+                const currentPlace = thread.currentPlace;
 
-            const target = thread.knownTypes.get(actualTargetName);
-
-            if (!target){
-                throw new RuntimeError("Unable to locate type");
+                thread.currentPlace = nextPlace;
+                
+                this.describe(thread, instance, false);
+                this.raiseEvent(thread, nextPlace, EventType.PlayerEntersPlace);
+                this.raiseEvent(thread, currentPlace!, EventType.PlayerExitsPlace);
+                break;
             }
+            case Meaning.Taking: {
+                const list = thread.currentPlace!.getContentsField();
+                list.items = list.items.filter(x => x.typeName != target.name);
+                
+                const inventory = thread.currentPlayer!.getContentsField();
+                inventory.items.push(instance);
 
-            const instance = this.locateTargetInstance(thread, target, meaning);
-
-            if (!(instance instanceof RuntimeWorldObject)){
-                throw new RuntimeError("Unable to locate world type");
+                this.describe(thread, thread.currentPlace!, false);
+                break;
             }
+            case Meaning.Inventory:{
+                const inventory = (<RuntimePlayer>instance).getContentsField();
+                this.describeContents(thread, inventory);
+                break;
+            }
+            case Meaning.Dropping:{
+                const list = thread.currentPlayer!.getContentsField();
+                list.items = list.items.filter(x => x.typeName != target.name);
+                
+                const contents = thread.currentPlace!.getContentsField();
+                contents.items.push(instance);
 
-            switch(meaning){
-                case Meaning.Describing:{
-                    this.describe(thread, instance, false);
-                    break;
-                }
-                case Meaning.Moving: {                                
-                    thread.currentPlace = <RuntimePlace>instance;
-                    this.describe(thread, instance, false);
-                    this.raiseEvent(thread, EventType.PlayerEntersPlace);
-                    break;
-                }
-                case Meaning.Taking: {
-                    const list = thread.currentPlace!.getContentsField();
-                    list.items = list.items.filter(x => x.typeName != target.name);
-                    
-                    const inventory = thread.currentPlayer!.getContentsField();
-                    inventory.items.push(instance);
-
-                    this.describe(thread, thread.currentPlace!, false);
-                    break;
-                }
-                case Meaning.Inventory:{
-                    const inventory = (<RuntimePlayer>instance).getContentsField();
-                    this.describeContents(thread, inventory);
-                    break;
-                }
-                case Meaning.Dropping:{
-                    const list = thread.currentPlayer!.getContentsField();
-                    list.items = list.items.filter(x => x.typeName != target.name);
-                    
-                    const contents = thread.currentPlace!.getContentsField();
-                    contents.items.push(instance);
-
-                    this.describe(thread, thread.currentPlace!, false);
-                    break;
-                }
-                default:
-                    throw new RuntimeError("Unsupported meaning found");
-            }  
-        }    
+                this.describe(thread, thread.currentPlace!, false);
+                break;
+            }
+            default:
+                throw new RuntimeError("Unsupported meaning found");
+        }  
 
         return super.handle(thread);
     }
 
-    private raiseEvent(thread:Thread, type:EventType){
-        const events = Array.from(thread.currentPlace?.methods.values()!).filter(x => x.eventType == type);
+    private raiseEvent(thread:Thread, location:RuntimePlace, type:EventType){
+        const events = Array.from(location.methods.values()!).filter(x => x.eventType == type);
 
         for(const event of events){
-            thread.currentMethod.push(thread.currentPlace!);
+            const method = location.methods.get(event.name)!;
+            method.actualParameters = [new Variable("~this", new Type(location?.typeName!, location?.parentTypeName!), location)];
 
-            const eventCall = new InstanceCallHandler(event.name);
-            eventCall.handle(thread);
+            const delegate = new RuntimeDelegate(method);
+
+            thread.currentMethod.push(delegate);
+
+            // const eventCall = new InstanceCallHandler(event.name);
+            // eventCall.handle(thread);
         }
     }
 
@@ -145,7 +162,7 @@ export class HandleCommandHandler extends OpCodeHandler{
 
     private inferTargetFrom(thread:Thread, targetName:string, meaning:Meaning){
         if (meaning === Meaning.Moving){
-            const placeName = <RuntimeString>thread.currentPlace?.fields.get(`<>${targetName}`)?.value;
+            const placeName = <RuntimeString>thread.currentPlace?.fields.get(`~${targetName}`)?.value;
 
             if (!placeName){
                 return undefined;
@@ -165,8 +182,11 @@ export class HandleCommandHandler extends OpCodeHandler{
         
         thread.currentMethod.push(target);
 
-        const describeType = new InstanceCallHandler(WorldObject.describe);
-        describeType.handle(thread);
+        const describe = target.methods.get(WorldObject.describe)!;
+
+        describe.actualParameters.unshift(new Variable("~this", new Type(target?.typeName!, target?.parentTypeName!), target));
+
+        thread.currentMethod.push(new RuntimeDelegate(describe));
 
         // const description = target.fields.get(WorldObject.description)?.value;
         // const contents = target.fields.get(WorldObject.contents)?.value;
@@ -195,7 +215,7 @@ export class HandleCommandHandler extends OpCodeHandler{
     }
 
     private determineMeaningFor(action:string):Meaning{
-        const systemAction = `<>${action}`;
+        const systemAction = `~${action}`;
 
         // TODO: Support custom actions better.
 

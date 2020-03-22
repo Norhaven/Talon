@@ -27,10 +27,10 @@ export class ReturnHandler extends OpCodeHandler{
         const returnValue = thread!.returnFromCurrentMethod();
 
         if (!(returnValue instanceof RuntimeEmpty)){
-            thread.log?.debug(`ret\t\t${returnValue}`);
+            thread.log?.debug(`.ret\t\t${returnValue}`);
             thread?.currentMethod.push(returnValue);
         } else {
-            thread.log?.debug("ret void");
+            thread.log?.debug(".ret void");
         }
 
         return EvaluationResult.Continue;

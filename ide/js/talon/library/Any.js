@@ -5,7 +5,7 @@ class Any {
 }
 exports.Any = Any;
 Any.parentTypeName = "";
-Any.typeName = "<>any";
-Any.main = "<>main";
-Any.externToString = ExternCall_1.ExternCall.of("<>toString");
+Any.typeName = "~any";
+Any.main = "~main";
+Any.externToString = ExternCall_1.ExternCall.of("~toString");
 //# sourceMappingURL=Any.js.map

@@ -7,11 +7,11 @@ export class LoadInstanceHandler extends OpCodeHandler{
 
         const typeName = thread.currentInstruction?.value!;
 
-        if (typeName === "<>it"){
+        if (typeName === "~it"){
             const subject = thread.currentPlace!;
             thread.currentMethod.push(subject);
 
-            thread.log?.debug("ld.curr.place");
+            thread.log?.debug(".ld.curr.place");
         } else {
             throw new RuntimeError(`Unable to load instance for unsupported type '${typeName}'`);
         }

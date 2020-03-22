@@ -6,7 +6,7 @@ class RuntimeString extends RuntimeAny_1.RuntimeAny {
     constructor(value) {
         super();
         this.parentTypeName = Any_1.Any.typeName;
-        this.typeName = "<>string";
+        this.typeName = "~string";
         this.value = value;
     }
 }

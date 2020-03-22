@@ -11,6 +11,7 @@ export class GoToHandler extends OpCodeHandler{
         if (typeof instructionNumber === "number"){
             // We need to jump one previous to the desired instruction because after 
             // evaluating this goto we'll move forward (which will move to the desired one).
+            thread.log?.debug(`.br ${instructionNumber}`)
 
             thread.jumpToLine(instructionNumber - 1);
         } else{

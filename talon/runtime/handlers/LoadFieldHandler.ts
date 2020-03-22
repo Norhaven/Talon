@@ -10,7 +10,7 @@ export class LoadFieldHandler extends OpCodeHandler{
 
         const value = field?.value;
 
-        thread.log?.debug(`ld.field\t\t${instance?.typeName}::${fieldName} // ${value}`);
+        thread.log?.debug(`.ld.field\t\t${instance?.typeName}::${fieldName} // ${value}`);
 
         thread.currentMethod.push(value!);
 

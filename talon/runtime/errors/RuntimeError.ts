@@ -1,7 +1,6 @@
-export class RuntimeError{
-    message:string;
+export class RuntimeError extends Error{
 
     constructor(message:string){
-        this.message = message;
+        super(message);
     }
 }

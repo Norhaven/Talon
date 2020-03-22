@@ -5,5 +5,5 @@ class WorldObject {
 }
 exports.WorldObject = WorldObject;
 WorldObject.parentTypeName = Any_1.Any.typeName;
-WorldObject.typeName = "<>worldObject";
+WorldObject.typeName = "~worldObject";
 //# sourceMappingURL=WorldObject.js.map

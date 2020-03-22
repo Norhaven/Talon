@@ -21,6 +21,7 @@ import { Say } from "../../library/Say";
 import { RuntimeSay } from "../library/RuntimeSay";
 import { Method } from "../../common/Method";
 import { RuntimeInteger } from "../library/RuntimeInteger";
+import { NumberType } from "../../library/NumberType";
 
 export class Memory{
     private static typesByName = new Map<string, Type>();
@@ -111,6 +112,7 @@ export class Memory{
         switch(variable.type!.name){
             case StringType.typeName: return new RuntimeString(defaultValue ? <string>defaultValue : "");
             case BooleanType.typeName: return new RuntimeBoolean(defaultValue ? <boolean>defaultValue : false);
+            case NumberType.typeName: return new RuntimeInteger(defaultValue ? <number>defaultValue : 0);
             case List.typeName: return new RuntimeList(defaultValue ? this.instantiateList(<Object[]>defaultValue) : []);
             default:
                 return new RuntimeEmpty();

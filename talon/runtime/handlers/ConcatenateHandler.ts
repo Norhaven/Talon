@@ -8,6 +8,8 @@ export class ConcatenateHandler extends OpCodeHandler{
         const last = <RuntimeString>thread.currentMethod.pop();
         const first = <RuntimeString>thread.currentMethod.pop();
 
+        thread.log?.debug(`.concat '${first.value}' '${last.value}'`);
+
         const concatenated = Memory.allocateString(first.value + " " + last.value);
 
         thread.currentMethod.push(concatenated);
