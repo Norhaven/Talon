@@ -182,8 +182,12 @@ export class HandleCommandHandler extends OpCodeHandler{
     }
 
     private describe(thread:Thread, target:RuntimeWorldObject, isShallowDescription:boolean){
-        
-        thread.currentMethod.push(target);
+                
+        if (!isShallowDescription){
+            const contents = target.getFieldAsList(WorldObject.contents);
+
+            this.describeContents(thread, contents);
+        }
 
         const describe = target.methods.get(WorldObject.describe)!;
 
@@ -192,9 +196,17 @@ export class HandleCommandHandler extends OpCodeHandler{
         thread.currentMethod.push(new RuntimeDelegate(describe));
     }
 
-    private describeContents(executionPoint:Thread, target:RuntimeList){
+    private observe(thread:Thread, target:RuntimeWorldObject){
+        const observe = target.methods.get(WorldObject.observe)!;
+
+        observe.actualParameters.unshift(new Variable("~this", new Type(target?.typeName!, target?.parentTypeName!), target));
+
+        thread.currentMethod.push(new RuntimeDelegate(observe));
+    }
+
+    private describeContents(thread:Thread, target:RuntimeList){
         for(const item of target.items){
-            this.describe(executionPoint, <RuntimeWorldObject>item, true);
+            this.observe(thread, <RuntimeWorldObject>item);
         }
     }
 

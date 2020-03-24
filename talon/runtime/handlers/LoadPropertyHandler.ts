@@ -19,34 +19,38 @@ export class LoadPropertyHandler extends OpCodeHandler{
             this.fieldName = <string>thread.currentInstruction?.value!;
         }
 
-        const field = instance?.fields.get(this.fieldName);
+        try{
+            const field = instance?.fields.get(this.fieldName);
 
-        const value = field?.value!;
+            const value = field?.value!;
 
-        const getField = instance?.methods.get(`~get_${this.fieldName}`);
+            const getField = instance?.methods.get(`~get_${this.fieldName}`);
 
-        thread.log?.debug(`.ld.prop\t\t${instance?.typeName}::${this.fieldName} {get=${getField != undefined}} // ${value}`);
+            thread.log?.debug(`.ld.prop\t\t${instance?.typeName}::${this.fieldName} {get=${getField != undefined}} // ${value}`);
 
-        if (getField){
-            thread.currentMethod.push(value);
+            if (getField){
+                thread.currentMethod.push(value);
 
-            const loadThis = new LoadThisHandler();
-            const result = loadThis.handle(thread);
+                const loadThis = new LoadThisHandler();
+                const result = loadThis.handle(thread);
 
-            if (result != EvaluationResult.Continue){
-                return result;
+                if (result != EvaluationResult.Continue){
+                    return result;
+                }
+                
+                const handler = new InstanceCallHandler(getField.name);
+                handler.handle(thread);
+
+                //getField.actualParameters.push(new Variable("~value", field?.type!, value));
+
+                //thread.activateMethod(getField);
+            } else {
+                thread.currentMethod.push(value);
             }
-            
-            const handler = new InstanceCallHandler(getField.name);
-            handler.handle(thread);
 
-            //getField.actualParameters.push(new Variable("~value", field?.type!, value));
-
-            //thread.activateMethod(getField);
-        } else {
-            thread.currentMethod.push(value);
+            return super.handle(thread);
+        } finally{
+            this.fieldName = undefined;
         }
-
-        return super.handle(thread);
     }
 }

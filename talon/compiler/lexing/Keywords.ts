@@ -45,6 +45,9 @@ export class Keywords{
     static readonly set = "set";
     static readonly to = "to";
     static readonly decoration = "decoration";
+    static readonly visible = "visible";
+    static readonly not = "not";
+    static readonly observed = "observed";
 
     static getAll():Set<string>{
         type KeywordProperties = keyof Keywords;

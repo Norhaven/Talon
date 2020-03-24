@@ -58,6 +58,10 @@ export class ExpressionVisitor extends Visitor{
             const text = context.expectString();
 
             return new SayExpression(text.value);
+        } else if (context.isTypeOf(TokenType.String)){
+            const value = context.expectString();
+
+            return new LiteralExpression(StringType.typeName, value.value);
         } else {
             throw new CompilationError("Unable to parse expression");
         }

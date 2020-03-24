@@ -7,7 +7,7 @@ export class BranchRelativeIfFalseHandler extends OpCodeHandler{
         const relativeAmount = <number>thread.currentInstruction?.value;
         const value = <RuntimeBoolean>thread.currentMethod.pop();
 
-        thread.log?.debug(`br.rel.false ${relativeAmount}`)
+        thread.log?.debug(`br.rel.false ${relativeAmount} // ${value}`)
 
         if (!value.value){            
             thread.jumpToLine(thread.currentMethod.stackFrame.currentInstruction + relativeAmount);

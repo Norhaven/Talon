@@ -25,7 +25,31 @@ export class FieldDeclarationVisitor extends Visitor{
         if (context.is(Keywords.is)){
             context.expect(Keywords.is);
 
-            if (context.is(Keywords.described)){
+            if (context.isAnyOf(Keywords.not, Keywords.visible)){
+                let isVisible = true;
+
+                if (context.is(Keywords.not)){
+                    context.expect(Keywords.not);
+                    isVisible = false;
+                }
+
+                context.expect(Keywords.visible);
+
+                field.name = WorldObject.visible;
+                field.typeName = BooleanType.typeName;
+                field.initialValue = isVisible;
+
+            } else if (context.is(Keywords.observed)){
+                context.expect(Keywords.observed);
+                context.expect(Keywords.as);
+
+                const observation = context.expectString();
+
+                field.name = WorldObject.observation;
+                field.typeName = StringType.typeName;
+                field.initialValue = observation.value;
+                
+            } else if (context.is(Keywords.described)){
                 context.expect(Keywords.described);
                 context.expect(Keywords.as);
 

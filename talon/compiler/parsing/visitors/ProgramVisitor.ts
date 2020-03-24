@@ -34,7 +34,7 @@ export class ProgramVisitor extends Visitor{
 
                 expressions.push(expression);
             } else{
-                throw new CompilationError(`Found unexpected token '${context.currentToken.value}'`);
+                throw new CompilationError(`Found unexpected token '${context.currentToken}'`);
             }            
         }
 

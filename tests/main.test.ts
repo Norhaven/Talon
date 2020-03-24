@@ -34,7 +34,7 @@ describe('run', () => {
 
             "a test is a kind of place. " +
             "it is where the player starts. " +
-            "it is described as \"It looks like a room.\" and if it contains 1 Coin then say \"There's also a coin here.\" else say \"There is just dust.\"." +
+            "it is described as \"It looks like a room.\" and if it contains 1 Coin then \"There's also a coin here.\" else \"There is just dust.\"." +
             "it contains 1 Coin." + 
             "it can reach the inn by going \"north\". " +
             "it has a \"value\" that is 1. " +
@@ -53,6 +53,7 @@ describe('run', () => {
             "and then stop. " +
 
             "a fireplace is a kind of decoration. " +
+            "it is observed as \"There is a small fireplace in the corner.\". " +
             "it is described as \"The fireplace is burning brightly. It's full of fire.\". " +
 
             "say \"This is the middle.\"." +

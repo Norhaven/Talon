@@ -106,6 +106,9 @@ export class TalonTransformer{
                             } else if (field.typeName == NumberType.typeName){
                                 const value = Number(fieldExpression.initialValue);
                                 field.defaultValue = value;
+                            } else if (field.typeName == BooleanType.typeName){
+                                const value = Boolean(fieldExpression.initialValue);
+                                field.defaultValue = value;
                             } else {
                                 field.defaultValue = fieldExpression.initialValue;
                             }
@@ -145,12 +148,59 @@ export class TalonTransformer{
                         describe.name = WorldObject.describe;
                         describe.body.push(
                             Instruction.loadThis(),
+                            Instruction.loadProperty(WorldObject.visible),
+                            Instruction.branchRelativeIfFalse(3),
+                            Instruction.loadThis(),
                             Instruction.loadProperty(WorldObject.description),
                             Instruction.print(),
                             Instruction.return()
                         );
 
                         type?.methods.push(describe);
+
+                        const observe = new Method();
+                        observe.name = WorldObject.observe;
+                        observe.body.push(
+                            Instruction.loadThis(),
+                            Instruction.loadProperty(WorldObject.visible),
+                            Instruction.branchRelativeIfFalse(3),
+                            Instruction.loadThis(),
+                            Instruction.loadProperty(WorldObject.observation),
+                            Instruction.print(),
+                            Instruction.return()
+                        );
+
+                        type?.methods.push(observe);
+
+                        if (!type?.fields.find(x => x.name == WorldObject.visible)){
+                            const visible = new Field();
+
+                            visible.name = WorldObject.visible;
+                            visible.typeName = BooleanType.typeName;
+                            visible.defaultValue = true;
+
+                            type?.fields.push(visible);
+                        }
+
+                        if (!type?.fields.find(x => x.name == WorldObject.contents)){
+                            const contents = new Field();
+
+                            contents.name = WorldObject.contents;
+                            contents.typeName = List.typeName;
+                            contents.defaultValue = [];
+
+                            type?.fields.push(contents);
+                        }
+
+                        if (!type?.fields.find(x => x.name == WorldObject.observation)){
+                            const observation = new Field();
+
+                            observation.name = WorldObject.observation;
+                            observation.typeName = StringType.typeName;
+                            observation.defaultValue = "";
+
+                            type?.fields.push(observation);
+                        }
 
                         let duplicateEventCount = 0;
 

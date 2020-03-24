@@ -27,7 +27,7 @@ export class Token{
     static get forDecoration():Token{
         return Token.getTokenWithTypeOf(Decoration.typeName, TokenType.Keyword);
     }
-    
+
     static get forWorldObject():Token{
         return Token.getTokenWithTypeOf(WorldObject.typeName, TokenType.Keyword);
     }
@@ -51,5 +51,9 @@ export class Token{
     constructor(public readonly line:number,
                 public readonly column:number,
                 public readonly value:string){
+    }
+
+    toString(){
+        return `${this.line}|${this.column}: Found token '${this.value}' of type '${this.type}'`;
     }
 }

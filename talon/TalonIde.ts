@@ -86,6 +86,7 @@ export class TalonIde{
                 
                 "understand \"look\" as describing. \n" +
                 "understand \"north\" as directions. \n" +
+                "understand \"south\" as directions.\n" +
                 "understand \"go\" as moving. \n" +
                 "understand \"take\" as taking. \n" +
                 "understand \"inv\" as inventory. \n" +
@@ -93,21 +94,24 @@ export class TalonIde{
 
                 "an Inn is a kind of place. \n" +
                 "it is where the player starts. \n" +
-                "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. An open door to the north leads outside.\" and if it contains 1 Coin then say \"There's also a coin here.\" else say \"There is just dust.\".\n" +
+                "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. The bartender is behind the bar. An open door to the north leads outside.\" and if it contains 1 Coin then say \"There's also a coin here.\" else say \"There is just dust.\".\n" +
                 "it contains 1 Coin.\n" + 
-                "it can reach the inn by going \"north\". \n" +
+                "it can reach the Walkway by going \"north\". \n" +
                 "it has a \"value\" that is 1. \n" +
                 "when the player exits: \n" +
-                "say \"Goodbye!\"; \n" +
+                "say \"The bartender waves goodbye.\"; \n" +
                 "set \"value\" to 2; \n" +
                 "and then stop. \n\n" +
                 
-                "a inn is a kind of place. \n" +
-                "it is described as \"It's an inn.\". \n" +
-                "it can reach the test by going \"north\". \n" +
+                "a Fireplace is a kind of decoration. \n" +
+                "it is described as \"The fireplace crackles. It's full of fire.\". \n\n" +
+
+                "a Walkway is a kind of place. \n" +
+                "it is described as \"The walkway in front of the inn is empty, just a cobblestone entrance. The inn is to the south.\". \n" +
+                "it can reach the Inn by going \"south\". \n" +
                 "when the player enters:\n" +
-                "say \"You walk into the inn.\"; \n" +
-                "say \"It looks deserted.\"; \n" +
+                "say \"You walk onto the cobblestones. They're nice, if you like that sort of thing.\"; \n" +
+                "say \"There's nobody around. The wind whistles a little bit.\"; \n" +
                 "and then stop. \n\n" +
 
                 "say \"This is the middle.\".\n\n" +
