@@ -7,14 +7,16 @@ export class PaneOutput implements IOutput, ILogOutput{
     }
 
     clear(){
-        this.pane.innerHTML = "";
+        this.pane.innerText = "";
     }
 
     debug(line: string): void {
-        this.pane.innerHTML += line + "</br>";
+        this.pane.innerText += line + "\n";
+        this.pane.scrollTo(0, this.pane.scrollHeight);
     }
 
     write(line: string): void {
-        this.pane.innerHTML += line + "</br>";
+        this.pane.innerText += line + "\n";
+        this.pane.scrollTo(0, this.pane.scrollHeight);
     }
 }

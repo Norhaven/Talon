@@ -54,67 +54,55 @@ export class HandleCommandHandler extends OpCodeHandler{
         const meaningField = understanding.fields.find(x => x.name == Understanding.meaning);
 
         const meaning = this.determineMeaningFor(<string>meaningField?.defaultValue!);
-        const actualTargetName = this.inferTargetFrom(thread, targetName, meaning);
+        const actualTarget = this.inferTargetFrom(thread, targetName, meaning);
         
-        if (!actualTargetName){
+        if (!actualTarget){
             this.output.write("I don't know what you're referring to.");
             return super.handle(thread);
         }
 
-        const target = thread.knownTypes.get(actualTargetName);
-
-        if (!target){
-            throw new RuntimeError("Unable to locate type");
-        }
-
-        const instance = this.locateTargetInstance(thread, target, meaning);
-
-        if (!(instance instanceof RuntimeWorldObject)){
-            throw new RuntimeError("Unable to locate world type");
-        }
-
         switch(meaning){
             case Meaning.Describing:{
-                this.describe(thread, instance, false);
+                this.describe(thread, actualTarget, false);
                 break;
             }
             case Meaning.Moving: {    
-                const nextPlace = <RuntimePlace>instance;
+                const nextPlace = <RuntimePlace>actualTarget;
                 const currentPlace = thread.currentPlace;
 
                 thread.currentPlace = nextPlace;
                 
-                this.describe(thread, instance, false);
+                this.describe(thread, actualTarget, false);
                 this.raiseEvent(thread, nextPlace, EventType.PlayerEntersPlace);
                 this.raiseEvent(thread, currentPlace!, EventType.PlayerExitsPlace);
                 break;
             }
             case Meaning.Taking: {
-                if (!(instance instanceof RuntimeItem)){
+                if (!(actualTarget instanceof RuntimeItem)){
                     this.output.write("I can't take that.");
                     return super.handle(thread);
                 }
 
                 const list = thread.currentPlace!.getContentsField();
-                list.items = list.items.filter(x => x.typeName != target.name);
+                list.items = list.items.filter(x => x.typeName != targetName);
                 
                 const inventory = thread.currentPlayer!.getContentsField();
-                inventory.items.push(instance);
+                inventory.items.push(actualTarget);
 
                 this.describe(thread, thread.currentPlace!, false);
                 break;
             }
             case Meaning.Inventory:{
-                const inventory = (<RuntimePlayer>instance).getContentsField();
+                const inventory = (<RuntimePlayer>actualTarget).getContentsField();
                 this.describeContents(thread, inventory);
                 break;
             }
             case Meaning.Dropping:{
                 const list = thread.currentPlayer!.getContentsField();
-                list.items = list.items.filter(x => x.typeName != target.name);
+                list.items = list.items.filter(x => x.typeName != targetName);
                 
                 const contents = thread.currentPlace!.getContentsField();
-                contents.items.push(instance);
+                contents.items.push(actualTarget);
 
                 this.describe(thread, thread.currentPlace!, false);
                 break;
@@ -139,31 +127,15 @@ export class HandleCommandHandler extends OpCodeHandler{
         }
     }
 
-    private locateTargetInstance(thread:Thread, target:Type, meaning:Meaning):RuntimeAny|undefined{
-        if (meaning === Meaning.Taking){
-            const list = <RuntimeList>thread.currentPlace!.fields.get(WorldObject.contents)?.value;
-            const matchingItems = list.items.filter(x => x.typeName === target.name);
-            
-            if (matchingItems.length == 0){
+    private inferTargetFrom(thread:Thread, targetName:string, meaning:Meaning):RuntimeWorldObject|undefined{
+        const lookupInstance = (name:string) => {
+            try{     
+                return <RuntimeWorldObject>Memory.findInstanceByName(name);
+            } catch(ex){
                 return undefined;
             }
+        };
 
-            return matchingItems[0];
-        } else if (meaning === Meaning.Dropping){
-            const list = <RuntimeList>thread.currentPlayer!.fields.get(WorldObject.contents)?.value;            
-            const matchingItems = list.items.filter(x => x.typeName === target.name);
-            
-            if (matchingItems.length == 0){
-                return undefined;
-            }
-
-            return matchingItems[0];
-        } else {        
-            return Memory.findInstanceByName(target.name);
-        }
-    }
-
-    private inferTargetFrom(thread:Thread, targetName:string, meaning:Meaning){
         if (meaning === Meaning.Moving){
             const placeName = <RuntimeString>thread.currentPlace?.fields.get(`~${targetName}`)?.value;
 
@@ -171,14 +143,44 @@ export class HandleCommandHandler extends OpCodeHandler{
                 return undefined;
             }
 
-            return placeName.value;
-        }
+            return lookupInstance(placeName.value);            
+        } else if (meaning === Meaning.Inventory){
+            return lookupInstance(Player.typeName);
+        } else if (meaning === Meaning.Describing){
+            if (!targetName){
+                return thread.currentPlace;
+            }
 
-        if (meaning === Meaning.Inventory){
-            return Player.typeName;
-        }
+            const placeContents = thread.currentPlace?.getContentsField()!;
 
-        return targetName;
+            const itemOrDecoration = placeContents.items.find(x => x.typeName.toLowerCase() == targetName.toLowerCase());
+
+            if (itemOrDecoration instanceof RuntimeWorldObject){
+                return itemOrDecoration;
+            }
+
+            return lookupInstance(thread.currentPlace?.typeName!);            
+        } else if (meaning === Meaning.Taking){
+            const list = thread.currentPlace!.getContentsField();
+            const matchingItems = list.items.filter(x => x.typeName === targetName);
+            
+            if (matchingItems.length == 0){
+                return undefined;
+            }
+
+            return <RuntimeWorldObject>matchingItems[0];
+        } else if (meaning === Meaning.Dropping){
+            const list = thread.currentPlayer!.getContentsField();
+            const matchingItems = list.items.filter(x => x.typeName === targetName);
+            
+            if (matchingItems.length == 0){
+                return undefined;
+            }
+
+            return <RuntimeWorldObject>matchingItems[0];
+        } else {
+            return undefined;
+        }
     }
 
     private describe(thread:Thread, target:RuntimeWorldObject, isShallowDescription:boolean){

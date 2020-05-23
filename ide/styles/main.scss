@@ -20,6 +20,7 @@
 .code-pane{
     @extend %pane;
     cursor: text;
+    white-space: pre;
 }
 
 #game-pane{

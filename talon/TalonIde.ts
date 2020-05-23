@@ -94,8 +94,8 @@ export class TalonIde{
 
                 "an Inn is a kind of place. \n" +
                 "it is where the player starts. \n" +
-                "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. The bartender is behind the bar. An open door to the north leads outside.\" and if it contains 1 Coin then say \"There's also a coin here.\" else say \"There is just dust.\".\n" +
-                "it contains 1 Coin.\n" + 
+                "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. The bartender is behind the bar. An open door to the north leads outside.\" and if it contains 1 Coin then \"There's also a coin here.\" else \"There is just dust.\".\n" +
+                "it contains 1 Coin, 1 Fireplace.\n" + 
                 "it can reach the Walkway by going \"north\". \n" +
                 "it has a \"value\" that is 1. \n" +
                 "when the player exits: \n" +

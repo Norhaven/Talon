@@ -11,6 +11,7 @@ import { SetVariableExpression } from "../expressions/SetVariableExpression";
 import { LiteralExpression } from "../expressions/LiteralExpression";
 import { NumberType } from "../../../library/NumberType";
 import { StringType } from "../../../library/StringType";
+import { ListExpression } from "../expressions/ListExpression";
 
 export class ExpressionVisitor extends Visitor{
     visit(context: ParseContext): Expression {
@@ -40,16 +41,8 @@ export class ExpressionVisitor extends Visitor{
 
             context.expect(Keywords.to);
 
-            let value:Object;
-
-            if (context.isTypeOf(TokenType.String)){
-                value = new LiteralExpression(StringType.typeName, context.expectString().value);
-            } else if (context.isTypeOf(TokenType.Number)){
-                value = new LiteralExpression(NumberType.typeName, context.expectNumber().value);
-            } else {
-                // TODO: Support dereferencing arbitrary instances.
-                throw new CompilationError("Current unable to support assigning from derefenced instances, planned for a future release");
-            }
+            const visitor = new ExpressionVisitor();
+            const value = visitor.visit(context);
 
             return new SetVariableExpression(undefined, variableName, value);
         } else if (context.is(Keywords.say)){
@@ -62,6 +55,20 @@ export class ExpressionVisitor extends Visitor{
             const value = context.expectString();
 
             return new LiteralExpression(StringType.typeName, value.value);
+        } else if (context.isTypeOf(TokenType.Number)){
+            const value = context.expectNumber();
+
+            return new LiteralExpression(NumberType.typeName, value.value);
+        } else if (context.isTypeOf(TokenType.ListSeparator)){
+            const items:Expression[] = [];
+
+            while(context.isTypeOf(TokenType.ListSeparator)){
+                context.consumeCurrentToken();
+                const item = this.visit(context);
+                items.push(item);
+            }
+
+            return new ListExpression(items);
         } else {
             throw new CompilationError("Unable to parse expression");
         }

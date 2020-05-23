@@ -48,7 +48,7 @@ export class FieldDeclarationVisitor extends Visitor{
                 field.name = WorldObject.observation;
                 field.typeName = StringType.typeName;
                 field.initialValue = observation.value;
-                
+
             } else if (context.is(Keywords.described)){
                 context.expect(Keywords.described);
                 context.expect(Keywords.as);
@@ -114,14 +114,24 @@ export class FieldDeclarationVisitor extends Visitor{
             
             context.expect(Keywords.contains);
 
-            const count = context.expectNumber();
-            const name = context.expectIdentifier();
+            const expectPair = () => {
+                const count = context.expectNumber();
+                const name = context.expectIdentifier();
 
-            // TODO: Support multiple content entries.
+                return [Number(count.value), name.value];
+            };
+
+            const items = [expectPair()];
+
+            while (context.isTypeOf(TokenType.ListSeparator)){
+                context.consumeCurrentToken();
+
+                items.push(expectPair());
+            }
 
             field.name = WorldObject.contents;
             field.typeName = List.typeName;
-            field.initialValue = [[Number(count.value), name.value]]; 
+            field.initialValue = items; 
         } else if (context.is(Keywords.can)){
 
             context.expect(Keywords.can);

@@ -55,6 +55,8 @@ export class TalonLexer{
                 token.type = TokenType.SemiTerminator;
             } else if (token.value == Punctuation.colon){
                 token.type = TokenType.OpenMethodBlock;
+            } else if (token.value == Punctuation.comma){
+                token.type = TokenType.ListSeparator;
             } else if (TalonLexer.allKeywords.has(token.value)){
                 token.type = TokenType.Keyword;
             } else if (token.value.startsWith("\"") && token.value.endsWith("\"")){
@@ -95,7 +97,12 @@ export class TalonLexer{
                 }
             }
 
-            if (currentChar == " " || currentChar == "\n" || currentChar == Punctuation.period || currentChar == Punctuation.colon || currentChar == Punctuation.semicolon){
+            if (currentChar == " " || 
+                currentChar == "\n" || 
+                currentChar == Punctuation.period || 
+                currentChar == Punctuation.colon || 
+                currentChar == Punctuation.semicolon ||
+                currentChar == Punctuation.comma){
                 if (tokenChars.length == 0){
                     tokenChars.push(currentChar);
                 }

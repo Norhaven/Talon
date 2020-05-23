@@ -1,4 +1,4 @@
-export enum TokenType{
+export enum TokenType {
     Unknown,
     Keyword,
     Terminator,
@@ -6,5 +6,6 @@ export enum TokenType{
     String,
     Identifier,
     Number,
-    OpenMethodBlock
+    OpenMethodBlock,
+    ListSeparator
 }
