@@ -29,6 +29,11 @@ export class Memory{
     private static typesByName = new Map<string, Type>();
     private static heap = new Map<string, RuntimeAny[]>();
 
+    static clear(){
+        Memory.typesByName = new Map<string, Type>();
+        Memory.heap = new Map<string, RuntimeAny[]>();
+    }
+
     static findInstanceByName(name:string){
         const instances = Memory.heap.get(name);
 

@@ -12,6 +12,7 @@ import { LiteralExpression } from "../expressions/LiteralExpression";
 import { NumberType } from "../../../library/NumberType";
 import { StringType } from "../../../library/StringType";
 import { ListExpression } from "../expressions/ListExpression";
+import { ComparisonExpressionVisitor } from "./ComparisonExpressionVisitor";
 
 export class ExpressionVisitor extends Visitor{
     visit(context: ParseContext): Expression {
@@ -32,8 +33,8 @@ export class ExpressionVisitor extends Visitor{
 
             let variableName:string;
 
-            if (context.isTypeOf(TokenType.String)){
-                variableName = context.expectString().value;
+            if (context.isTypeOf(TokenType.Identifier)){
+                variableName = context.expectIdentifier().value;
             } else {
                 // TODO: Support dereferencing arbitrary instances.
                 throw new CompilationError("Currently unable to dereference a field, planned for a future release");
@@ -69,8 +70,11 @@ export class ExpressionVisitor extends Visitor{
             }
 
             return new ListExpression(items);
+        } else if (context.isFollowedBy(Keywords.is)){
+            const visitor = new ComparisonExpressionVisitor();
+            return visitor.visit(context);
         } else {
-            throw new CompilationError("Unable to parse expression");
+            throw new CompilationError(`Unable to parse expression at ${context.currentToken}`);
         }
     }
 

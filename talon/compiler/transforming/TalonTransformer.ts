@@ -32,6 +32,8 @@ import { IOutput } from "../../runtime/IOutput";
 import { SetVariableExpression } from "../parsing/expressions/SetVariableExpression";
 import { LiteralExpression } from "../parsing/expressions/LiteralExpression";
 import { Decoration } from "../../library/Decoration";
+import { ComparisonExpression } from "../parsing/expressions/ComparisonExpression";
+import { IdentifierExpression } from "../parsing/expressions/IdentifierExpression";
 
 export class TalonTransformer{
     constructor(private readonly out:IOutput){
@@ -276,8 +278,12 @@ export class TalonTransformer{
         }
     }
 
-    private transformExpression(expression:Expression, mode?:ExpressionTransformationMode){
+    private transformExpression(expression:Expression|null, mode?:ExpressionTransformationMode){
         const instructions:Instruction[] = [];
+
+        if (expression == null){
+            return instructions;
+        }
 
         if (expression instanceof IfExpression){            
             const conditional = this.transformExpression(expression.conditional, mode);
@@ -336,8 +342,23 @@ export class TalonTransformer{
             } else {
                 throw new CompilationError(`Unable to transform unsupported literal expression '${expression}'`);
             }
+        } else if (expression instanceof IdentifierExpression){
+            instructions.push(
+                Instruction.loadThis(),
+                Instruction.loadField(expression.variableName));
+        } else if (expression instanceof ComparisonExpression){
+            const right = this.transformExpression(expression.right!);
+            const left = this.transformExpression(expression.left!);
+
+            instructions.push(
+                ...left,
+                ...right,
+                Instruction.compareEqual()
+            );
+        } else if (expression instanceof ActionsExpression){
+            expression.actions.forEach(x => instructions.push(...this.transformExpression(x, mode)));
         } else {
-            throw new CompilationError("Unable to transform unsupported expression");
+            throw new CompilationError(`Unable to transform unsupported expression: ${expression}`);
         }
 
         return instructions;

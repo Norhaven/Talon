@@ -4,10 +4,14 @@ import { RuntimeString } from "../library/RuntimeString";
 import { RuntimeError } from "../errors/RuntimeError";
 import { RuntimeCommand } from "../library/RuntimeCommand";
 import { Memory } from "../common/Memory";
+import { OpCode } from "../../common/OpCode";
 
 export class ParseCommandHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.ParseCommand;
+
     handle(thread:Thread){
-        thread.log?.debug(`.handle.cmd.parse`);
+
+        this.logInteraction(thread);
         
         const text = thread.currentMethod.pop();
 

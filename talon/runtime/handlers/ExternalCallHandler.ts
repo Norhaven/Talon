@@ -1,22 +1,23 @@
 import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
 import { RuntimeAny } from "../library/RuntimeAny";
+import { OpCode } from "../../common/OpCode";
 
 interface IIndexable{
     [name:string]:(...args:RuntimeAny[])=>RuntimeAny;
 }
 
 export class ExternalCallHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.ExternalCall;
     
     handle(thread:Thread){
 
         const methodName = <string>thread.currentInstruction?.value!;
-
         const instance = thread.currentMethod.pop();
         
         const method = this.locateFunction(instance!, <string>methodName);
 
-        thread.log?.debug(`.call.extern\t${instance?.typeName}::${methodName}(...${method.length})`);
+        this.logInteraction(thread, `${instance?.typeName}::${methodName}(...${method.length})`);
 
         const args:RuntimeAny[] = [];
 

@@ -1,10 +1,13 @@
 import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
 import { EvaluationResult } from "../EvaluationResult";
+import { OpCode } from "../../common/OpCode";
 
 export class ReadInputHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.ReadInput;
+
     handle(thread:Thread){
-        thread.log?.debug(".read.in");
+        this.logInteraction(thread);
         
         return EvaluationResult.SuspendForInput;
     }

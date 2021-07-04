@@ -5,6 +5,10 @@ export class Instruction{
         return new Instruction(OpCode.Assign);
     }
 
+    static compareEqual(){
+        return new Instruction(OpCode.CompareEqual);
+    }
+    
     static invokeDelegate(){
         return new Instruction(OpCode.InvokeDelegate);
     }

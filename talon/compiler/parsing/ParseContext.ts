@@ -14,6 +14,10 @@ export class ParseContext{
         return this.tokens[this.index];
     }
 
+    get nextToken(){
+        return this.tokens[this.index + 1];
+    }
+
     constructor(private readonly tokens:Token[], private readonly out:IOutput){
         this.out.write(`${tokens.length} tokens discovered, parsing...`);
     }
@@ -28,6 +32,10 @@ export class ParseContext{
 
     is(tokenValue:string){
         return this.currentToken?.value == tokenValue;
+    }
+
+    isFollowedBy(tokenValue:string){
+        return this.nextToken?.value == tokenValue;
     }
 
     isTypeOf(type:TokenType){
@@ -75,11 +83,7 @@ export class ParseContext{
     }
 
     expectString(){
-        if (this.currentToken.type != TokenType.String){
-            throw new CompilationError("Expected string");
-        }
-
-        const token = this.consumeCurrentToken();
+        const token = this.expectAndConsume(TokenType.String, "Expected string");
 
         // We need to strip off the double quotes from their string after we consume it.
         
@@ -87,42 +91,34 @@ export class ParseContext{
     }
 
     expectNumber(){
-        if (this.currentToken.type != TokenType.Number){
-            throw new CompilationError("Expected number");
-        }
-
-        return this.consumeCurrentToken();
+        return this.expectAndConsume(TokenType.Number, "Expected number");
     }
 
     expectIdentifier(){
-        if (this.currentToken.type != TokenType.Identifier){
-            throw new CompilationError("Expected identifier");
-        }
-
-        return this.consumeCurrentToken();
+        return this.expectAndConsume(TokenType.Identifier, "Expected identifier");
     }
 
     expectTerminator(){
-        if (this.currentToken.type != TokenType.Terminator){
-            throw new CompilationError("Expected expression terminator");
-        }
-
-        return this.consumeCurrentToken();
+        this.expectAndConsume(TokenType.Terminator, "Expected expression terminator");
     }
 
     expectSemiTerminator(){
-        if (this.currentToken.type != TokenType.SemiTerminator){
-            throw new CompilationError("Expected semi expression terminator");
+        this.expectAndConsume(TokenType.SemiTerminator, "Expected semi expression terminator");
+    }
+
+    expectOpenMethodBlock(){
+        this.expectAndConsume(TokenType.OpenMethodBlock, "Expected open method block");
+    }
+
+    private expectAndConsume(tokenType:TokenType, errorMessage:string){
+        if (this.currentToken.type != tokenType){
+            throw this.createCompilationErrorForCurrentToken(errorMessage);
         }
 
         return this.consumeCurrentToken();
     }
 
-    expectOpenMethodBlock(){
-        if (this.currentToken.type != TokenType.OpenMethodBlock){
-            throw new CompilationError("Expected open method block");
-        }
-
-        return this.consumeCurrentToken();
+    private createCompilationErrorForCurrentToken(message:string):CompilationError{
+        return new CompilationError(`${message}: ${this.currentToken}`);
     }
 }

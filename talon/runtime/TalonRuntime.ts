@@ -42,6 +42,7 @@ import { ConcatenateHandler } from "./handlers/ConcatenateHandler";
 import { AssignVariableHandler } from "./handlers/AssignVariableHandler";
 import { TypeOfHandler } from "./handlers/TypeOfHandler";
 import { InvokeDelegateHandler } from "./handlers/InvokeDelegateHandler";
+import { ComparisonHandler } from "./handlers/ComparisonHandler";
 
 export class TalonRuntime{
 
@@ -75,6 +76,7 @@ export class TalonRuntime{
         this.handlers.set(OpCode.Assign, new AssignVariableHandler());
         this.handlers.set(OpCode.TypeOf, new TypeOfHandler());
         this.handlers.set(OpCode.InvokeDelegate, new InvokeDelegateHandler());
+        this.handlers.set(OpCode.CompareEqual, new ComparisonHandler());
     }
 
     start(){
@@ -110,6 +112,8 @@ export class TalonRuntime{
             this.logOutput?.debug("No types were provided, unable to load runtime!");
             return false;
         }
+
+        Memory.clear();
 
         const loadedTypes = Memory.loadTypes(types);
 

@@ -3,8 +3,11 @@ import { Thread } from "../Thread";
 import { EvaluationResult } from "../EvaluationResult";
 import { RuntimeEmpty } from "../library/RuntimeEmpty";
 import { RuntimeError } from "../errors/RuntimeError";
+import { OpCode } from "../../common/OpCode";
 
 export class ReturnHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.Return;
+
     handle(thread:Thread){
         // TODO: Handle returning top value on stack based on return type of method.
         
@@ -27,10 +30,11 @@ export class ReturnHandler extends OpCodeHandler{
         const returnValue = thread!.returnFromCurrentMethod();
 
         if (!(returnValue instanceof RuntimeEmpty)){
-            thread.log?.debug(`.ret\t\t${returnValue}`);
+            
+            this.logInteraction(thread, returnValue);
             thread?.currentMethod.push(returnValue);
         } else {
-            thread.log?.debug(".ret void");
+            this.logInteraction(thread, 'void');
         }
 
         return EvaluationResult.Continue;

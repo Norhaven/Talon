@@ -1,13 +1,16 @@
+import { OpCode } from "../../common/OpCode";
 import { OpCodeHandler } from "../OpCodeHandler"
 import { Thread } from "../Thread";
 
 export class LoadThisHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.LoadThis;
+
     handle(thread:Thread){
         const instance = thread.currentMethod.method?.actualParameters[0].value!;
 
         thread.currentMethod.push(instance);
 
-        thread.log?.debug(`.ld.this`);
+        this.logInteraction(thread);
 
         return super.handle(thread);
     }

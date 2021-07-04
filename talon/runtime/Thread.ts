@@ -34,6 +34,10 @@ export class Thread{
         this.methods.push(method);
     }
 
+    currentInstructionValueAs<T>(){
+        return <T>this.currentInstruction?.value!;
+    }
+
     activateMethod(method:Method){
         const activation = new MethodActivation(method);
         const current = this.currentMethod;

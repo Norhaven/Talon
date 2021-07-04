@@ -1,4 +1,4 @@
-#ide, .dev-toolbar, #command-pane, #runtime-pane {
+#ide, .dev-toolbar, .dev-footer, #command-pane, #runtime-pane {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -32,6 +32,16 @@
   overflow-x: auto;
   overflow-y: auto;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.dev-footer {
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: reverse;
+      -ms-flex-direction: row-reverse;
+          flex-direction: row-reverse;
+  -webkit-box-pack: end;
+      -ms-flex-pack: end;
+          justify-content: end;
 }
 
 .code-pane {

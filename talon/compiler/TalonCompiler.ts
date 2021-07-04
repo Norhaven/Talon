@@ -25,7 +25,7 @@ export class TalonCompiler{
     }
 
     compile(code:string):Type[]{
-        this.out.write("Starting compilation...");
+        this.out.write("<strong>Starting compilation...</strong>");
 
         try{
             const lexer = new TalonLexer(this.out);
@@ -45,19 +45,19 @@ export class TalonCompiler{
             return types;
         } catch(ex){
             if (ex instanceof CompilationError){
-                this.out.write(`Error: ${ex.message}`);
+                this.out.write(`<em>Error: ${ex.message}</em>`);
             } else {
-                this.out.write(`Unhandled Error: ${ex}`);
+                this.out.write(`<em>Unhandled Error: ${ex}</em>`);
             }
 
             return [];
         } finally{
-            this.out.write("Compilation complete.");
+            this.out.write("<strong>Compilation complete.</strong>");
         }
     }
 
     private createEntryPoint(){
-        const type = new Type("~entryPoint", "~empty");
+        const type = new Type("~game", Any.typeName);
 
         type.attributes.push(new EntryPointAttribute());
 

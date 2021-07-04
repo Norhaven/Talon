@@ -9,6 +9,13 @@
     @extend %horizontal-container;
 }
 
+.dev-footer{
+    @extend %horizontal-container;
+
+    flex-direction: row-reverse;
+    justify-content: end;
+}
+
 #dev-container{
     @extend %vertical-container;
 }

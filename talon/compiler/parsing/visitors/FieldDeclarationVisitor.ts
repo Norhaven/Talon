@@ -93,7 +93,7 @@ export class FieldDeclarationVisitor extends Visitor{
             context.expect(Keywords.has);
             context.expect(Keywords.a);
             
-            const name = context.expectString();
+            const name = context.expectIdentifier();
 
             context.expect(Keywords.that);
             context.expect(Keywords.is);

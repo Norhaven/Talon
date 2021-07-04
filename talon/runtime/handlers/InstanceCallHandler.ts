@@ -7,8 +7,11 @@ import { Variable } from "../library/Variable";
 import { RuntimeAny } from "../library/RuntimeAny";
 import { MethodActivation } from "../MethodActivation";
 import { Type } from "../../common/Type";
+import { OpCode } from "../../common/OpCode";
 
 export class InstanceCallHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.InstanceCall;
+
     constructor(private methodName?:string){
         super();
     }
@@ -25,7 +28,7 @@ export class InstanceCallHandler extends OpCodeHandler{
 
         const method = instance?.methods.get(this.methodName)!;
 
-        thread.log?.debug(`.call.inst\t${instance?.typeName}::${this.methodName}(...${method.parameters.length})`);
+        this.logInteraction(thread, `${instance?.typeName}::${this.methodName}(...${method.parameters.length})`);
         
         const parameterValues:Variable[] = [];
 
@@ -39,7 +42,7 @@ export class InstanceCallHandler extends OpCodeHandler{
         
         // HACK: We shouldn't create our own type, we should inherently know what it is.
 
-        parameterValues.unshift(new Variable("~this", new Type(instance?.typeName!, instance?.parentTypeName!), instance));
+        parameterValues.unshift(Variable.forThis(new Type(instance?.typeName!, instance?.parentTypeName!), instance));
 
         method.actualParameters = parameterValues;
 

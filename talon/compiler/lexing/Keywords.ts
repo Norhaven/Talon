@@ -34,6 +34,7 @@ export class Keywords{
     static readonly by = "by";
     static readonly going = "going";
     static readonly and = "and";
+    static readonly or = "or";
     static readonly then = "then";
     static readonly else = "else";
     static readonly when = "when";
@@ -48,6 +49,7 @@ export class Keywords{
     static readonly visible = "visible";
     static readonly not = "not";
     static readonly observed = "observed";
+    static readonly continue = "continue";
 
     static getAll():Set<string>{
         type KeywordProperties = keyof Keywords;

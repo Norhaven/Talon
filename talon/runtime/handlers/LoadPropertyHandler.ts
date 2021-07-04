@@ -5,8 +5,11 @@ import { Variable } from "../library/Variable";
 import { InstanceCallHandler } from "./InstanceCallHandler";
 import { LoadThisHandler } from "./LoadThisHandler";
 import { EvaluationResult } from "../EvaluationResult";
+import { OpCode } from "../../common/OpCode";
 
 export class LoadPropertyHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.LoadProperty;
+
     constructor(private fieldName?:string){
         super();
     }
@@ -21,12 +24,10 @@ export class LoadPropertyHandler extends OpCodeHandler{
 
         try{
             const field = instance?.fields.get(this.fieldName);
-
             const value = field?.value!;
-
             const getField = instance?.methods.get(`~get_${this.fieldName}`);
 
-            thread.log?.debug(`.ld.prop\t\t${instance?.typeName}::${this.fieldName} {get=${getField != undefined}} // ${value}`);
+            this.logInteraction(thread, `${instance?.typeName}::${this.fieldName}`, `{get=${getField != undefined}}`, '//', value);
 
             if (getField){
                 thread.currentMethod.push(value);

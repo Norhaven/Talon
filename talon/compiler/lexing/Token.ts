@@ -54,6 +54,6 @@ export class Token{
     }
 
     toString(){
-        return `${this.line}|${this.column}: Found token '${this.value}' of type '${this.type}'`;
+        return `${this.line}, ${this.column}: Found token '${this.value}' of type '${this.type}'`;
     }
 }

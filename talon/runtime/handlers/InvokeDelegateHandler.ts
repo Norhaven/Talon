@@ -2,11 +2,14 @@ import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
 import { RuntimeDelegate } from "../library/RuntimeDelegate";
 import { RuntimeError } from "../errors/RuntimeError";
+import { OpCode } from "../../common/OpCode";
 
 export class InvokeDelegateHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.InvokeDelegate;
+
     handle(thread:Thread){
 
-        thread.log?.debug(".call.delegate");
+        this.logInteraction(thread);
         
         const instance = thread.currentMethod.pop()!;
 

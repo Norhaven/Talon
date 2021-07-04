@@ -1,11 +1,11 @@
 export enum TokenType {
-    Unknown,
-    Keyword,
-    Terminator,
-    SemiTerminator,
-    String,
-    Identifier,
-    Number,
-    OpenMethodBlock,
-    ListSeparator
+    Unknown = 'Unknown',
+    Keyword = 'Keyword',
+    Terminator = 'Terminator',
+    SemiTerminator = 'SemiTerminator',
+    String = 'String',
+    Identifier = 'Identifier',
+    Number = 'Number',
+    OpenMethodBlock = 'OpenMethodBlock',
+    ListSeparator = 'ListSeparator'
 }

@@ -1,8 +1,11 @@
 import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
 import { MethodActivation } from "../MethodActivation";
+import { OpCode } from "../../common/OpCode";
 
 export class StaticCallHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.StaticCall;
+
     handle(thread:Thread){
         const callText = <string>thread.currentInstruction?.value!;
 
@@ -14,7 +17,7 @@ export class StaticCallHandler extends OpCodeHandler{
         const type = thread.knownTypes.get(typeName)!;
         const method = type?.methods.find(x => x.name === methodName)!;       
         
-        thread.log?.debug(`.call.static\t${typeName}::${methodName}()`);
+        this.logInteraction(thread, `${typeName}::${methodName}()`);
 
         thread.activateMethod(method);
 

@@ -4,6 +4,8 @@ import { PaneOutput } from "./PaneOutput";
 
 import { TalonRuntime } from "./runtime/TalonRuntime";
 import { Type } from "./common/Type";
+import { AnalysisCoordinator } from "./ide/AnalysisCoordinator";
+import { CodePaneAnalyzer } from "./ide/analyzers/CodePaneAnalyzer";
 
 export class TalonIde{
     private readonly codePane:HTMLDivElement;
@@ -15,10 +17,14 @@ export class TalonIde{
     private readonly startNewGameButton:HTMLButtonElement;
     private readonly userCommandText:HTMLInputElement;
     private readonly sendUserCommandButton:HTMLButtonElement;
+    private readonly caretPosition:HTMLDivElement;
 
     private readonly compilationOutputPane:PaneOutput;
     private readonly runtimeOutputPane:PaneOutput;
     private readonly runtimeLogOutputPane:PaneOutput;
+
+    private readonly codePaneAnalyzer:CodePaneAnalyzer;
+    private readonly analysisCoordinator:AnalysisCoordinator;
 
     private readonly compiler:TalonCompiler;
     private readonly runtime:TalonRuntime;
@@ -40,13 +46,14 @@ export class TalonIde{
         this.startNewGameButton = TalonIde.getById<HTMLButtonElement>("start-new-game")!;
         this.userCommandText = TalonIde.getById<HTMLInputElement>("user-command-text")!;
         this.sendUserCommandButton = TalonIde.getById<HTMLButtonElement>("send-user-command");
+        this.caretPosition = TalonIde.getById<HTMLDivElement>("caret-position");
         
         this.example1Button.addEventListener('click', e => this.loadExample());
         this.compileButton.addEventListener('click', e => this.compile());
         this.startNewGameButton.addEventListener('click', e => this.startNewGame());
         this.sendUserCommandButton.addEventListener('click', e => this.sendUserCommand());
         this.userCommandText.addEventListener('keyup', e => {
-            if (e.keyCode == 13) { // enter key
+            if (e.key === "Enter") { 
                 this.sendUserCommand();
             }
         });
@@ -55,6 +62,9 @@ export class TalonIde{
         this.runtimeOutputPane = new PaneOutput(this.gamePane);
         this.runtimeLogOutputPane = new PaneOutput(this.gameLogOutput);
 
+        this.codePaneAnalyzer = new CodePaneAnalyzer(this.codePane);
+        this.analysisCoordinator = new AnalysisCoordinator(this.codePaneAnalyzer, this.caretPosition);
+
         this.compiler = new TalonCompiler(this.compilationOutputPane);
         this.runtime = new TalonRuntime(this.runtimeOutputPane, this.runtimeLogOutputPane);
     }
@@ -62,6 +72,8 @@ export class TalonIde{
     private sendUserCommand(){
         const command = this.userCommandText.value;
         this.runtime.sendCommand(command);
+
+        this.userCommandText.value = "";
     }
 
     private compile(){
@@ -94,13 +106,13 @@ export class TalonIde{
 
                 "an Inn is a kind of place. \n" +
                 "it is where the player starts. \n" +
-                "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. The bartender is behind the bar. An open door to the north leads outside.\" and if it contains 1 Coin then \"There's also a coin here.\" else \"There is just dust.\".\n" +
+                "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. The bartender is behind the bar. An open door to the north leads outside.\" and if it contains 1 Coin then \"There's also a coin here.\"; or else \"There is just dust.\"; and then continue.\n" +
                 "it contains 1 Coin, 1 Fireplace.\n" + 
                 "it can reach the Walkway by going \"north\". \n" +
-                "it has a \"value\" that is 1. \n" +
+                "it has a value that is 1. \n" +
                 "when the player exits: \n" +
-                "say \"The bartender waves goodbye.\"; \n" +
-                "set \"value\" to 2; \n" +
+                "if value is 1 then say \"The bartender waves goodbye.\"; or else say \"The bartender cleans the bar.\"; and then continue;\n" +
+                "set value to 2; \n" +
                 "and then stop. \n\n" +
                 
                 "a Fireplace is a kind of decoration. \n" +

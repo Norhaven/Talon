@@ -23,8 +23,11 @@ import { EventType } from "../../common/EventType";
 import { RuntimeDelegate } from "../library/RuntimeDelegate";
 import { Variable } from "../library/Variable";
 import { RuntimeItem } from "../library/RuntimeItem";
+import { OpCode } from "../../common/OpCode";
 
 export class HandleCommandHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.HandleCommand;
+
     constructor(private readonly output:IOutput){
         super();
     }
@@ -40,7 +43,7 @@ export class HandleCommandHandler extends OpCodeHandler{
         const action = command.action!.value;
         const targetName = command.targetName!.value;
 
-        thread.log?.debug(`.handle.cmd '${action} ${targetName}'`);
+        this.logInteraction(thread, `'${action} ${targetName}'`);
 
         const understandingsByAction = new Map<Object, Type>(thread.knownUnderstandings.map(x => [x.fields.find(field => field.name == Understanding.action)?.defaultValue!, x]));
 
@@ -84,7 +87,7 @@ export class HandleCommandHandler extends OpCodeHandler{
                 }
 
                 const list = thread.currentPlace!.getContentsField();
-                list.items = list.items.filter(x => x.typeName != targetName);
+                list.items = list.items.filter(x => x.typeName.toLowerCase() !== targetName.toLowerCase());
                 
                 const inventory = thread.currentPlayer!.getContentsField();
                 inventory.items.push(actualTarget);
@@ -99,7 +102,7 @@ export class HandleCommandHandler extends OpCodeHandler{
             }
             case Meaning.Dropping:{
                 const list = thread.currentPlayer!.getContentsField();
-                list.items = list.items.filter(x => x.typeName != targetName);
+                list.items = list.items.filter(x => x.typeName.toLowerCase() !== targetName.toLowerCase());
                 
                 const contents = thread.currentPlace!.getContentsField();
                 contents.items.push(actualTarget);
@@ -119,7 +122,7 @@ export class HandleCommandHandler extends OpCodeHandler{
 
         for(const event of events){
             const method = location.methods.get(event.name)!;
-            method.actualParameters = [new Variable("~this", new Type(location?.typeName!, location?.parentTypeName!), location)];
+            method.actualParameters = [Variable.forThis(new Type(location?.typeName!, location?.parentTypeName!), location)];
 
             const delegate = new RuntimeDelegate(method);
 
@@ -153,7 +156,7 @@ export class HandleCommandHandler extends OpCodeHandler{
 
             const placeContents = thread.currentPlace?.getContentsField()!;
 
-            const itemOrDecoration = placeContents.items.find(x => x.typeName.toLowerCase() == targetName.toLowerCase());
+            const itemOrDecoration = placeContents.items.find(x => x.typeName.toLowerCase() === targetName.toLowerCase());
 
             if (itemOrDecoration instanceof RuntimeWorldObject){
                 return itemOrDecoration;
@@ -162,7 +165,7 @@ export class HandleCommandHandler extends OpCodeHandler{
             return lookupInstance(thread.currentPlace?.typeName!);            
         } else if (meaning === Meaning.Taking){
             const list = thread.currentPlace!.getContentsField();
-            const matchingItems = list.items.filter(x => x.typeName === targetName);
+            const matchingItems = list.items.filter(x => x.typeName.toLowerCase() === targetName.toLowerCase());
             
             if (matchingItems.length == 0){
                 return undefined;
@@ -171,7 +174,7 @@ export class HandleCommandHandler extends OpCodeHandler{
             return <RuntimeWorldObject>matchingItems[0];
         } else if (meaning === Meaning.Dropping){
             const list = thread.currentPlayer!.getContentsField();
-            const matchingItems = list.items.filter(x => x.typeName === targetName);
+            const matchingItems = list.items.filter(x => x.typeName.toLowerCase() === targetName.toLowerCase());
             
             if (matchingItems.length == 0){
                 return undefined;
@@ -193,7 +196,7 @@ export class HandleCommandHandler extends OpCodeHandler{
 
         const describe = target.methods.get(WorldObject.describe)!;
 
-        describe.actualParameters.unshift(new Variable("~this", new Type(target?.typeName!, target?.parentTypeName!), target));
+        describe.actualParameters.unshift(Variable.forThis(new Type(target?.typeName!, target?.parentTypeName!), target));
 
         thread.currentMethod.push(new RuntimeDelegate(describe));
     }
@@ -201,7 +204,7 @@ export class HandleCommandHandler extends OpCodeHandler{
     private observe(thread:Thread, target:RuntimeWorldObject){
         const observe = target.methods.get(WorldObject.observe)!;
 
-        observe.actualParameters.unshift(new Variable("~this", new Type(target?.typeName!, target?.parentTypeName!), target));
+        observe.actualParameters.unshift(Variable.forThis(new Type(target?.typeName!, target?.parentTypeName!), target));
 
         thread.currentMethod.push(new RuntimeDelegate(observe));
     }

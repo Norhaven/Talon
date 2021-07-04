@@ -1,9 +1,14 @@
 import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
 import { EvaluationResult } from "../EvaluationResult";
+import { OpCode } from "../../common/OpCode";
 
 export class NoOpHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.NoOp;
+
     handle(thread:Thread){
-        return EvaluationResult.Continue;
+        this.logInteraction(thread);
+
+        return super.handle(thread);
     }
 }

@@ -3,10 +3,13 @@ import { Thread } from "../Thread";
 import { RuntimeString } from "../library/RuntimeString";
 import { RuntimeError } from "../errors/RuntimeError";
 import { RuntimeInteger } from "../library/RuntimeInteger";
+import { OpCode } from "../../common/OpCode";
 
 export class AssignVariableHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.Assign;
+
     handle(thread:Thread){
-        thread.log?.debug(".st.var");
+        this.logInteraction(thread);
 
         const instance = thread.currentMethod.pop();
         const value = thread.currentMethod.pop();

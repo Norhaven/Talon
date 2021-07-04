@@ -1,11 +1,15 @@
+import { OpCode } from "../../common/OpCode";
+import { EvaluationResult } from "../EvaluationResult";
 import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
 
 export class BranchRelativeHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.BranchRelative;
+
     handle(thread:Thread){
         const relativeAmount = <number>thread.currentInstruction?.value;
 
-        thread.log?.debug(`br.rel ${relativeAmount}`);
+        this.logInteraction(thread, relativeAmount);
 
         thread.jumpToLine(thread.currentMethod.stackFrame.currentInstruction + relativeAmount);
         

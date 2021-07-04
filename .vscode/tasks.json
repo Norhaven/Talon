@@ -14,6 +14,7 @@
         {
             "label": "Run Browserify",
             "dependsOn": [
+                "Clean",
                 "Build TypeScript"
             ],
             "type": "shell",
@@ -25,6 +26,13 @@
                 "isDefault": true
             }
         },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command":[
+                "rm ./ide/js -recurse"
+            ]
+        },  
         {
             "type": "npm",
             "script": "test",

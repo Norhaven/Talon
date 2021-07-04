@@ -1,8 +1,11 @@
 import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
 import { Memory } from "../common/Memory";
+import { OpCode } from "../../common/OpCode";
 
 export class LoadNumberHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.LoadNumber;
+
     handle(thread:Thread){
 
         const value = <number>thread.currentInstruction?.value!;
@@ -10,7 +13,7 @@ export class LoadNumberHandler extends OpCodeHandler{
 
         thread.currentMethod.push(runtimeValue);
 
-        thread.log?.debug(`.ld.const.num\t${value}`);
+        this.logInteraction(thread, value);
 
         return super.handle(thread);
     }

@@ -1,12 +1,15 @@
 import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
 import { Memory } from "../common/Memory";
+import { OpCode } from "../../common/OpCode";
 
 export class TypeOfHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.TypeOf;
+
     handle(thread:Thread){
         const typeName = <string>thread.currentInstruction?.value!;
 
-        thread.log?.debug(`.typeof ${typeName}`);
+        this.logInteraction(thread, typeName);
 
         if (thread.currentMethod.stackSize() == 0){
             const value = Memory.allocateBoolean(false);

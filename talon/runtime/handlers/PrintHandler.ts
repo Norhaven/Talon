@@ -4,8 +4,11 @@ import { RuntimeString } from "../library/RuntimeString";
 import { RuntimeError } from "../errors/RuntimeError";
 import { EvaluationResult } from "../EvaluationResult";
 import { OpCodeHandler } from "../OpCodeHandler";
+import { OpCode } from "../../common/OpCode";
 
 export class PrintHandler extends OpCodeHandler{
+    protected code: OpCode = OpCode.Print;
+
     private output:IOutput;
 
     constructor(output:IOutput){
@@ -16,8 +19,9 @@ export class PrintHandler extends OpCodeHandler{
     handle(thread:Thread){
         const text = thread.currentMethod.pop();
 
+        this.logInteraction(thread);
+        
         if (text instanceof RuntimeString){
-            thread.log?.debug(".print");
             this.output.write(text.value);
         } else {
             throw new RuntimeError("Unable to print, encountered a type on the stack other than string");
