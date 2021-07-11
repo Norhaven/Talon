@@ -4,7 +4,7 @@ import { Memory } from "../common/Memory";
 import { OpCode } from "../../common/OpCode";
 
 export class TypeOfHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.TypeOf;
+    public readonly code: OpCode = OpCode.TypeOf;
 
     handle(thread:Thread){
         const typeName = <string>thread.currentInstruction?.value!;

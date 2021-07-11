@@ -5,7 +5,7 @@ import { RuntimeError } from "../errors/RuntimeError";
 import { OpCode } from "../../common/OpCode";
 
 export class InvokeDelegateHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.InvokeDelegate;
+    public readonly code: OpCode = OpCode.InvokeDelegate;
 
     handle(thread:Thread){
 

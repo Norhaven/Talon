@@ -8,7 +8,7 @@ interface IIndexable{
 }
 
 export class ExternalCallHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.ExternalCall;
+    public readonly code: OpCode = OpCode.ExternalCall;
     
     handle(thread:Thread){
 

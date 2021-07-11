@@ -5,7 +5,7 @@ import { RuntimeError } from "../errors/RuntimeError";
 import { OpCode } from "../../common/OpCode";
 
 export class LoadStringHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.LoadString;
+    public readonly code: OpCode = OpCode.LoadString;
 
     handle(thread:Thread){
         const value = thread.currentInstruction!.value;

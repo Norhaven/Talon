@@ -57,6 +57,8 @@ export class TalonLexer{
                 token.type = TokenType.OpenMethodBlock;
             } else if (token.value == Punctuation.comma){
                 token.type = TokenType.ListSeparator;
+            } else if (token.value === Keywords.true || token.value === Keywords.false){
+                token.type = TokenType.Boolean;
             } else if (TalonLexer.allKeywords.has(token.value)){
                 token.type = TokenType.Keyword;
             } else if (token.value.startsWith("\"") && token.value.endsWith("\"")){

@@ -5,7 +5,7 @@ import { Memory } from "../common/Memory";
 import { OpCode } from "../../common/OpCode";
 
 export class ConcatenateHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.Concatenate;
+    public readonly code: OpCode = OpCode.Concatenate;
 
     handle(thread:Thread){
         const last = <RuntimeString>thread.currentMethod.pop();

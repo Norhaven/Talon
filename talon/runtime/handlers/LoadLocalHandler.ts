@@ -3,7 +3,7 @@ import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
 
 export class LoadLocalHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.LoadLocal;
+    public readonly code: OpCode = OpCode.LoadLocal;
 
     handle(thread:Thread){
 

@@ -4,7 +4,7 @@ import { MethodActivation } from "../MethodActivation";
 import { OpCode } from "../../common/OpCode";
 
 export class StaticCallHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.StaticCall;
+    public readonly code: OpCode = OpCode.StaticCall;
 
     handle(thread:Thread){
         const callText = <string>thread.currentInstruction?.value!;

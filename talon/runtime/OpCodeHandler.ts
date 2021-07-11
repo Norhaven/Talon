@@ -4,7 +4,7 @@ import { EvaluationResult } from "./EvaluationResult";
 
 export abstract class OpCodeHandler{
     
-    protected abstract code:OpCode;
+    public abstract readonly code:OpCode;
     
     protected logInteraction(thread:Thread, ...parameters:any[]){
         let formattedLine = this.code.toString();

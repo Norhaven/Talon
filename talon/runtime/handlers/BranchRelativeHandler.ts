@@ -4,7 +4,7 @@ import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
 
 export class BranchRelativeHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.BranchRelative;
+    public readonly code: OpCode = OpCode.BranchRelative;
 
     handle(thread:Thread){
         const relativeAmount = <number>thread.currentInstruction?.value;

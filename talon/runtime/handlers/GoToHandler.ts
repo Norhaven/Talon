@@ -5,7 +5,7 @@ import { RuntimeError } from "../errors/RuntimeError";
 import { OpCode } from "../../common/OpCode";
 
 export class GoToHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.BranchRelative;
+    public readonly code: OpCode = OpCode.GoTo;
 
     handle(thread:Thread){
 

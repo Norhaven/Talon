@@ -7,7 +7,7 @@ import { Memory } from "../common/Memory";
 import { OpCode } from "../../common/OpCode";
 
 export class ParseCommandHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.ParseCommand;
+    public readonly code: OpCode = OpCode.ParseCommand;
 
     handle(thread:Thread){
 

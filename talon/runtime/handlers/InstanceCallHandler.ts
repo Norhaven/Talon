@@ -10,7 +10,7 @@ import { Type } from "../../common/Type";
 import { OpCode } from "../../common/OpCode";
 
 export class InstanceCallHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.InstanceCall;
+    public readonly code: OpCode = OpCode.InstanceCall;
 
     constructor(private methodName?:string){
         super();

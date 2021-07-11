@@ -5,7 +5,7 @@ import { Memory } from "../common/Memory";
 import { OpCode } from "../../common/OpCode";
 
 export class NewInstanceHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.NewInstance;
+    public readonly code: OpCode = OpCode.NewInstance;
 
     handle(thread:Thread){
         const typeName = thread.currentInstruction?.value;

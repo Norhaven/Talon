@@ -23,5 +23,6 @@ export enum OpCode {
     StaticCall = '.call.static',
     ExternalCall = '.call.extern',
     TypeOf = '.typeof',
-    InvokeDelegate = '.call.func'
+    InvokeDelegate = '.call.func',
+    LoadBoolean = ".load.bool"
 }

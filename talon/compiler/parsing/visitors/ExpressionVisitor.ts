@@ -13,6 +13,8 @@ import { NumberType } from "../../../library/NumberType";
 import { StringType } from "../../../library/StringType";
 import { ListExpression } from "../expressions/ListExpression";
 import { ComparisonExpressionVisitor } from "./ComparisonExpressionVisitor";
+import { BooleanType } from "../../../library/BooleanType";
+import { Convert } from "../../../library/Convert";
 
 export class ExpressionVisitor extends Visitor{
     visit(context: ParseContext): Expression {
@@ -59,7 +61,11 @@ export class ExpressionVisitor extends Visitor{
         } else if (context.isTypeOf(TokenType.Number)){
             const value = context.expectNumber();
 
-            return new LiteralExpression(NumberType.typeName, value.value);
+            return new LiteralExpression(NumberType.typeName, Number(value.value));
+        } else if (context.isTypeOf(TokenType.Boolean)){
+            const value = context.expectBoolean();
+
+            return new LiteralExpression(BooleanType.typeName, Convert.stringToBoolean(value.value));
         } else if (context.isTypeOf(TokenType.ListSeparator)){
             const items:Expression[] = [];
 

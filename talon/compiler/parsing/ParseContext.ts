@@ -94,6 +94,10 @@ export class ParseContext{
         return this.expectAndConsume(TokenType.Number, "Expected number");
     }
 
+    expectBoolean(){
+        return this.expectAndConsume(TokenType.Boolean, "Expected boolean");
+    }
+
     expectIdentifier(){
         return this.expectAndConsume(TokenType.Identifier, "Expected identifier");
     }

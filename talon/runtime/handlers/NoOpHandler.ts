@@ -4,7 +4,7 @@ import { EvaluationResult } from "../EvaluationResult";
 import { OpCode } from "../../common/OpCode";
 
 export class NoOpHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.NoOp;
+    public readonly code: OpCode = OpCode.NoOp;
 
     handle(thread:Thread){
         this.logInteraction(thread);

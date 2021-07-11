@@ -34,6 +34,7 @@ import { LiteralExpression } from "../parsing/expressions/LiteralExpression";
 import { Decoration } from "../../library/Decoration";
 import { ComparisonExpression } from "../parsing/expressions/ComparisonExpression";
 import { IdentifierExpression } from "../parsing/expressions/IdentifierExpression";
+import { Convert } from "../../library/Convert";
 
 export class TalonTransformer{
     constructor(private readonly out:IOutput){
@@ -109,8 +110,19 @@ export class TalonTransformer{
                                 const value = Number(fieldExpression.initialValue);
                                 field.defaultValue = value;
                             } else if (field.typeName == BooleanType.typeName){
-                                const value = Boolean(fieldExpression.initialValue);
+                                let value = false;
+
+                                if (typeof fieldExpression.initialValue == 'string'){
+                                    value = Convert.stringToBoolean(fieldExpression.initialValue);
+                                } else if (typeof fieldExpression.initialValue == 'boolean'){
+                                    value = fieldExpression.initialValue;
+                                } else {
+                                    throw new CompilationError(`Unable to transform field type`);
+                                }
+
+                                this.out.write(`INIT ${field.name}:${field.typeName} = (${value}:${typeof value})${fieldExpression.initialValue}:${typeof fieldExpression.initialValue}`);
                                 field.defaultValue = value;
+                                this.out.write(`VALUE IS ${field.defaultValue}:${typeof field.defaultValue}`);
                             } else {
                                 field.defaultValue = fieldExpression.initialValue;
                             }
@@ -339,6 +351,8 @@ export class TalonTransformer{
                 instructions.push(Instruction.loadString(<string>expression.value));
             } else if (expression.typeName == NumberType.typeName){
                 instructions.push(Instruction.loadNumber(Number(expression.value)));
+            } else if (expression.typeName == BooleanType.typeName){
+                instructions.push(Instruction.loadBoolean(<boolean>(expression.value)));
             } else {
                 throw new CompilationError(`Unable to transform unsupported literal expression '${expression}'`);
             }

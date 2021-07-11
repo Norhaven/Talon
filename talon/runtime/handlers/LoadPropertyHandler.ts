@@ -8,7 +8,7 @@ import { EvaluationResult } from "../EvaluationResult";
 import { OpCode } from "../../common/OpCode";
 
 export class LoadPropertyHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.LoadProperty;
+    public readonly code: OpCode = OpCode.LoadProperty;
 
     constructor(private fieldName?:string){
         super();

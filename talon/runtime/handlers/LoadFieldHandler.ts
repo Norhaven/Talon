@@ -3,7 +3,7 @@ import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
 
 export class LoadFieldHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.LoadField;
+    public readonly code: OpCode = OpCode.LoadField;
 
     handle(thread:Thread){
         const instance = thread.currentMethod.pop();
@@ -13,7 +13,7 @@ export class LoadFieldHandler extends OpCodeHandler{
 
         const value = field?.value;
 
-        this.logInteraction(thread, `${instance?.typeName}::${fieldName}`, '//', value);
+        this.logInteraction(thread, `${instance?.typeName}::${fieldName}:${field?.type.name}`, '//', typeof value, value);
 
         thread.currentMethod.push(value!);
 

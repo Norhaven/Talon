@@ -8,13 +8,14 @@ import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
 
 export class ComparisonHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.CompareEqual;
+    public readonly code: OpCode = OpCode.CompareEqual;
 
     handle(thread:Thread){
-        this.logInteraction(thread);
 
         var instance = thread.currentMethod.pop();
         var comparand = thread.currentMethod.pop();
+
+        this.logInteraction(thread, instance, comparand);
 
         if (instance instanceof RuntimeString && comparand instanceof RuntimeString){
             var value = Memory.allocateBoolean(instance.value == comparand.value);
@@ -23,7 +24,9 @@ export class ComparisonHandler extends OpCodeHandler{
             var value = Memory.allocateBoolean(instance.value == comparand.value);
             thread.currentMethod.push(value);
         } else if (instance instanceof RuntimeBoolean && comparand instanceof RuntimeBoolean){
-            var value = Memory.allocateBoolean(instance.value == comparand.value);
+            
+            var value = Memory.allocateBoolean(instance.value === comparand.value);
+            this.logInteraction(thread, `LOG: ${instance.value}:${typeof instance.value} == ${comparand.value}:${typeof comparand.value} -> ${value}`);
             thread.currentMethod.push(value);
         } else {
             throw new RuntimeError(`Encountered type mismatch on stack during comparison: ${instance?.typeName} == ${comparand?.typeName}`);

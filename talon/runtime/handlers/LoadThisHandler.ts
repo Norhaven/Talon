@@ -3,7 +3,7 @@ import { OpCodeHandler } from "../OpCodeHandler"
 import { Thread } from "../Thread";
 
 export class LoadThisHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.LoadThis;
+    public readonly code: OpCode = OpCode.LoadThis;
 
     handle(thread:Thread){
         const instance = thread.currentMethod.method?.actualParameters[0].value!;

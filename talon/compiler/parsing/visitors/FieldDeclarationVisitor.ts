@@ -104,8 +104,11 @@ export class FieldDeclarationVisitor extends Visitor{
             } else if (context.isTypeOf(TokenType.Number)){
                 field.typeName = NumberType.typeName;
                 field.initialValue = context.expectNumber().value;
+            } else if (context.isTypeOf(TokenType.Boolean)){
+                field.typeName = BooleanType.typeName;
+                field.initialValue = context.expectBoolean().value;
             } else {
-                throw new CompilationError(`Expected a string or a number but found '${context.currentToken.value}'`);
+                throw new CompilationError(`Expected a string, number, or boolean but found '${context.currentToken.value}' of type '${context.currentToken.type}'`);
             }
                 
             field.name = name.value;

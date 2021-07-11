@@ -26,7 +26,7 @@ import { RuntimeItem } from "../library/RuntimeItem";
 import { OpCode } from "../../common/OpCode";
 
 export class HandleCommandHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.HandleCommand;
+    public readonly code: OpCode = OpCode.HandleCommand;
 
     constructor(private readonly output:IOutput){
         super();
@@ -97,7 +97,8 @@ export class HandleCommandHandler extends OpCodeHandler{
             }
             case Meaning.Inventory:{
                 const inventory = (<RuntimePlayer>actualTarget).getContentsField();
-                this.describeContents(thread, inventory);
+                this.nameAndTotalContents(thread, inventory);
+                
                 break;
             }
             case Meaning.Dropping:{
@@ -184,6 +185,29 @@ export class HandleCommandHandler extends OpCodeHandler{
         } else {
             return undefined;
         }
+    }
+
+    private nameAndTotalContents(thread:Thread, contents:RuntimeList){
+        const names = contents.items.map(x => x.typeName);
+
+        const namesWithCount = new Map<string, number>();
+
+        for(const name of names){
+            if (!namesWithCount.has(name)){
+                namesWithCount.set(name, 1);
+            } else {
+                const count = namesWithCount.get(name)!;
+                namesWithCount.set(name, count + 1);
+            }
+        }
+
+        const namedValues:string[] = [];
+
+        for(const [name, value] of namesWithCount){
+            namedValues.push(`${value} ${name}(s)`);
+        }
+
+        namedValues.forEach(x => this.output.write(x));
     }
 
     private describe(thread:Thread, target:RuntimeWorldObject, isShallowDescription:boolean){

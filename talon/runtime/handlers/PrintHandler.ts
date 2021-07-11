@@ -7,7 +7,7 @@ import { OpCodeHandler } from "../OpCodeHandler";
 import { OpCode } from "../../common/OpCode";
 
 export class PrintHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.Print;
+    public readonly code: OpCode = OpCode.Print;
 
     private output:IOutput;
 

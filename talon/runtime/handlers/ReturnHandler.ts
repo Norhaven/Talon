@@ -6,7 +6,7 @@ import { RuntimeError } from "../errors/RuntimeError";
 import { OpCode } from "../../common/OpCode";
 
 export class ReturnHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.Return;
+    public readonly code: OpCode = OpCode.Return;
 
     handle(thread:Thread){
         // TODO: Handle returning top value on stack based on return type of method.

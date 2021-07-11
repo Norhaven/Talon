@@ -4,7 +4,7 @@ import { RuntimeBoolean } from "../library/RuntimeBoolean";
 import { OpCode } from "../../common/OpCode";
 
 export class BranchRelativeIfFalseHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.BranchRelativeIfFalse;
+    public readonly code: OpCode = OpCode.BranchRelativeIfFalse;
 
     handle(thread:Thread){
         const relativeAmount = <number>thread.currentInstruction?.value;

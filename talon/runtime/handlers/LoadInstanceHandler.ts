@@ -4,7 +4,7 @@ import { RuntimeError } from "../errors/RuntimeError";
 import { OpCode } from "../../common/OpCode";
 
 export class LoadInstanceHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.LoadInstance;
+    public readonly code: OpCode = OpCode.LoadInstance;
 
     handle(thread:Thread){
 

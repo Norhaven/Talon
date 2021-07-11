@@ -6,6 +6,7 @@ export enum TokenType {
     String = 'String',
     Identifier = 'Identifier',
     Number = 'Number',
+    Boolean = "Boolean",
     OpenMethodBlock = 'OpenMethodBlock',
     ListSeparator = 'ListSeparator'
 }

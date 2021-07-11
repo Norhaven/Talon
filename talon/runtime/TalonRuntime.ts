@@ -43,51 +43,92 @@ import { AssignVariableHandler } from "./handlers/AssignVariableHandler";
 import { TypeOfHandler } from "./handlers/TypeOfHandler";
 import { InvokeDelegateHandler } from "./handlers/InvokeDelegateHandler";
 import { ComparisonHandler } from "./handlers/ComparisonHandler";
+import { RuntimeState } from "./RuntimeState";
+import { StateMachine } from "./common/StateMachine";
+import { State } from "./common/State";
+import { LoadBooleanHandler } from "./handlers/LoadBooleanHandler";
 
 export class TalonRuntime{
 
+    private state:StateMachine<RuntimeState>;
     private thread?:Thread;
-    private handlers:Map<OpCode, OpCodeHandler> = new Map<OpCode, OpCodeHandler>();
+    private readonly handlers:Map<OpCode, OpCodeHandler>;
 
     constructor(private readonly userOutput:IOutput, private readonly logOutput?:ILogOutput){
         this.userOutput = userOutput;
 
-        this.handlers.set(OpCode.NoOp, new NoOpHandler());
-        this.handlers.set(OpCode.LoadString, new LoadStringHandler());
-        this.handlers.set(OpCode.Print, new PrintHandler(this.userOutput));
-        this.handlers.set(OpCode.NewInstance, new NewInstanceHandler());
-        this.handlers.set(OpCode.ReadInput, new ReadInputHandler());
-        this.handlers.set(OpCode.ParseCommand, new ParseCommandHandler());
-        this.handlers.set(OpCode.HandleCommand, new HandleCommandHandler(this.userOutput));
-        this.handlers.set(OpCode.GoTo, new GoToHandler());
-        this.handlers.set(OpCode.Return, new ReturnHandler());
-        this.handlers.set(OpCode.StaticCall, new StaticCallHandler());
-        this.handlers.set(OpCode.LoadInstance, new LoadInstanceHandler());
-        this.handlers.set(OpCode.LoadNumber, new LoadNumberHandler());
-        this.handlers.set(OpCode.InstanceCall, new InstanceCallHandler());
-        this.handlers.set(OpCode.LoadProperty, new LoadPropertyHandler());
-        this.handlers.set(OpCode.LoadField, new LoadFieldHandler());
-        this.handlers.set(OpCode.ExternalCall, new ExternalCallHandler());
-        this.handlers.set(OpCode.LoadLocal, new LoadLocalHandler());
-        this.handlers.set(OpCode.LoadThis, new LoadThisHandler());
-        this.handlers.set(OpCode.BranchRelative, new BranchRelativeHandler());
-        this.handlers.set(OpCode.BranchRelativeIfFalse, new BranchRelativeIfFalseHandler());
-        this.handlers.set(OpCode.Concatenate, new ConcatenateHandler());
-        this.handlers.set(OpCode.Assign, new AssignVariableHandler());
-        this.handlers.set(OpCode.TypeOf, new TypeOfHandler());
-        this.handlers.set(OpCode.InvokeDelegate, new InvokeDelegateHandler());
-        this.handlers.set(OpCode.CompareEqual, new ComparisonHandler());
+        const handlerInstances:OpCodeHandler[] = [
+            new NoOpHandler(),
+            new LoadStringHandler(),
+            new PrintHandler(this.userOutput),
+            new NewInstanceHandler(),
+            new ReadInputHandler(),
+            new ParseCommandHandler(),
+            new HandleCommandHandler(this.userOutput),
+            new GoToHandler(),
+            new ReturnHandler(),
+            new StaticCallHandler(),
+            new LoadInstanceHandler(),
+            new LoadNumberHandler(),
+            new LoadBooleanHandler(),
+            new InstanceCallHandler(),
+            new LoadPropertyHandler(),
+            new LoadFieldHandler(),
+            new ExternalCallHandler(),
+            new LoadLocalHandler(),
+            new LoadThisHandler(),
+            new BranchRelativeHandler(),
+            new BranchRelativeIfFalseHandler(),
+            new ConcatenateHandler(),
+            new AssignVariableHandler(),
+            new TypeOfHandler(),
+            new InvokeDelegateHandler(),
+            new ComparisonHandler()
+        ];
+
+        this.handlers = new Map<OpCode, OpCodeHandler>(handlerInstances.map(x => [x.code, x]));
+
+        this.state = new StateMachine<RuntimeState>(
+            new State<RuntimeState>(
+                RuntimeState.Stopped,
+                (current:State<RuntimeState>) => current.state !== RuntimeState.Stopped
+            ),
+            new State<RuntimeState>(
+                RuntimeState.Loaded,
+                (current:State<RuntimeState>) => {
+                    if (current.state === RuntimeState.Started){
+                        this.logOutput?.debug("The runtime has already been started and can't load more types.");
+                        return false;
+                    } 
+
+                    return true;
+                }
+            ),
+            new State<RuntimeState>(
+                RuntimeState.Started,
+                (current:State<RuntimeState>) => {
+                    if (current.state === RuntimeState.Started){
+                        this.logOutput?.debug("The runtime has already been started.");
+                        return false;
+                    } else if (current.state === RuntimeState.Stopped){
+                        this.logOutput?.debug("The runtime must be loaded with types prior to being started.");
+                        return false;
+                    } 
+
+                    return true;
+                }
+            )
+        );
     }
 
-    start(){
-        if (this.thread?.allTypes.length == 0){
-            this.thread.log?.debug("Unable to start runtime without types.");
+    start(){        
+        if (!this.state.tryMoveTo(RuntimeState.Started)){
             return;
         }
 
         const places = this.thread?.allTypes
                         .filter(x => x.baseTypeName == Place.typeName)
-                        .map(x => <RuntimePlayer>Memory.allocate(x));
+                        .map(x => <RuntimePlace>Memory.allocate(x));
 
         const getPlayerStart = (place:RuntimePlace) => <RuntimeBoolean>(place.fields.get(Place.isPlayerStart)?.value);
         const isPlayerStart = (place:RuntimePlace) => getPlayerStart(place)?.value === true;
@@ -104,12 +145,22 @@ export class TalonRuntime{
     }
 
     stop(){
+        if (!this.state.tryMoveTo(RuntimeState.Stopped)){
+            return;
+        }
 
+        Memory.clear();
+        this.thread = undefined;
     }
 
-    loadFrom(types:Type[]){
+    loadFrom(types:Type[]):boolean{
+                
         if (types.length == 0){
-            this.logOutput?.debug("No types were provided, unable to load runtime!");
+            this.logOutput?.debug("No types were provided, unable to load runtime.");
+            return false;
+        }
+
+        if (!this.state.tryMoveTo(RuntimeState.Loaded)){
             return false;
         }
 
@@ -122,7 +173,7 @@ export class TalonRuntime{
         const activation = new MethodActivation(mainMethod!);
         
         this.thread = new Thread(loadedTypes, activation);  
-        this.thread.log = this.logOutput;      
+        this.thread.log = this.logOutput;   
 
         return true;
     }

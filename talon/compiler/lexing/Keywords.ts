@@ -50,6 +50,8 @@ export class Keywords{
     static readonly not = "not";
     static readonly observed = "observed";
     static readonly continue = "continue";
+    static readonly true = "true";
+    static readonly false = "false";
 
     static getAll():Set<string>{
         type KeywordProperties = keyof Keywords;

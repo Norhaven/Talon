@@ -4,7 +4,7 @@ import { Memory } from "../common/Memory";
 import { OpCode } from "../../common/OpCode";
 
 export class LoadNumberHandler extends OpCodeHandler{
-    protected code: OpCode = OpCode.LoadNumber;
+    public readonly code: OpCode = OpCode.LoadNumber;
 
     handle(thread:Thread){
 

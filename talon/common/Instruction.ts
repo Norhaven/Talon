@@ -8,7 +8,7 @@ export class Instruction{
     static compareEqual(){
         return new Instruction(OpCode.CompareEqual);
     }
-    
+
     static invokeDelegate(){
         return new Instruction(OpCode.InvokeDelegate);
     }
@@ -19,6 +19,10 @@ export class Instruction{
 
     static loadNumber(value:number){
         return new Instruction(OpCode.LoadNumber, value);
+    }
+
+    static loadBoolean(value:boolean){
+        return new Instruction(OpCode.LoadBoolean, value);
     }
 
     static loadString(value:string){
