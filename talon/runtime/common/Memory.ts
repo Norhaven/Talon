@@ -34,6 +34,14 @@ export class Memory{
         Memory.heap = new Map<string, RuntimeAny[]>();
     }
 
+    static findTypeByName(name:string){
+        if (!this.typesByName.has(name)){
+            throw new RuntimeError(`Unable to locate type '${name}'`);
+        }
+
+        return this.typesByName.get(name);
+    }
+
     static findInstanceByName(name:string){
         const instances = Memory.heap.get(name);
 

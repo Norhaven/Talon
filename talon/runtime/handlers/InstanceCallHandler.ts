@@ -24,29 +24,33 @@ export class InstanceCallHandler extends OpCodeHandler{
             this.methodName = <string>thread.currentInstruction?.value!;
         }
 
-        const instance = current.pop();
+        try{
+            const instance = current.pop();
 
-        const method = instance?.methods.get(this.methodName)!;
+            const method = instance?.methods.get(this.methodName)!;
 
-        this.logInteraction(thread, `${instance?.typeName}::${this.methodName}(...${method.parameters.length})`);
-        
-        const parameterValues:Variable[] = [];
+            this.logInteraction(thread, `${instance?.typeName}::${this.methodName}(...${method.parameters.length})`);
+            
+            const parameterValues:Variable[] = [];
 
-        for(let i = 0; i < method!.parameters.length; i++){
-            const parameter = method!.parameters[i];
-            const instance = current.pop()!;
-            const variable = new Variable(parameter.name, parameter.type!, instance);
+            for(let i = 0; i < method!.parameters.length; i++){
+                const parameter = method!.parameters[i];
+                const instance = current.pop()!;
+                const variable = new Variable(parameter.name, parameter.type!, instance);
 
-            parameterValues.push(variable);
+                parameterValues.push(variable);
+            }
+            
+            // HACK: We shouldn't create our own type, we should inherently know what it is.
+
+            parameterValues.unshift(Variable.forThis(new Type(instance?.typeName!, instance?.parentTypeName!), instance));
+
+            method.actualParameters = parameterValues;
+
+            thread.activateMethod(method);
+        } finally {
+            this.methodName = undefined;
         }
-        
-        // HACK: We shouldn't create our own type, we should inherently know what it is.
-
-        parameterValues.unshift(Variable.forThis(new Type(instance?.typeName!, instance?.parentTypeName!), instance));
-
-        method.actualParameters = parameterValues;
-
-        thread.activateMethod(method);
 
         return super.handle(thread);
     }

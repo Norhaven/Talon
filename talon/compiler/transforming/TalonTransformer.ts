@@ -120,9 +120,7 @@ export class TalonTransformer{
                                     throw new CompilationError(`Unable to transform field type`);
                                 }
 
-                                this.out.write(`INIT ${field.name}:${field.typeName} = (${value}:${typeof value})${fieldExpression.initialValue}:${typeof fieldExpression.initialValue}`);
-                                field.defaultValue = value;
-                                this.out.write(`VALUE IS ${field.defaultValue}:${typeof field.defaultValue}`);
+                                field.defaultValue = value;                                
                             } else {
                                 field.defaultValue = fieldExpression.initialValue;
                             }
@@ -163,9 +161,21 @@ export class TalonTransformer{
                         describe.body.push(
                             Instruction.loadThis(),
                             Instruction.loadProperty(WorldObject.visible),
-                            Instruction.branchRelativeIfFalse(3),
+                            Instruction.branchRelativeIfFalse(10),
+
                             Instruction.loadThis(),
                             Instruction.loadProperty(WorldObject.description),
+
+                            Instruction.loadString(' '),
+                            Instruction.loadThis(),
+                            Instruction.createDelegate(type?.name!, WorldObject.observe),
+
+                            Instruction.loadThis(),
+                            Instruction.loadProperty(WorldObject.contents),
+                            Instruction.instanceCall(List.map),
+
+                            Instruction.instanceCall(List.join),
+                            Instruction.concatenate(),
                             Instruction.print(),
                             Instruction.return()
                         );
@@ -174,13 +184,16 @@ export class TalonTransformer{
 
                         const observe = new Method();
                         observe.name = WorldObject.observe;
+                        observe.returnType = StringType.typeName;
+
                         observe.body.push(
                             Instruction.loadThis(),
                             Instruction.loadProperty(WorldObject.visible),
-                            Instruction.branchRelativeIfFalse(3),
+                            Instruction.branchRelativeIfFalse(4),
                             Instruction.loadThis(),
                             Instruction.loadProperty(WorldObject.observation),
-                            Instruction.print(),
+                            Instruction.return(),
+                            Instruction.loadString(""),
                             Instruction.return()
                         );
 

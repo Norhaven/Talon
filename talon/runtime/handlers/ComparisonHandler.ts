@@ -23,10 +23,8 @@ export class ComparisonHandler extends OpCodeHandler{
         } else if (instance instanceof RuntimeInteger && comparand instanceof RuntimeInteger){
             var value = Memory.allocateBoolean(instance.value == comparand.value);
             thread.currentMethod.push(value);
-        } else if (instance instanceof RuntimeBoolean && comparand instanceof RuntimeBoolean){
-            
+        } else if (instance instanceof RuntimeBoolean && comparand instanceof RuntimeBoolean){            
             var value = Memory.allocateBoolean(instance.value === comparand.value);
-            this.logInteraction(thread, `LOG: ${instance.value}:${typeof instance.value} == ${comparand.value}:${typeof comparand.value} -> ${value}`);
             thread.currentMethod.push(value);
         } else {
             throw new RuntimeError(`Encountered type mismatch on stack during comparison: ${instance?.typeName} == ${comparand?.typeName}`);

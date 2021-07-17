@@ -24,5 +24,12 @@ export enum OpCode {
     ExternalCall = '.call.extern',
     TypeOf = '.typeof',
     InvokeDelegate = '.call.func',
-    LoadBoolean = ".load.bool"
+    LoadBoolean = ".load.bool",
+    CompareLessThan = ".compare.lt",
+    Add = ".add",
+    LoadElement = ".load.elem",
+    SetLocal = ".set.local",
+    CreateDelegate = ".new.dlgt",
+    LoadEmpty = ".load.empty",
+    InvokeDelegateOnInstance = ".call.func.inst"
 }

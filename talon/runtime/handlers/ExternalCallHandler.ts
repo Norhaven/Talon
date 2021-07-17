@@ -27,7 +27,9 @@ export class ExternalCallHandler extends OpCodeHandler{
 
         const result = method.call(instance, ...args);
 
-        thread.currentMethod.push(result);
+        if (result){
+            thread.currentMethod.push(result);
+        }
 
         return super.handle(thread);
     }

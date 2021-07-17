@@ -16,7 +16,7 @@ export abstract class OpCodeHandler{
         thread.log?.debug(formattedLine);
     }
 
-    handle(thread:Thread){
+    handle(thread:Thread){       
         return EvaluationResult.Continue;
     }
 }

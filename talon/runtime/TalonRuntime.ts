@@ -47,6 +47,13 @@ import { RuntimeState } from "./RuntimeState";
 import { StateMachine } from "./common/StateMachine";
 import { State } from "./common/State";
 import { LoadBooleanHandler } from "./handlers/LoadBooleanHandler";
+import { CreateDelegateHandler } from "./handlers/CreateDelegateHandler";
+import { CompareLessThanHandler } from "./handlers/CompareLessThanHandler";
+import { AddHandler } from "./handlers/AddHandler";
+import { LoadElementHandler } from "./handlers/LoadElementHandler";
+import { SetLocalHandler } from "./handlers/SetLocalHandler";
+import { LoadEmptyHandler } from "./handlers/LoadEmptyHandler";
+import { InvokeDelegateOnInstanceHandler } from "./handlers/InvokeDelegateOnInstanceHandler";
 
 export class TalonRuntime{
 
@@ -83,7 +90,14 @@ export class TalonRuntime{
             new AssignVariableHandler(),
             new TypeOfHandler(),
             new InvokeDelegateHandler(),
-            new ComparisonHandler()
+            new ComparisonHandler(),
+            new CreateDelegateHandler(),
+            new CompareLessThanHandler(),
+            new AddHandler(),
+            new LoadElementHandler(),
+            new SetLocalHandler(),
+            new LoadEmptyHandler(),
+            new InvokeDelegateOnInstanceHandler()
         ];
 
         this.handlers = new Map<OpCode, OpCodeHandler>(handlerInstances.map(x => [x.code, x]));

@@ -3,6 +3,8 @@ import { Thread } from "../Thread";
 import { RuntimeDelegate } from "../library/RuntimeDelegate";
 import { RuntimeError } from "../errors/RuntimeError";
 import { OpCode } from "../../common/OpCode";
+import { Variable } from "../library/Variable";
+import { Type } from "../../common/Type";
 
 export class InvokeDelegateHandler extends OpCodeHandler{
     public readonly code: OpCode = OpCode.InvokeDelegate;
@@ -11,12 +13,12 @@ export class InvokeDelegateHandler extends OpCodeHandler{
 
         this.logInteraction(thread);
         
-        const instance = thread.currentMethod.pop()!;
+        const delegate = thread.currentMethod.pop()!;
 
-        if (instance instanceof RuntimeDelegate){
-            const activation = thread.activateMethod(instance.wrappedMethod);
+        if (delegate instanceof RuntimeDelegate){
+            const activation = thread.activateMethod(delegate.wrappedMethod);
         } else {
-            throw new RuntimeError(`Unable to invoke delegate for non-delegate instance '${instance}'`);
+            throw new RuntimeError(`Unable to invoke delegate for non-delegate instance '${delegate}'`);
         }
         
         return super.handle(thread);

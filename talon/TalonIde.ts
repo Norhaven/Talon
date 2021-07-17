@@ -72,6 +72,8 @@ export class TalonIde{
             }
         });
 
+        this.userCommandText.value = "look";
+        
         this.compilationOutputPane = new PaneOutput(this.compilationOutput);
         this.runtimeOutputPane = new PaneOutput(this.gamePane);
         this.runtimeLogOutputPane = new PaneOutput(this.gameLogOutput);

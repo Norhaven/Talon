@@ -15,7 +15,7 @@ export class NewInstanceHandler extends OpCodeHandler{
         if (typeof typeName === "string"){
             const type = thread.knownTypes.get(typeName);
 
-            if (type == null){
+            if (!type){
                 throw new RuntimeError("Unable to locate type");
             }
 

@@ -97,6 +97,38 @@ export class Instruction{
         return new Instruction(OpCode.BranchRelativeIfFalse, count);
     }
 
+    static compareLessThan(){
+        return new Instruction(OpCode.CompareLessThan);
+    }
+
+    static add(){
+        return new Instruction(OpCode.Add);
+    }
+
+    static loadElement(){
+        return new Instruction(OpCode.LoadElement);
+    }
+
+    static setLocal(name:string){
+        return new Instruction(OpCode.SetLocal, name);
+    }
+
+    static createDelegate(typeName:string, methodName:string){
+        return new Instruction(OpCode.CreateDelegate, `${typeName}:${methodName}`);
+    }
+
+    static loadEmpty(){
+        return new Instruction(OpCode.LoadEmpty);
+    }
+
+    static newInstance(typeName:string){
+        return new Instruction(OpCode.NewInstance, typeName);
+    }
+
+    static invokeDelegateOnInstance(){
+        return new Instruction(OpCode.InvokeDelegateOnInstance);
+    }
+
     opCode:OpCode = OpCode.NoOp;
     value?:Object;
 

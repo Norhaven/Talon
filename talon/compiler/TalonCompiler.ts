@@ -81,10 +81,10 @@ export class TalonCompiler{
             Instruction.parseCommand(),    
             Instruction.handleCommand(),
             Instruction.isTypeOf(Delegate.typeName),
-            Instruction.branchRelativeIfFalse(2),            
+            Instruction.branchRelativeIfFalse(2),  
             Instruction.invokeDelegate(),        
             Instruction.branchRelative(-4),
-            Instruction.goTo(9)
+            Instruction.goTo(7)
         );
 
         type.methods.push(main);

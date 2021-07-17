@@ -24,6 +24,7 @@ import { RuntimeDelegate } from "../library/RuntimeDelegate";
 import { Variable } from "../library/Variable";
 import { RuntimeItem } from "../library/RuntimeItem";
 import { OpCode } from "../../common/OpCode";
+import { Instruction } from "../../common/Instruction";
 
 export class HandleCommandHandler extends OpCodeHandler{
     public readonly code: OpCode = OpCode.HandleCommand;
@@ -230,7 +231,7 @@ export class HandleCommandHandler extends OpCodeHandler{
 
         observe.actualParameters.unshift(Variable.forThis(new Type(target?.typeName!, target?.parentTypeName!), target));
 
-        thread.currentMethod.push(new RuntimeDelegate(observe));
+        thread.currentMethod.push(new RuntimeDelegate(observe));        
     }
 
     private describeContents(thread:Thread, target:RuntimeList){
