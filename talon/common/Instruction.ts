@@ -129,6 +129,17 @@ export class Instruction{
         return new Instruction(OpCode.InvokeDelegateOnInstance);
     }
 
+    static ifTrueThen(...instructions:Instruction[]){
+        const result:Instruction[] = [];
+
+        result.push(
+            Instruction.branchRelativeIfFalse(instructions.length),
+            ...instructions
+        );
+
+        return result;
+    }
+
     opCode:OpCode = OpCode.NoOp;
     value?:Object;
 

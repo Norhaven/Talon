@@ -189,10 +189,11 @@ export class TalonTransformer{
                         observe.body.push(
                             Instruction.loadThis(),
                             Instruction.loadProperty(WorldObject.visible),
-                            Instruction.branchRelativeIfFalse(4),
-                            Instruction.loadThis(),
-                            Instruction.loadProperty(WorldObject.observation),
-                            Instruction.return(),
+                            ...Instruction.ifTrueThen(
+                                Instruction.loadThis(),
+                                Instruction.loadProperty(WorldObject.observation),
+                                Instruction.return(),
+                            ),
                             Instruction.loadString(""),
                             Instruction.return()
                         );

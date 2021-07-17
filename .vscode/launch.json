@@ -10,7 +10,12 @@
             "name": "Launch Chrome against localhost",
             "file": "${workspaceFolder}/ide/index.html",
             "webRoot": "${workspaceFolder}/ide", 
-            "preLaunchTask": "Run Browserify"
+            "preLaunchTask": "Run Webpack",
+            "smartStep": true,
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+              "webpack:///./*": "${workspaceFolder}/out/*"
+          }
         },
         {
             "type": "node",

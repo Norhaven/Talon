@@ -12,25 +12,25 @@
             ]
         },
         {
-            "label": "Run Browserify",
-            "dependsOn": [
+            "label": "Run Webpack",
+            "dependsOn":[
                 "Clean",
                 "Build TypeScript"
             ],
             "type": "shell",
-            "command": [
-                "browserify .\\talon\\main.ts -p tsify --debug -o .\\ide\\js\\talon.js"
+            "command":[
+                "npx webpack"
             ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
-        },
+        },        
         {
             "label": "Clean",
             "type": "shell",
             "command":[
-                "rm ./ide/js -recurse"
+                "rm ./ide/js -Recurse -ErrorAction Ignore"
             ]
         },  
         {
