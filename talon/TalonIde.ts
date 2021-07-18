@@ -73,7 +73,7 @@ export class TalonIde{
         });
 
         this.userCommandText.value = "look";
-        
+
         this.compilationOutputPane = new PaneOutput(this.compilationOutput);
         this.runtimeOutputPane = new PaneOutput(this.gamePane);
         this.runtimeLogOutputPane = new PaneOutput(this.gameLogOutput);
@@ -160,7 +160,8 @@ export class TalonIde{
             "understand \"go\" as moving. \n" +
             "understand \"take\" as taking. \n" +
             "understand \"inv\" as inventory. \n" +
-            "understand \"drop\" as dropping. \n\n" +
+            "understand \"drop\" as dropping. \n" +
+            "understand \"use\" as using.\n\n" +
 
             "an Inn is a kind of place. \n" +
             "it is where the player starts. \n" +
@@ -179,7 +180,10 @@ export class TalonIde{
             "and then stop. \n\n" +
             
             "a Fireplace is a kind of decoration. \n" +
-            "it is described as \"The fireplace crackles. It's full of fire.\". \n\n" +
+            "it is described as \"The fireplace crackles. It's full of fire.\".\n" +
+            "when it is used with a Coin:\n" +
+            "    say \"The firelight flickers on the surface of the coin.\";\n" +
+            "and then stop.\n\n" +
 
             "a Walkway is a kind of place. \n" +
             "it is described as \"The walkway in front of the inn is empty, just a cobblestone entrance. The inn is to the south.\". \n" +
@@ -192,7 +196,16 @@ export class TalonIde{
             "say \"This is the middle.\".\n\n" +
             
             "a Coin is a kind of item. \n" +
-            "it is described as \"It's a small coin.\".\n\n" +
+            "it is described as \"It's a small coin.\".\n" +
+            "when it is taken:\n" +
+            "    say \"You got a coin!\";\n" +
+            "and then stop.\n" +
+            "when it is dropped:\n" +
+            "    say \"You put the coin down!\";\n" +
+            "and then stop.\n\n" +
+            "when it is used:\n" +
+            "    say \"You used the coin somehow!\";\n" +
+            "and then stop.\n\n" +
             
             "say \"This is the end.\".\n";
     }

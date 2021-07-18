@@ -10,6 +10,7 @@ export class Understanding{
     static taking = "~taking";
     static inventory = "~inventory";
     static dropping = "~dropping";
+    static using = "~using";
 
     static action = "~action";
     static meaning = "~meaning";  

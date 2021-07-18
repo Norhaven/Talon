@@ -6,21 +6,44 @@ import { WhenDeclarationExpression } from "../expressions/WhenDeclarationExpress
 import { Punctuation } from "../../lexing/Punctuation";
 import { ExpressionVisitor } from "./ExpressionVisitor";
 import { EventExpressionVisitor } from "./EventExpressionVisitor";
+import { CompilationError } from "../../exceptions/CompilationError";
+import { Token } from "../../lexing/Token";
 
 export class WhenDeclarationVisitor extends Visitor{
     visit(context: ParseContext): Expression {
         context.expect(Keywords.when);
-        context.expect(Keywords.the);
-        context.expect(Keywords.player);
 
-        const eventKind = context.expectAnyOf(Keywords.enters, Keywords.exits);
+        let eventKind:Token;
+        let target:Token|undefined = undefined;
+
+        if (context.is(Keywords.it)){
+            context.expect(Keywords.it);
+            context.expect(Keywords.is);
+
+            if (context.is(Keywords.used)){
+                eventKind = context.expect(Keywords.used);
+
+                if (context.is(Keywords.with)){
+                    context.expect(Keywords.with);
+                    context.expectAnyOf(Keywords.a, Keywords.an);
+
+                    target = context.expectIdentifier();
+                }
+            } else {
+                eventKind = context.expectAnyOf(Keywords.taken, Keywords.dropped);
+            }
+        } else {            
+            context.expect(Keywords.the);
+            context.expect(Keywords.player);
+            eventKind = context.expectAnyOf(Keywords.enters, Keywords.exits);
+        }
 
         context.expectOpenMethodBlock();
 
         const actionsVisitor = new EventExpressionVisitor();
         const actions = actionsVisitor.visit(context);
 
-        return new WhenDeclarationExpression(Keywords.player, eventKind.value, actions);
+        return new WhenDeclarationExpression(Keywords.player, eventKind.value, actions,  target?.value);
     }
 
 }

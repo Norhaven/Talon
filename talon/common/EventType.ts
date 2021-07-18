@@ -1,5 +1,8 @@
 export enum EventType{
     None,
     PlayerEntersPlace,
-    PlayerExitsPlace
+    PlayerExitsPlace,
+    ItIsTaken,
+    ItIsDropped,
+    ItIsUsed
 }

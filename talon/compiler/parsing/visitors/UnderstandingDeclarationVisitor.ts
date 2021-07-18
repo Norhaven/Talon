@@ -17,7 +17,8 @@ export class UnderstandingDeclarationVisitor extends Visitor{
                                             Keywords.directions,
                                             Keywords.taking,
                                             Keywords.inventory,
-                                            Keywords.dropping);
+                                            Keywords.dropping,
+                                            Keywords.using);
 
         context.expectTerminator();
 

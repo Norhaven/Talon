@@ -12,4 +12,6 @@ export class WorldObject {
     static observe = "~observe";
     
     static visible = "~visible";
+
+    static contextParameter = "~context";
 }

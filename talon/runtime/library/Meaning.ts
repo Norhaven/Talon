@@ -5,6 +5,7 @@ export enum Meaning{
     Direction,
     Inventory,
     Dropping,
+    Using,
     Quitting,
     Custom
 }

@@ -238,16 +238,26 @@ export class TalonTransformer{
                             method.name = `~event_${event.actor}_${event.eventKind}_${duplicateEventCount}`;
                             method.eventType = this.transformEventKind(event.eventKind);
 
+                            if (event.target){
+                                method.parameters.push(
+                                    new Parameter(WorldObject.contextParameter, event.target)
+                                );
+                            }
+
                             duplicateEventCount++;
 
                             const actions = <ActionsExpression>event.actions;
 
                             for(const action of actions.actions){
                                 const body = this.transformExpression(action, ExpressionTransformationMode.IgnoreResultsOfSayExpression);
-                                method.body.push(...body);
+                                method.body.push(
+                                    ...body                                    
+                                );
                             }
 
-                            method.body.push(Instruction.return());
+                            method.body.push(
+                                Instruction.return()
+                            );
 
                             type?.methods.push(method);
                         }
@@ -297,6 +307,15 @@ export class TalonTransformer{
             }
             case Keywords.exits:{
                 return EventType.PlayerExitsPlace;
+            }
+            case Keywords.taken:{
+                return EventType.ItIsTaken;
+            }
+            case Keywords.dropped:{
+                return EventType.ItIsDropped;
+            }
+            case Keywords.used:{
+                return EventType.ItIsUsed;
             }
             default:{
                 throw new CompilationError(`Unable to transform unsupported event kind '${kind}'`);

@@ -32,7 +32,13 @@ export class ParseCommandHandler extends OpCodeHandler{
         const command = Memory.allocateCommand();
         
         command.action = Memory.allocateString(pieces[0]);
-        command.targetName = Memory.allocateString(pieces[1]);
+
+        if (pieces.length == 2){
+            command.targetName = Memory.allocateString(pieces[1]);
+        } else if (pieces.length == 4){
+            command.actorName = Memory.allocateString(pieces[1]);
+            command.targetName = Memory.allocateString(pieces[3]);
+        }
 
         return command;
     }

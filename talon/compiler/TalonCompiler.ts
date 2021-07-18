@@ -11,6 +11,7 @@ import { Version } from "../common/Version";
 import { IOutput } from "../runtime/IOutput";
 import { CompilationError } from "./exceptions/CompilationError";
 import { Delegate } from "../library/Delegate";
+import * as buildInfo from "../../build-info.json";
 
 export class TalonCompiler{
     get languageVersion(){
@@ -18,7 +19,7 @@ export class TalonCompiler{
     }
 
     get version(){
-        return new Version(1, 0, 0);
+        return new Version(buildInfo.major, buildInfo.minor, buildInfo.revision);
     }
 
     constructor(private readonly out:IOutput){

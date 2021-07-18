@@ -9,12 +9,15 @@
             "tsconfig": "tsconfig.json",
             "problemMatcher": [
                 "$tsc"
+            ],
+            "dependsOn":[
+                "Clean",
+                "Increment Build Version",
             ]
         },
         {
             "label": "Run Webpack",
-            "dependsOn":[
-                "Clean",
+            "dependsOn":[                
                 "Build TypeScript"
             ],
             "type": "shell",
@@ -27,10 +30,17 @@
             }
         },        
         {
+            "label": "Increment Build Version",
+            "type": "shell",
+            "command":[
+                "node replace.build.js"
+            ]
+        },
+        {
             "label": "Clean",
             "type": "shell",
             "command":[
-                "rm ./ide/js -Recurse -ErrorAction Ignore"
+                "'Test-Path -Path ./ide/js' -and 'rm ./ide/js -Recurse'"
             ]
         },  
         {

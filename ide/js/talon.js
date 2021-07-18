@@ -2,6 +2,16 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./out/build-info.json":
+/*!*****************************!*\
+  !*** ./out/build-info.json ***!
+  \*****************************/
+/***/ ((module) => {
+
+module.exports = JSON.parse('{"major":1,"minor":0,"revision":23}');
+
+/***/ }),
+
 /***/ "./out/talon/PaneOutput.js":
 /*!*********************************!*\
   !*** ./out/talon/PaneOutput.js ***!
@@ -164,7 +174,8 @@ class TalonIde {
                 "understand \"go\" as moving. \n" +
                 "understand \"take\" as taking. \n" +
                 "understand \"inv\" as inventory. \n" +
-                "understand \"drop\" as dropping. \n\n" +
+                "understand \"drop\" as dropping. \n" +
+                "understand \"use\" as using.\n\n" +
                 "an Inn is a kind of place. \n" +
                 "it is where the player starts. \n" +
                 "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. The bartender is behind the bar. An open door to the north leads outside.\" \n" +
@@ -181,7 +192,10 @@ class TalonIde {
                 "    set value to true; \n" +
                 "and then stop. \n\n" +
                 "a Fireplace is a kind of decoration. \n" +
-                "it is described as \"The fireplace crackles. It's full of fire.\". \n\n" +
+                "it is described as \"The fireplace crackles. It's full of fire.\".\n" +
+                "when it is used with a Coin:\n" +
+                "    say \"The firelight flickers on the surface of the coin.\";\n" +
+                "and then stop.\n\n" +
                 "a Walkway is a kind of place. \n" +
                 "it is described as \"The walkway in front of the inn is empty, just a cobblestone entrance. The inn is to the south.\". \n" +
                 "it can reach the Inn by going \"south\". \n" +
@@ -191,7 +205,16 @@ class TalonIde {
                 "and then stop. \n\n" +
                 "say \"This is the middle.\".\n\n" +
                 "a Coin is a kind of item. \n" +
-                "it is described as \"It's a small coin.\".\n\n" +
+                "it is described as \"It's a small coin.\".\n" +
+                "when it is taken:\n" +
+                "    say \"You got a coin!\";\n" +
+                "and then stop.\n" +
+                "when it is dropped:\n" +
+                "    say \"You put the coin down!\";\n" +
+                "and then stop.\n\n" +
+                "when it is used:\n" +
+                "    say \"You used the coin somehow!\";\n" +
+                "and then stop.\n\n" +
                 "say \"This is the end.\".\n";
     }
 }
@@ -216,6 +239,9 @@ var EventType;
     EventType[EventType["None"] = 0] = "None";
     EventType[EventType["PlayerEntersPlace"] = 1] = "PlayerEntersPlace";
     EventType[EventType["PlayerExitsPlace"] = 2] = "PlayerExitsPlace";
+    EventType[EventType["ItIsTaken"] = 3] = "ItIsTaken";
+    EventType[EventType["ItIsDropped"] = 4] = "ItIsDropped";
+    EventType[EventType["ItIsUsed"] = 5] = "ItIsUsed";
 })(EventType = exports.EventType || (exports.EventType = {}));
 //# sourceMappingURL=../../../ide/js/talon/common/EventType.js.map
 
@@ -515,9 +541,28 @@ exports.Version = Version;
 /*!*********************************************!*\
   !*** ./out/talon/compiler/TalonCompiler.js ***!
   \*********************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TalonCompiler = void 0;
 const Type_1 = __webpack_require__(/*! ../common/Type */ "./out/talon/common/Type.js");
@@ -532,6 +577,7 @@ const TalonTransformer_1 = __webpack_require__(/*! ./transforming/TalonTransform
 const Version_1 = __webpack_require__(/*! ../common/Version */ "./out/talon/common/Version.js");
 const CompilationError_1 = __webpack_require__(/*! ./exceptions/CompilationError */ "./out/talon/compiler/exceptions/CompilationError.js");
 const Delegate_1 = __webpack_require__(/*! ../library/Delegate */ "./out/talon/library/Delegate.js");
+const buildInfo = __importStar(__webpack_require__(/*! ../../build-info.json */ "./out/build-info.json"));
 class TalonCompiler {
     constructor(out) {
         this.out = out;
@@ -540,7 +586,7 @@ class TalonCompiler {
         return new Version_1.Version(1, 0, 0);
     }
     get version() {
-        return new Version_1.Version(1, 0, 0);
+        return new Version_1.Version(buildInfo.major, buildInfo.minor, buildInfo.revision);
     }
     compile(code) {
         this.out.write("<strong>Starting compilation...</strong>");
@@ -675,6 +721,11 @@ Keywords.observed = "observed";
 Keywords.continue = "continue";
 Keywords.true = "true";
 Keywords.false = "false";
+Keywords.taken = "taken";
+Keywords.dropped = "dropped";
+Keywords.using = "using";
+Keywords.used = "used";
+Keywords.with = "with";
 //# sourceMappingURL=../../../../ide/js/talon/compiler/lexing/Keywords.js.map
 
 /***/ }),
@@ -1395,11 +1446,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WhenDeclarationExpression = void 0;
 const Expression_1 = __webpack_require__(/*! ./Expression */ "./out/talon/compiler/parsing/expressions/Expression.js");
 class WhenDeclarationExpression extends Expression_1.Expression {
-    constructor(actor, eventKind, actions) {
+    constructor(actor, eventKind, actions, target) {
         super();
         this.actor = actor;
         this.eventKind = eventKind;
         this.actions = actions;
+        this.target = target;
     }
 }
 exports.WhenDeclarationExpression = WhenDeclarationExpression;
@@ -1926,7 +1978,7 @@ class UnderstandingDeclarationVisitor extends Visitor_1.Visitor {
         context.expect(Keywords_1.Keywords.understand);
         const value = context.expectString();
         context.expect(Keywords_1.Keywords.as);
-        const meaning = context.expectAnyOf(Keywords_1.Keywords.describing, Keywords_1.Keywords.moving, Keywords_1.Keywords.directions, Keywords_1.Keywords.taking, Keywords_1.Keywords.inventory, Keywords_1.Keywords.dropping);
+        const meaning = context.expectAnyOf(Keywords_1.Keywords.describing, Keywords_1.Keywords.moving, Keywords_1.Keywords.directions, Keywords_1.Keywords.taking, Keywords_1.Keywords.inventory, Keywords_1.Keywords.dropping, Keywords_1.Keywords.using);
         context.expectTerminator();
         return new UnderstandingDeclarationExpression_1.UnderstandingDeclarationExpression(value.value, meaning.value);
     }
@@ -1968,13 +2020,32 @@ const EventExpressionVisitor_1 = __webpack_require__(/*! ./EventExpressionVisito
 class WhenDeclarationVisitor extends Visitor_1.Visitor {
     visit(context) {
         context.expect(Keywords_1.Keywords.when);
-        context.expect(Keywords_1.Keywords.the);
-        context.expect(Keywords_1.Keywords.player);
-        const eventKind = context.expectAnyOf(Keywords_1.Keywords.enters, Keywords_1.Keywords.exits);
+        let eventKind;
+        let target = undefined;
+        if (context.is(Keywords_1.Keywords.it)) {
+            context.expect(Keywords_1.Keywords.it);
+            context.expect(Keywords_1.Keywords.is);
+            if (context.is(Keywords_1.Keywords.used)) {
+                eventKind = context.expect(Keywords_1.Keywords.used);
+                if (context.is(Keywords_1.Keywords.with)) {
+                    context.expect(Keywords_1.Keywords.with);
+                    context.expectAnyOf(Keywords_1.Keywords.a, Keywords_1.Keywords.an);
+                    target = context.expectIdentifier();
+                }
+            }
+            else {
+                eventKind = context.expectAnyOf(Keywords_1.Keywords.taken, Keywords_1.Keywords.dropped);
+            }
+        }
+        else {
+            context.expect(Keywords_1.Keywords.the);
+            context.expect(Keywords_1.Keywords.player);
+            eventKind = context.expectAnyOf(Keywords_1.Keywords.enters, Keywords_1.Keywords.exits);
+        }
         context.expectOpenMethodBlock();
         const actionsVisitor = new EventExpressionVisitor_1.EventExpressionVisitor();
         const actions = actionsVisitor.visit(context);
-        return new WhenDeclarationExpression_1.WhenDeclarationExpression(Keywords_1.Keywords.player, eventKind.value, actions);
+        return new WhenDeclarationExpression_1.WhenDeclarationExpression(Keywords_1.Keywords.player, eventKind.value, actions, target === null || target === void 0 ? void 0 : target.value);
     }
 }
 exports.WhenDeclarationVisitor = WhenDeclarationVisitor;
@@ -2232,13 +2303,19 @@ class TalonTransformer {
                             const method = new Method_1.Method();
                             method.name = `~event_${event.actor}_${event.eventKind}_${duplicateEventCount}`;
                             method.eventType = this.transformEventKind(event.eventKind);
+                            if (event.target) {
+                                method.parameters.push(new Parameter_1.Parameter(WorldObject_1.WorldObject.contextParameter, event.target));
+                            }
                             duplicateEventCount++;
                             const actions = event.actions;
                             for (const action of actions.actions) {
                                 const body = this.transformExpression(action, ExpressionTransformationMode_1.ExpressionTransformationMode.IgnoreResultsOfSayExpression);
                                 method.body.push(...body);
                             }
-                            method.body.push(Instruction_1.Instruction.return());
+                            method.body.push(
+                            // Instruction.loadString(''),
+                            // Instruction.print(),
+                            Instruction_1.Instruction.return());
                             type === null || type === void 0 ? void 0 : type.methods.push(method);
                         }
                     }
@@ -2272,6 +2349,15 @@ class TalonTransformer {
             }
             case Keywords_1.Keywords.exits: {
                 return EventType_1.EventType.PlayerExitsPlace;
+            }
+            case Keywords_1.Keywords.taken: {
+                return EventType_1.EventType.ItIsTaken;
+            }
+            case Keywords_1.Keywords.dropped: {
+                return EventType_1.EventType.ItIsDropped;
+            }
+            case Keywords_1.Keywords.used: {
+                return EventType_1.EventType.ItIsUsed;
             }
             default: {
                 throw new CompilationError_1.CompilationError(`Unable to transform unsupported event kind '${kind}'`);
@@ -2801,6 +2887,7 @@ Understanding.direction = "~direction";
 Understanding.taking = "~taking";
 Understanding.inventory = "~inventory";
 Understanding.dropping = "~dropping";
+Understanding.using = "~using";
 Understanding.action = "~action";
 Understanding.meaning = "~meaning";
 //# sourceMappingURL=../../../ide/js/talon/library/Understanding.js.map
@@ -2828,6 +2915,7 @@ WorldObject.observation = "~observation";
 WorldObject.describe = "~describe";
 WorldObject.observe = "~observe";
 WorldObject.visible = "~visible";
+WorldObject.contextParameter = "~context";
 //# sourceMappingURL=../../../ide/js/talon/library/WorldObject.js.map
 
 /***/ }),
@@ -3876,6 +3964,7 @@ const RuntimeWorldObject_1 = __webpack_require__(/*! ../library/RuntimeWorldObje
 const WorldObject_1 = __webpack_require__(/*! ../../library/WorldObject */ "./out/talon/library/WorldObject.js");
 const Memory_1 = __webpack_require__(/*! ../common/Memory */ "./out/talon/runtime/common/Memory.js");
 const Type_1 = __webpack_require__(/*! ../../common/Type */ "./out/talon/common/Type.js");
+const RuntimeAny_1 = __webpack_require__(/*! ../library/RuntimeAny */ "./out/talon/runtime/library/RuntimeAny.js");
 const Player_1 = __webpack_require__(/*! ../../library/Player */ "./out/talon/library/Player.js");
 const EventType_1 = __webpack_require__(/*! ../../common/EventType */ "./out/talon/common/EventType.js");
 const RuntimeDelegate_1 = __webpack_require__(/*! ../library/RuntimeDelegate */ "./out/talon/runtime/library/RuntimeDelegate.js");
@@ -3889,13 +3978,15 @@ class HandleCommandHandler extends OpCodeHandler_1.OpCodeHandler {
         this.code = OpCode_1.OpCode.HandleCommand;
     }
     handle(thread) {
+        var _a, _b;
         const command = thread.currentMethod.pop();
         if (!(command instanceof RuntimeCommand_1.RuntimeCommand)) {
             throw new RuntimeError_1.RuntimeError(`Unable to handle a non-command, found '${command}`);
         }
         const action = command.action.value;
-        const targetName = command.targetName.value;
-        this.logInteraction(thread, `'${action} ${targetName}'`);
+        const actor = (_a = command.actorName) === null || _a === void 0 ? void 0 : _a.value;
+        const targetName = (_b = command.targetName) === null || _b === void 0 ? void 0 : _b.value;
+        this.logInteraction(thread, `'${action} ${actor} ${targetName}'`);
         const understandingsByAction = new Map(thread.knownUnderstandings.map(x => { var _a; return [(_a = x.fields.find(field => field.name == Understanding_1.Understanding.action)) === null || _a === void 0 ? void 0 : _a.defaultValue, x]; }));
         const understanding = understandingsByAction.get(action);
         if (!understanding) {
@@ -3904,6 +3995,7 @@ class HandleCommandHandler extends OpCodeHandler_1.OpCodeHandler {
         }
         const meaningField = understanding.fields.find(x => x.name == Understanding_1.Understanding.meaning);
         const meaning = this.determineMeaningFor(meaningField === null || meaningField === void 0 ? void 0 : meaningField.defaultValue);
+        const actualActor = this.inferTargetFrom(thread, actor, meaning);
         const actualTarget = this.inferTargetFrom(thread, targetName, meaning);
         if (!actualTarget) {
             this.output.write("I don't know what you're referring to.");
@@ -3919,8 +4011,8 @@ class HandleCommandHandler extends OpCodeHandler_1.OpCodeHandler {
                 const currentPlace = thread.currentPlace;
                 thread.currentPlace = nextPlace;
                 this.describe(thread, actualTarget, false);
-                this.raiseEvent(thread, nextPlace, EventType_1.EventType.PlayerEntersPlace);
-                this.raiseEvent(thread, currentPlace, EventType_1.EventType.PlayerExitsPlace);
+                this.raisePlaceEvent(thread, nextPlace, EventType_1.EventType.PlayerEntersPlace);
+                this.raisePlaceEvent(thread, currentPlace, EventType_1.EventType.PlayerExitsPlace);
                 break;
             }
             case Meaning_1.Meaning.Taking: {
@@ -3929,10 +4021,11 @@ class HandleCommandHandler extends OpCodeHandler_1.OpCodeHandler {
                     return super.handle(thread);
                 }
                 const list = thread.currentPlace.getContentsField();
-                list.items = list.items.filter(x => x.typeName.toLowerCase() !== targetName.toLowerCase());
+                list.items = list.items.filter(x => x.typeName.toLowerCase() !== (targetName === null || targetName === void 0 ? void 0 : targetName.toLowerCase()));
                 const inventory = thread.currentPlayer.getContentsField();
                 inventory.items.push(actualTarget);
                 this.describe(thread, thread.currentPlace, false);
+                this.tryRaiseItemEvents(thread, thread.currentPlace, EventType_1.EventType.ItIsTaken, actualTarget);
                 break;
             }
             case Meaning_1.Meaning.Inventory: {
@@ -3942,10 +4035,21 @@ class HandleCommandHandler extends OpCodeHandler_1.OpCodeHandler {
             }
             case Meaning_1.Meaning.Dropping: {
                 const list = thread.currentPlayer.getContentsField();
-                list.items = list.items.filter(x => x.typeName.toLowerCase() !== targetName.toLowerCase());
+                list.items = list.items.filter(x => x.typeName.toLowerCase() !== (targetName === null || targetName === void 0 ? void 0 : targetName.toLowerCase()));
                 const contents = thread.currentPlace.getContentsField();
                 contents.items.push(actualTarget);
                 this.describe(thread, thread.currentPlace, false);
+                this.tryRaiseItemEvents(thread, thread.currentPlace, EventType_1.EventType.ItIsDropped, actualTarget);
+                break;
+            }
+            case Meaning_1.Meaning.Using: {
+                if (actualActor) {
+                    this.tryRaiseContextualItemEvents(thread, thread.currentPlace, EventType_1.EventType.ItIsUsed, actualActor, actualTarget);
+                    this.tryRaiseItemEvents(thread, thread.currentPlace, EventType_1.EventType.ItIsUsed, actualActor);
+                }
+                else {
+                    this.tryRaiseItemEvents(thread, thread.currentPlace, EventType_1.EventType.ItIsUsed, actualTarget);
+                }
                 break;
             }
             default:
@@ -3953,7 +4057,39 @@ class HandleCommandHandler extends OpCodeHandler_1.OpCodeHandler {
         }
         return super.handle(thread);
     }
-    raiseEvent(thread, location, type) {
+    tryRaiseContextualItemEvents(thread, location, type, actor, target) {
+        const actorEvents = Array.from(actor.methods.values()).filter(x => x.eventType == type && x.parameters.length > 0 && x.parameters[0].typeName === target.typeName);
+        const targetEvents = Array.from(target.methods.values()).filter(x => x.eventType == type && x.parameters.length > 0 && x.parameters[0].typeName === actor.typeName);
+        const actorThis = Variable_1.Variable.forThis(new Type_1.Type(actor.typeName, actor.parentTypeName), actor);
+        const targetThis = Variable_1.Variable.forThis(new Type_1.Type(target.typeName, target.parentTypeName), target);
+        for (const event of actorEvents) {
+            event.actualParameters = [
+                actorThis,
+                new Variable_1.Variable(WorldObject_1.WorldObject.contextParameter, new Type_1.Type(RuntimeItem_1.RuntimeItem.name, RuntimeAny_1.RuntimeAny.name), target)
+            ];
+            const delegate = new RuntimeDelegate_1.RuntimeDelegate(event);
+            thread.currentMethod.push(delegate);
+        }
+        for (const event of targetEvents) {
+            event.actualParameters = [
+                targetThis,
+                new Variable_1.Variable(WorldObject_1.WorldObject.contextParameter, new Type_1.Type(RuntimeItem_1.RuntimeItem.name, RuntimeAny_1.RuntimeAny.name), actor)
+            ];
+            const delegate = new RuntimeDelegate_1.RuntimeDelegate(event);
+            thread.currentMethod.push(delegate);
+        }
+    }
+    tryRaiseItemEvents(thread, location, type, target) {
+        const events = Array.from(target.methods.values()).filter(x => x.eventType == type && x.parameters.length === 0);
+        for (const event of events) {
+            event.actualParameters = [
+                Variable_1.Variable.forThis(new Type_1.Type(target.typeName, target.parentTypeName), target)
+            ];
+            const delegate = new RuntimeDelegate_1.RuntimeDelegate(event);
+            thread.currentMethod.push(delegate);
+        }
+    }
+    raisePlaceEvent(thread, location, type) {
         const events = Array.from(location.methods.values()).filter(x => x.eventType == type);
         for (const event of events) {
             const method = location.methods.get(event.name);
@@ -3987,7 +4123,7 @@ class HandleCommandHandler extends OpCodeHandler_1.OpCodeHandler {
                 return thread.currentPlace;
             }
             const placeContents = (_c = thread.currentPlace) === null || _c === void 0 ? void 0 : _c.getContentsField();
-            const itemOrDecoration = placeContents.items.find(x => x.typeName.toLowerCase() === targetName.toLowerCase());
+            const itemOrDecoration = placeContents.items.find(x => x.typeName.toLowerCase() === (targetName === null || targetName === void 0 ? void 0 : targetName.toLowerCase()));
             if (itemOrDecoration instanceof RuntimeWorldObject_1.RuntimeWorldObject) {
                 return itemOrDecoration;
             }
@@ -3995,7 +4131,7 @@ class HandleCommandHandler extends OpCodeHandler_1.OpCodeHandler {
         }
         else if (meaning === Meaning_1.Meaning.Taking) {
             const list = thread.currentPlace.getContentsField();
-            const matchingItems = list.items.filter(x => x.typeName.toLowerCase() === targetName.toLowerCase());
+            const matchingItems = list.items.filter(x => x.typeName.toLowerCase() === (targetName === null || targetName === void 0 ? void 0 : targetName.toLowerCase()));
             if (matchingItems.length == 0) {
                 return undefined;
             }
@@ -4003,11 +4139,24 @@ class HandleCommandHandler extends OpCodeHandler_1.OpCodeHandler {
         }
         else if (meaning === Meaning_1.Meaning.Dropping) {
             const list = thread.currentPlayer.getContentsField();
-            const matchingItems = list.items.filter(x => x.typeName.toLowerCase() === targetName.toLowerCase());
+            const matchingItems = list.items.filter(x => x.typeName.toLowerCase() === (targetName === null || targetName === void 0 ? void 0 : targetName.toLowerCase()));
             if (matchingItems.length == 0) {
                 return undefined;
             }
             return matchingItems[0];
+        }
+        else if (meaning === Meaning_1.Meaning.Using) {
+            const list = thread.currentPlayer.getContentsField();
+            const matchingInventoryItems = list.items.filter(x => x.typeName.toLowerCase() === (targetName === null || targetName === void 0 ? void 0 : targetName.toLowerCase()));
+            if (matchingInventoryItems.length > 0) {
+                return matchingInventoryItems[0];
+            }
+            const contents = thread.currentPlace.getContentsField();
+            const matchingPlaceItems = contents.items.filter(x => x.typeName.toLowerCase() === (targetName === null || targetName === void 0 ? void 0 : targetName.toLowerCase()));
+            if (matchingPlaceItems.length > 0) {
+                return matchingPlaceItems[0];
+            }
+            return undefined;
         }
         else {
             return undefined;
@@ -4060,6 +4209,7 @@ class HandleCommandHandler extends OpCodeHandler_1.OpCodeHandler {
             case Understanding_1.Understanding.taking: return Meaning_1.Meaning.Taking;
             case Understanding_1.Understanding.inventory: return Meaning_1.Meaning.Inventory;
             case Understanding_1.Understanding.dropping: return Meaning_1.Meaning.Dropping;
+            case Understanding_1.Understanding.using: return Meaning_1.Meaning.Using;
             default:
                 return Meaning_1.Meaning.Custom;
         }
@@ -4639,7 +4789,13 @@ class ParseCommandHandler extends OpCodeHandler_1.OpCodeHandler {
         const pieces = text.split(" ");
         const command = Memory_1.Memory.allocateCommand();
         command.action = Memory_1.Memory.allocateString(pieces[0]);
-        command.targetName = Memory_1.Memory.allocateString(pieces[1]);
+        if (pieces.length == 2) {
+            command.targetName = Memory_1.Memory.allocateString(pieces[1]);
+        }
+        else if (pieces.length == 4) {
+            command.actorName = Memory_1.Memory.allocateString(pieces[1]);
+            command.targetName = Memory_1.Memory.allocateString(pieces[3]);
+        }
         return command;
     }
 }
@@ -4893,8 +5049,9 @@ var Meaning;
     Meaning[Meaning["Direction"] = 3] = "Direction";
     Meaning[Meaning["Inventory"] = 4] = "Inventory";
     Meaning[Meaning["Dropping"] = 5] = "Dropping";
-    Meaning[Meaning["Quitting"] = 6] = "Quitting";
-    Meaning[Meaning["Custom"] = 7] = "Custom";
+    Meaning[Meaning["Using"] = 6] = "Using";
+    Meaning[Meaning["Quitting"] = 7] = "Quitting";
+    Meaning[Meaning["Custom"] = 8] = "Custom";
 })(Meaning = exports.Meaning || (exports.Meaning = {}));
 //# sourceMappingURL=../../../../ide/js/talon/runtime/library/Meaning.js.map
 
@@ -4965,9 +5122,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RuntimeCommand = void 0;
 const RuntimeAny_1 = __webpack_require__(/*! ./RuntimeAny */ "./out/talon/runtime/library/RuntimeAny.js");
 class RuntimeCommand extends RuntimeAny_1.RuntimeAny {
-    constructor(targetName, action) {
+    constructor(targetName, actorName, action) {
         super();
         this.targetName = targetName;
+        this.actorName = actorName;
         this.action = action;
     }
 }
