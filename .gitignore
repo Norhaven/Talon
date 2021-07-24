@@ -47,6 +47,7 @@ jspm_packages/
 
 # Out directory
 out/
+ide/js
 
 # TypeScript v1 declaration files
 typings/
