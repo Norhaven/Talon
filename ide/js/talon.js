@@ -8,7 +8,7 @@
   \*****************************/
 /***/ ((module) => {
 
-module.exports = JSON.parse('{"major":1,"minor":0,"revision":23}');
+module.exports = JSON.parse('{"major":1,"minor":0,"revision":61}');
 
 /***/ }),
 
@@ -175,12 +175,15 @@ class TalonIde {
                 "understand \"take\" as taking. \n" +
                 "understand \"inv\" as inventory. \n" +
                 "understand \"drop\" as dropping. \n" +
-                "understand \"use\" as using.\n\n" +
+                "understand \"use\" as using.\n" +
+                "understand \"open\" as opening.\n" +
+                "understand \"close\" as closing.\n" +
+                "understand \"opened\" as stateful.\n\n" +
                 "an Inn is a kind of place. \n" +
                 "it is where the player starts. \n" +
                 "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. The bartender is behind the bar. An open door to the north leads outside.\" \n" +
                 "    and if it contains 1 Coin then \"There's also a coin here.\"; or else \"There is just dust.\"; and then continue.\n" +
-                "it contains 1 Coin, 1 Fireplace.\n" +
+                "it contains 1 Fireplace, 1 Chest.\n" +
                 "it can reach the Walkway by going \"north\". \n" +
                 "it has a value that is false. \n" +
                 "when the player exits: \n" +
@@ -196,6 +199,18 @@ class TalonIde {
                 "when it is used with a Coin:\n" +
                 "    say \"The firelight flickers on the surface of the coin.\";\n" +
                 "and then stop.\n\n" +
+                "a Chest is a kind of Container.\n" +
+                "it is described as \"The chest looks very heavy.\".\n" +
+                "it is observed as \"A large chest sits in the corner.\".\n" +
+                "it contains 1 Coin.\n" +
+                "when it is opened:\n" +
+                "    say \"The lid creaks with the effort.\";\n" +
+                "and then stop.\n" +
+                "when it is closed:\n" +
+                "    say \"The lid slams closed.\";\n" +
+                "and then stop.\n\n" +
+                "a Container is a kind of decoration.\n" +
+                "it is described as \"It's a container.\".\n\n" +
                 "a Walkway is a kind of place. \n" +
                 "it is described as \"The walkway in front of the inn is empty, just a cobblestone entrance. The inn is to the south.\". \n" +
                 "it can reach the Inn by going \"south\". \n" +
@@ -206,12 +221,13 @@ class TalonIde {
                 "say \"This is the middle.\".\n\n" +
                 "a Coin is a kind of item. \n" +
                 "it is described as \"It's a small coin.\".\n" +
+                "it is observed as \"You see a coin.\".\n" +
                 "when it is taken:\n" +
                 "    say \"You got a coin!\";\n" +
                 "and then stop.\n" +
                 "when it is dropped:\n" +
                 "    say \"You put the coin down!\";\n" +
-                "and then stop.\n\n" +
+                "and then stop.\n" +
                 "when it is used:\n" +
                 "    say \"You used the coin somehow!\";\n" +
                 "and then stop.\n\n" +
@@ -242,6 +258,8 @@ var EventType;
     EventType[EventType["ItIsTaken"] = 3] = "ItIsTaken";
     EventType[EventType["ItIsDropped"] = 4] = "ItIsDropped";
     EventType[EventType["ItIsUsed"] = 5] = "ItIsUsed";
+    EventType[EventType["ItIsOpened"] = 6] = "ItIsOpened";
+    EventType[EventType["ItIsClosed"] = 7] = "ItIsClosed";
 })(EventType = exports.EventType || (exports.EventType = {}));
 //# sourceMappingURL=../../../ide/js/talon/common/EventType.js.map
 
@@ -276,6 +294,7 @@ exports.Field = Field;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Instruction = void 0;
+const List_1 = __webpack_require__(/*! ../library/List */ "./out/talon/library/List.js");
 const OpCode_1 = __webpack_require__(/*! ./OpCode */ "./out/talon/common/OpCode.js");
 class Instruction {
     constructor(opCode, value) {
@@ -367,8 +386,8 @@ class Instruction {
     static setLocal(name) {
         return new Instruction(OpCode_1.OpCode.SetLocal, name);
     }
-    static createDelegate(typeName, methodName) {
-        return new Instruction(OpCode_1.OpCode.CreateDelegate, `${typeName}:${methodName}`);
+    static createDelegate(methodName) {
+        return new Instruction(OpCode_1.OpCode.CreateDelegate, methodName);
     }
     static loadEmpty() {
         return new Instruction(OpCode_1.OpCode.LoadEmpty);
@@ -382,6 +401,21 @@ class Instruction {
     static ifTrueThen(...instructions) {
         const result = [];
         result.push(Instruction.branchRelativeIfFalse(instructions.length), ...instructions);
+        return result;
+    }
+    static containsTextValue(value, propertyName) {
+        const result = [];
+        result.push(Instruction.loadString(value), Instruction.loadThis(), Instruction.loadProperty(propertyName), Instruction.instanceCall(List_1.List.contains));
+        return result;
+    }
+    static joinList(separator, ...instructions) {
+        const result = [];
+        result.push(Instruction.loadString(separator), ...instructions, Instruction.instanceCall(List_1.List.join));
+        return result;
+    }
+    static mapList(mappedFunctionName, listPropertyName) {
+        const result = [];
+        result.push(Instruction.loadThis(), Instruction.createDelegate(mappedFunctionName), Instruction.loadThis(), Instruction.loadProperty(listPropertyName), Instruction.instanceCall(List_1.List.map));
         return result;
     }
 }
@@ -481,6 +515,24 @@ class Parameter {
 }
 exports.Parameter = Parameter;
 //# sourceMappingURL=../../../ide/js/talon/common/Parameter.js.map
+
+/***/ }),
+
+/***/ "./out/talon/common/States.js":
+/*!************************************!*\
+  !*** ./out/talon/common/States.js ***!
+  \************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.States = void 0;
+var States;
+(function (States) {
+    States["opened"] = "opened";
+    States["closed"] = "closed";
+})(States = exports.States || (exports.States = {}));
+//# sourceMappingURL=../../../ide/js/talon/common/States.js.map
 
 /***/ }),
 
@@ -726,6 +778,11 @@ Keywords.dropped = "dropped";
 Keywords.using = "using";
 Keywords.used = "used";
 Keywords.with = "with";
+Keywords.opening = "opening";
+Keywords.closing = "closing";
+Keywords.opened = "opened";
+Keywords.closed = "closed";
+Keywords.stateful = "stateful";
 //# sourceMappingURL=../../../../ide/js/talon/compiler/lexing/Keywords.js.map
 
 /***/ }),
@@ -1978,7 +2035,7 @@ class UnderstandingDeclarationVisitor extends Visitor_1.Visitor {
         context.expect(Keywords_1.Keywords.understand);
         const value = context.expectString();
         context.expect(Keywords_1.Keywords.as);
-        const meaning = context.expectAnyOf(Keywords_1.Keywords.describing, Keywords_1.Keywords.moving, Keywords_1.Keywords.directions, Keywords_1.Keywords.taking, Keywords_1.Keywords.inventory, Keywords_1.Keywords.dropping, Keywords_1.Keywords.using);
+        const meaning = context.expectAnyOf(Keywords_1.Keywords.describing, Keywords_1.Keywords.moving, Keywords_1.Keywords.directions, Keywords_1.Keywords.taking, Keywords_1.Keywords.inventory, Keywords_1.Keywords.dropping, Keywords_1.Keywords.using, Keywords_1.Keywords.opening, Keywords_1.Keywords.closing, Keywords_1.Keywords.stateful);
         context.expectTerminator();
         return new UnderstandingDeclarationExpression_1.UnderstandingDeclarationExpression(value.value, meaning.value);
     }
@@ -2034,7 +2091,7 @@ class WhenDeclarationVisitor extends Visitor_1.Visitor {
                 }
             }
             else {
-                eventKind = context.expectAnyOf(Keywords_1.Keywords.taken, Keywords_1.Keywords.dropped);
+                eventKind = context.expectAnyOf(Keywords_1.Keywords.taken, Keywords_1.Keywords.dropped, Keywords_1.Keywords.opened, Keywords_1.Keywords.closed, Keywords_1.Keywords.dropped);
             }
         }
         else {
@@ -2138,10 +2195,6 @@ exports.TalonTransformer = void 0;
 const Type_1 = __webpack_require__(/*! ../../common/Type */ "./out/talon/common/Type.js");
 const ProgramExpression_1 = __webpack_require__(/*! ../parsing/expressions/ProgramExpression */ "./out/talon/compiler/parsing/expressions/ProgramExpression.js");
 const CompilationError_1 = __webpack_require__(/*! ../exceptions/CompilationError */ "./out/talon/compiler/exceptions/CompilationError.js");
-const TypeDeclarationExpression_1 = __webpack_require__(/*! ../parsing/expressions/TypeDeclarationExpression */ "./out/talon/compiler/parsing/expressions/TypeDeclarationExpression.js");
-const UnderstandingDeclarationExpression_1 = __webpack_require__(/*! ../parsing/expressions/UnderstandingDeclarationExpression */ "./out/talon/compiler/parsing/expressions/UnderstandingDeclarationExpression.js");
-const Understanding_1 = __webpack_require__(/*! ../../library/Understanding */ "./out/talon/library/Understanding.js");
-const Field_1 = __webpack_require__(/*! ../../common/Field */ "./out/talon/common/Field.js");
 const Any_1 = __webpack_require__(/*! ../../library/Any */ "./out/talon/library/Any.js");
 const WorldObject_1 = __webpack_require__(/*! ../../library/WorldObject */ "./out/talon/library/WorldObject.js");
 const Place_1 = __webpack_require__(/*! ../../library/Place */ "./out/talon/library/Place.js");
@@ -2151,25 +2204,13 @@ const Item_1 = __webpack_require__(/*! ../../library/Item */ "./out/talon/librar
 const NumberType_1 = __webpack_require__(/*! ../../library/NumberType */ "./out/talon/library/NumberType.js");
 const List_1 = __webpack_require__(/*! ../../library/List */ "./out/talon/library/List.js");
 const Player_1 = __webpack_require__(/*! ../../library/Player */ "./out/talon/library/Player.js");
-const SayExpression_1 = __webpack_require__(/*! ../parsing/expressions/SayExpression */ "./out/talon/compiler/parsing/expressions/SayExpression.js");
-const Method_1 = __webpack_require__(/*! ../../common/Method */ "./out/talon/common/Method.js");
 const Say_1 = __webpack_require__(/*! ../../library/Say */ "./out/talon/library/Say.js");
-const Instruction_1 = __webpack_require__(/*! ../../common/Instruction */ "./out/talon/common/Instruction.js");
-const Parameter_1 = __webpack_require__(/*! ../../common/Parameter */ "./out/talon/common/Parameter.js");
-const IfExpression_1 = __webpack_require__(/*! ../parsing/expressions/IfExpression */ "./out/talon/compiler/parsing/expressions/IfExpression.js");
-const ConcatenationExpression_1 = __webpack_require__(/*! ../parsing/expressions/ConcatenationExpression */ "./out/talon/compiler/parsing/expressions/ConcatenationExpression.js");
-const ContainsExpression_1 = __webpack_require__(/*! ../parsing/expressions/ContainsExpression */ "./out/talon/compiler/parsing/expressions/ContainsExpression.js");
-const FieldDeclarationExpression_1 = __webpack_require__(/*! ../parsing/expressions/FieldDeclarationExpression */ "./out/talon/compiler/parsing/expressions/FieldDeclarationExpression.js");
-const ActionsExpression_1 = __webpack_require__(/*! ../parsing/expressions/ActionsExpression */ "./out/talon/compiler/parsing/expressions/ActionsExpression.js");
-const Keywords_1 = __webpack_require__(/*! ../lexing/Keywords */ "./out/talon/compiler/lexing/Keywords.js");
-const EventType_1 = __webpack_require__(/*! ../../common/EventType */ "./out/talon/common/EventType.js");
-const ExpressionTransformationMode_1 = __webpack_require__(/*! ./ExpressionTransformationMode */ "./out/talon/compiler/transforming/ExpressionTransformationMode.js");
-const SetVariableExpression_1 = __webpack_require__(/*! ../parsing/expressions/SetVariableExpression */ "./out/talon/compiler/parsing/expressions/SetVariableExpression.js");
-const LiteralExpression_1 = __webpack_require__(/*! ../parsing/expressions/LiteralExpression */ "./out/talon/compiler/parsing/expressions/LiteralExpression.js");
 const Decoration_1 = __webpack_require__(/*! ../../library/Decoration */ "./out/talon/library/Decoration.js");
-const ComparisonExpression_1 = __webpack_require__(/*! ../parsing/expressions/ComparisonExpression */ "./out/talon/compiler/parsing/expressions/ComparisonExpression.js");
-const IdentifierExpression_1 = __webpack_require__(/*! ../parsing/expressions/IdentifierExpression */ "./out/talon/compiler/parsing/expressions/IdentifierExpression.js");
-const Convert_1 = __webpack_require__(/*! ../../library/Convert */ "./out/talon/library/Convert.js");
+const TransformerContext_1 = __webpack_require__(/*! ./TransformerContext */ "./out/talon/compiler/transforming/TransformerContext.js");
+const UnderstandingTypeTransformer_1 = __webpack_require__(/*! ./transformers/type/UnderstandingTypeTransformer */ "./out/talon/compiler/transforming/transformers/type/UnderstandingTypeTransformer.js");
+const InitialTypeDeclarationTypeTransformer_1 = __webpack_require__(/*! ./transformers/type/InitialTypeDeclarationTypeTransformer */ "./out/talon/compiler/transforming/transformers/type/InitialTypeDeclarationTypeTransformer.js");
+const GlobalSaysTypeTransformer_1 = __webpack_require__(/*! ./transformers/type/GlobalSaysTypeTransformer */ "./out/talon/compiler/transforming/transformers/type/GlobalSaysTypeTransformer.js");
+const GlobalTypeTransformer_1 = __webpack_require__(/*! ./transformers/type/GlobalTypeTransformer */ "./out/talon/compiler/transforming/transformers/type/GlobalTypeTransformer.js");
 class TalonTransformer {
     constructor(out) {
         this.out = out;
@@ -2190,175 +2231,262 @@ class TalonTransformer {
         types.push(new Type_1.Type(Decoration_1.Decoration.typeName, Decoration_1.Decoration.parentTypeName));
         return new Map(types.map(x => [x.name, x]));
     }
+    mapTransform(expressions, transformerType, context) {
+        expressions.map(x => this.typeTransform(x, transformerType, context));
+    }
+    typeTransform(expression, transformerType, context) {
+        const transformer = new transformerType();
+        transformer.transform(expression, context);
+    }
     transform(expression) {
-        const typesByName = this.createSystemTypes();
-        let dynamicTypeCount = 0;
-        if (expression instanceof ProgramExpression_1.ProgramExpression) {
-            for (const child of expression.expressions) {
-                if (child instanceof UnderstandingDeclarationExpression_1.UnderstandingDeclarationExpression) {
-                    const type = new Type_1.Type(`~${Understanding_1.Understanding.typeName}_${dynamicTypeCount}`, Understanding_1.Understanding.typeName);
-                    const action = new Field_1.Field();
-                    action.name = Understanding_1.Understanding.action;
-                    action.defaultValue = child.value;
-                    const meaning = new Field_1.Field();
-                    meaning.name = Understanding_1.Understanding.meaning;
-                    meaning.defaultValue = child.meaning;
-                    type.fields.push(action);
-                    type.fields.push(meaning);
-                    dynamicTypeCount++;
-                    typesByName.set(type.name, type);
-                }
-                else if (child instanceof TypeDeclarationExpression_1.TypeDeclarationExpression) {
-                    const type = this.transformInitialTypeDeclaration(child);
-                    typesByName.set(type.name, type);
-                }
-            }
-            for (const child of expression.expressions) {
-                if (child instanceof TypeDeclarationExpression_1.TypeDeclarationExpression) {
-                    const type = typesByName.get(child.name);
-                    for (const fieldExpression of child.fields) {
-                        const field = new Field_1.Field();
-                        field.name = fieldExpression.name;
-                        field.typeName = fieldExpression.typeName;
-                        field.type = typesByName.get(fieldExpression.typeName);
-                        if (fieldExpression.initialValue) {
-                            if (field.typeName == StringType_1.StringType.typeName) {
-                                const value = fieldExpression.initialValue;
-                                field.defaultValue = value;
-                            }
-                            else if (field.typeName == NumberType_1.NumberType.typeName) {
-                                const value = Number(fieldExpression.initialValue);
-                                field.defaultValue = value;
-                            }
-                            else if (field.typeName == BooleanType_1.BooleanType.typeName) {
-                                let value = false;
-                                if (typeof fieldExpression.initialValue == 'string') {
-                                    value = Convert_1.Convert.stringToBoolean(fieldExpression.initialValue);
-                                }
-                                else if (typeof fieldExpression.initialValue == 'boolean') {
-                                    value = fieldExpression.initialValue;
-                                }
-                                else {
-                                    throw new CompilationError_1.CompilationError(`Unable to transform field type`);
-                                }
-                                field.defaultValue = value;
-                            }
-                            else {
-                                field.defaultValue = fieldExpression.initialValue;
-                            }
-                        }
-                        if (fieldExpression.associatedExpressions.length > 0) {
-                            const getField = new Method_1.Method();
-                            getField.name = `~get_${field.name}`;
-                            getField.parameters.push(new Parameter_1.Parameter("~value", field.typeName));
-                            getField.returnType = field.typeName;
-                            for (const associated of fieldExpression.associatedExpressions) {
-                                getField.body.push(...this.transformExpression(associated));
-                            }
-                            getField.body.push(Instruction_1.Instruction.return());
-                            type === null || type === void 0 ? void 0 : type.methods.push(getField);
-                        }
-                        type === null || type === void 0 ? void 0 : type.fields.push(field);
-                    }
-                    let isWorldObject = false;
-                    for (let current = type; current; current = typesByName.get(current.baseTypeName)) {
-                        if (current.name == WorldObject_1.WorldObject.typeName) {
-                            isWorldObject = true;
-                            break;
-                        }
-                    }
-                    if (isWorldObject) {
-                        const describe = new Method_1.Method();
-                        describe.name = WorldObject_1.WorldObject.describe;
-                        describe.body.push(Instruction_1.Instruction.loadThis(), Instruction_1.Instruction.loadProperty(WorldObject_1.WorldObject.visible), Instruction_1.Instruction.branchRelativeIfFalse(10), Instruction_1.Instruction.loadThis(), Instruction_1.Instruction.loadProperty(WorldObject_1.WorldObject.description), Instruction_1.Instruction.loadString(' '), Instruction_1.Instruction.loadThis(), Instruction_1.Instruction.createDelegate(type === null || type === void 0 ? void 0 : type.name, WorldObject_1.WorldObject.observe), Instruction_1.Instruction.loadThis(), Instruction_1.Instruction.loadProperty(WorldObject_1.WorldObject.contents), Instruction_1.Instruction.instanceCall(List_1.List.map), Instruction_1.Instruction.instanceCall(List_1.List.join), Instruction_1.Instruction.concatenate(), Instruction_1.Instruction.print(), Instruction_1.Instruction.return());
-                        type === null || type === void 0 ? void 0 : type.methods.push(describe);
-                        const observe = new Method_1.Method();
-                        observe.name = WorldObject_1.WorldObject.observe;
-                        observe.returnType = StringType_1.StringType.typeName;
-                        observe.body.push(Instruction_1.Instruction.loadThis(), Instruction_1.Instruction.loadProperty(WorldObject_1.WorldObject.visible), ...Instruction_1.Instruction.ifTrueThen(Instruction_1.Instruction.loadThis(), Instruction_1.Instruction.loadProperty(WorldObject_1.WorldObject.observation), Instruction_1.Instruction.return()), Instruction_1.Instruction.loadString(""), Instruction_1.Instruction.return());
-                        type === null || type === void 0 ? void 0 : type.methods.push(observe);
-                        if (!(type === null || type === void 0 ? void 0 : type.fields.find(x => x.name == WorldObject_1.WorldObject.visible))) {
-                            const visible = new Field_1.Field();
-                            visible.name = WorldObject_1.WorldObject.visible;
-                            visible.typeName = BooleanType_1.BooleanType.typeName;
-                            visible.defaultValue = true;
-                            type === null || type === void 0 ? void 0 : type.fields.push(visible);
-                        }
-                        if (!(type === null || type === void 0 ? void 0 : type.fields.find(x => x.name == WorldObject_1.WorldObject.contents))) {
-                            const contents = new Field_1.Field();
-                            contents.name = WorldObject_1.WorldObject.contents;
-                            contents.typeName = List_1.List.typeName;
-                            contents.defaultValue = [];
-                            type === null || type === void 0 ? void 0 : type.fields.push(contents);
-                        }
-                        if (!(type === null || type === void 0 ? void 0 : type.fields.find(x => x.name == WorldObject_1.WorldObject.observation))) {
-                            const observation = new Field_1.Field();
-                            observation.name = WorldObject_1.WorldObject.observation;
-                            observation.typeName = StringType_1.StringType.typeName;
-                            observation.defaultValue = "";
-                            type === null || type === void 0 ? void 0 : type.fields.push(observation);
-                        }
-                        let duplicateEventCount = 0;
-                        for (const event of child.events) {
-                            const method = new Method_1.Method();
-                            method.name = `~event_${event.actor}_${event.eventKind}_${duplicateEventCount}`;
-                            method.eventType = this.transformEventKind(event.eventKind);
-                            if (event.target) {
-                                method.parameters.push(new Parameter_1.Parameter(WorldObject_1.WorldObject.contextParameter, event.target));
-                            }
-                            duplicateEventCount++;
-                            const actions = event.actions;
-                            for (const action of actions.actions) {
-                                const body = this.transformExpression(action, ExpressionTransformationMode_1.ExpressionTransformationMode.IgnoreResultsOfSayExpression);
-                                method.body.push(...body);
-                            }
-                            method.body.push(
-                            // Instruction.loadString(''),
-                            // Instruction.print(),
-                            Instruction_1.Instruction.return());
-                            type === null || type === void 0 ? void 0 : type.methods.push(method);
-                        }
-                    }
-                }
-            }
-            const globalSays = expression.expressions.filter(x => x instanceof SayExpression_1.SayExpression);
-            const type = new Type_1.Type(`~globalSays`, Say_1.Say.typeName);
+        if (!(expression instanceof ProgramExpression_1.ProgramExpression)) {
+            throw new CompilationError_1.CompilationError(`Unable to transform a partial program`);
+        }
+        const context = new TransformerContext_1.TransformerContext();
+        context.typesByName = this.createSystemTypes();
+        this.typeTransform(expression, GlobalSaysTypeTransformer_1.GlobalSaysTypeTransformer, context);
+        const globalExpressions = expression.expressions;
+        this.mapTransform(globalExpressions, UnderstandingTypeTransformer_1.UnderstandingTypeTransformer, context);
+        this.mapTransform(globalExpressions, InitialTypeDeclarationTypeTransformer_1.InitialTypeDeclarationTypeTransformer, context);
+        this.mapTransform(globalExpressions, GlobalTypeTransformer_1.GlobalTypeTransformer, context);
+        this.out.write(`Created ${context.typesByName.size} types...`);
+        return context.types;
+    }
+}
+exports.TalonTransformer = TalonTransformer;
+//# sourceMappingURL=../../../../ide/js/talon/compiler/transforming/TalonTransformer.js.map
+
+/***/ }),
+
+/***/ "./out/talon/compiler/transforming/TransformerContext.js":
+/*!***************************************************************!*\
+  !*** ./out/talon/compiler/transforming/TransformerContext.js ***!
+  \***************************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TransformerContext = void 0;
+class TransformerContext {
+    constructor() {
+        this.typesByName = new Map();
+        this.dynamicTypeCount = 0;
+    }
+    get types() {
+        return Array.from(this.typesByName.values());
+    }
+}
+exports.TransformerContext = TransformerContext;
+//# sourceMappingURL=../../../../ide/js/talon/compiler/transforming/TransformerContext.js.map
+
+/***/ }),
+
+/***/ "./out/talon/compiler/transforming/transformers/type/GlobalSaysTypeTransformer.js":
+/*!****************************************************************************************!*\
+  !*** ./out/talon/compiler/transforming/transformers/type/GlobalSaysTypeTransformer.js ***!
+  \****************************************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GlobalSaysTypeTransformer = void 0;
+const Instruction_1 = __webpack_require__(/*! ../../../../common/Instruction */ "./out/talon/common/Instruction.js");
+const Method_1 = __webpack_require__(/*! ../../../../common/Method */ "./out/talon/common/Method.js");
+const Type_1 = __webpack_require__(/*! ../../../../common/Type */ "./out/talon/common/Type.js");
+const Say_1 = __webpack_require__(/*! ../../../../library/Say */ "./out/talon/library/Say.js");
+const ProgramExpression_1 = __webpack_require__(/*! ../../../parsing/expressions/ProgramExpression */ "./out/talon/compiler/parsing/expressions/ProgramExpression.js");
+const SayExpression_1 = __webpack_require__(/*! ../../../parsing/expressions/SayExpression */ "./out/talon/compiler/parsing/expressions/SayExpression.js");
+class GlobalSaysTypeTransformer {
+    transform(expression, context) {
+        if (!(expression instanceof ProgramExpression_1.ProgramExpression)) {
+            return;
+        }
+        const globalSaysTypeName = "~globalSays";
+        if (!context.typesByName.has(globalSaysTypeName)) {
+            const type = new Type_1.Type(globalSaysTypeName, Say_1.Say.typeName);
+            context.typesByName.set(type.name, type);
+        }
+        const globalSays = expression.expressions.filter(x => x instanceof SayExpression_1.SayExpression);
+        const type = context.typesByName.get(globalSaysTypeName);
+        const method = new Method_1.Method();
+        method.name = Say_1.Say.typeName;
+        method.parameters = [];
+        const instructions = [];
+        for (const say of globalSays) {
+            const sayExpression = say;
+            instructions.push(Instruction_1.Instruction.loadString(sayExpression.text), Instruction_1.Instruction.print());
+        }
+        instructions.push(Instruction_1.Instruction.return());
+        method.body = instructions;
+        type === null || type === void 0 ? void 0 : type.methods.push(method);
+    }
+}
+exports.GlobalSaysTypeTransformer = GlobalSaysTypeTransformer;
+//# sourceMappingURL=../../../../../../ide/js/talon/compiler/transforming/transformers/type/GlobalSaysTypeTransformer.js.map
+
+/***/ }),
+
+/***/ "./out/talon/compiler/transforming/transformers/type/GlobalTypeTransformer.js":
+/*!************************************************************************************!*\
+  !*** ./out/talon/compiler/transforming/transformers/type/GlobalTypeTransformer.js ***!
+  \************************************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GlobalTypeTransformer = void 0;
+const EventType_1 = __webpack_require__(/*! ../../../../common/EventType */ "./out/talon/common/EventType.js");
+const Field_1 = __webpack_require__(/*! ../../../../common/Field */ "./out/talon/common/Field.js");
+const Instruction_1 = __webpack_require__(/*! ../../../../common/Instruction */ "./out/talon/common/Instruction.js");
+const Method_1 = __webpack_require__(/*! ../../../../common/Method */ "./out/talon/common/Method.js");
+const Parameter_1 = __webpack_require__(/*! ../../../../common/Parameter */ "./out/talon/common/Parameter.js");
+const States_1 = __webpack_require__(/*! ../../../../common/States */ "./out/talon/common/States.js");
+const BooleanType_1 = __webpack_require__(/*! ../../../../library/BooleanType */ "./out/talon/library/BooleanType.js");
+const Convert_1 = __webpack_require__(/*! ../../../../library/Convert */ "./out/talon/library/Convert.js");
+const List_1 = __webpack_require__(/*! ../../../../library/List */ "./out/talon/library/List.js");
+const NumberType_1 = __webpack_require__(/*! ../../../../library/NumberType */ "./out/talon/library/NumberType.js");
+const StringType_1 = __webpack_require__(/*! ../../../../library/StringType */ "./out/talon/library/StringType.js");
+const WorldObject_1 = __webpack_require__(/*! ../../../../library/WorldObject */ "./out/talon/library/WorldObject.js");
+const CompilationError_1 = __webpack_require__(/*! ../../../exceptions/CompilationError */ "./out/talon/compiler/exceptions/CompilationError.js");
+const Keywords_1 = __webpack_require__(/*! ../../../lexing/Keywords */ "./out/talon/compiler/lexing/Keywords.js");
+const ActionsExpression_1 = __webpack_require__(/*! ../../../parsing/expressions/ActionsExpression */ "./out/talon/compiler/parsing/expressions/ActionsExpression.js");
+const ComparisonExpression_1 = __webpack_require__(/*! ../../../parsing/expressions/ComparisonExpression */ "./out/talon/compiler/parsing/expressions/ComparisonExpression.js");
+const ConcatenationExpression_1 = __webpack_require__(/*! ../../../parsing/expressions/ConcatenationExpression */ "./out/talon/compiler/parsing/expressions/ConcatenationExpression.js");
+const ContainsExpression_1 = __webpack_require__(/*! ../../../parsing/expressions/ContainsExpression */ "./out/talon/compiler/parsing/expressions/ContainsExpression.js");
+const FieldDeclarationExpression_1 = __webpack_require__(/*! ../../../parsing/expressions/FieldDeclarationExpression */ "./out/talon/compiler/parsing/expressions/FieldDeclarationExpression.js");
+const IdentifierExpression_1 = __webpack_require__(/*! ../../../parsing/expressions/IdentifierExpression */ "./out/talon/compiler/parsing/expressions/IdentifierExpression.js");
+const IfExpression_1 = __webpack_require__(/*! ../../../parsing/expressions/IfExpression */ "./out/talon/compiler/parsing/expressions/IfExpression.js");
+const LiteralExpression_1 = __webpack_require__(/*! ../../../parsing/expressions/LiteralExpression */ "./out/talon/compiler/parsing/expressions/LiteralExpression.js");
+const SayExpression_1 = __webpack_require__(/*! ../../../parsing/expressions/SayExpression */ "./out/talon/compiler/parsing/expressions/SayExpression.js");
+const SetVariableExpression_1 = __webpack_require__(/*! ../../../parsing/expressions/SetVariableExpression */ "./out/talon/compiler/parsing/expressions/SetVariableExpression.js");
+const TypeDeclarationExpression_1 = __webpack_require__(/*! ../../../parsing/expressions/TypeDeclarationExpression */ "./out/talon/compiler/parsing/expressions/TypeDeclarationExpression.js");
+const ExpressionTransformationMode_1 = __webpack_require__(/*! ../../ExpressionTransformationMode */ "./out/talon/compiler/transforming/ExpressionTransformationMode.js");
+class GlobalTypeTransformer {
+    transform(expression, context) {
+        if (!(expression instanceof TypeDeclarationExpression_1.TypeDeclarationExpression)) {
+            return;
+        }
+        const type = context.typesByName.get(expression.name);
+        if (!type) {
+            throw new CompilationError_1.CompilationError(`Unable to transform type with unknown definition '${expression.name}'`);
+        }
+        this.transformCustomFields(expression, context, type);
+        if (this.isWorldObject(type, context)) {
+            this.createFieldIfNotExists(WorldObject_1.WorldObject.state, List_1.List.typeName, [], type);
+            this.createFieldIfNotExists(WorldObject_1.WorldObject.visible, BooleanType_1.BooleanType.typeName, true, type);
+            this.createFieldIfNotExists(WorldObject_1.WorldObject.contents, List_1.List.typeName, [], type);
+            this.createFieldIfNotExists(WorldObject_1.WorldObject.observation, StringType_1.StringType.typeName, "", type);
+            this.createFieldIfNotExists(WorldObject_1.WorldObject.description, StringType_1.StringType.typeName, "", type);
+            this.createDescribeMethod(type);
+            this.createObserveMethod(type);
+            this.createEvents(expression, context, type);
+        }
+    }
+    createEvents(expression, context, type) {
+        let eventCount = 0;
+        for (const event of expression.events) {
             const method = new Method_1.Method();
-            method.name = Say_1.Say.typeName;
-            method.parameters = [];
-            const instructions = [];
-            for (const say of globalSays) {
-                const sayExpression = say;
-                instructions.push(Instruction_1.Instruction.loadString(sayExpression.text), Instruction_1.Instruction.print());
+            method.name = `~event_${event.actor}_${event.eventKind}_${eventCount}`;
+            method.eventType = this.transformEventKind(event.eventKind);
+            if (event.target) {
+                method.parameters.push(new Parameter_1.Parameter(WorldObject_1.WorldObject.contextParameter, event.target));
             }
-            instructions.push(Instruction_1.Instruction.return());
-            method.body = instructions;
+            eventCount++;
+            const actions = event.actions;
+            for (const action of actions.actions) {
+                const body = this.transformExpression(action, ExpressionTransformationMode_1.ExpressionTransformationMode.IgnoreResultsOfSayExpression);
+                method.body.push(...body);
+            }
+            method.body.push(Instruction_1.Instruction.return());
             type.methods.push(method);
-            typesByName.set(type.name, type);
         }
-        else {
-            throw new CompilationError_1.CompilationError("Unable to partially transform");
+    }
+    createDescribeMethod(type) {
+        const describe = new Method_1.Method();
+        describe.name = WorldObject_1.WorldObject.describe;
+        describe.body.push(Instruction_1.Instruction.loadThis(), Instruction_1.Instruction.loadProperty(WorldObject_1.WorldObject.visible), ...Instruction_1.Instruction.ifTrueThen(Instruction_1.Instruction.loadThis(), Instruction_1.Instruction.loadProperty(WorldObject_1.WorldObject.description), ...Instruction_1.Instruction.joinList(' ', ...Instruction_1.Instruction.mapList(WorldObject_1.WorldObject.observe, WorldObject_1.WorldObject.contents)), Instruction_1.Instruction.concatenate(), Instruction_1.Instruction.print()), Instruction_1.Instruction.return());
+        type.methods.push(describe);
+    }
+    createObserveMethod(type) {
+        const observe = new Method_1.Method();
+        observe.name = WorldObject_1.WorldObject.observe;
+        observe.returnType = StringType_1.StringType.typeName;
+        observe.body.push(Instruction_1.Instruction.loadThis(), Instruction_1.Instruction.loadProperty(WorldObject_1.WorldObject.visible), ...Instruction_1.Instruction.ifTrueThen(...Instruction_1.Instruction.containsTextValue(States_1.States.opened, WorldObject_1.WorldObject.state), ...Instruction_1.Instruction.ifTrueThen(Instruction_1.Instruction.loadThis(), Instruction_1.Instruction.loadProperty(WorldObject_1.WorldObject.observation), ...Instruction_1.Instruction.joinList(' ', ...Instruction_1.Instruction.mapList(WorldObject_1.WorldObject.observe, WorldObject_1.WorldObject.contents)), Instruction_1.Instruction.concatenate(), Instruction_1.Instruction.return()), Instruction_1.Instruction.loadThis(), Instruction_1.Instruction.loadProperty(WorldObject_1.WorldObject.observation), Instruction_1.Instruction.return()), Instruction_1.Instruction.loadString(""), Instruction_1.Instruction.return());
+        type.methods.push(observe);
+    }
+    createFieldIfNotExists(name, typeName, defaultValue, type) {
+        if (type.fields.some(x => x.name === name)) {
+            return;
         }
-        this.out.write(`Created ${typesByName.size} types...`);
-        return Array.from(typesByName.values());
+        const state = new Field_1.Field();
+        state.name = name;
+        state.typeName = typeName;
+        state.defaultValue = defaultValue;
+        type.fields.push(state);
+    }
+    isWorldObject(type, context) {
+        for (let current = type; current; current = context.typesByName.get(current.baseTypeName)) {
+            if (current.name == WorldObject_1.WorldObject.typeName) {
+                return true;
+            }
+        }
+        return false;
+    }
+    transformCustomFields(expression, context, type) {
+        for (const fieldExpression of expression.fields) {
+            const field = new Field_1.Field();
+            field.name = fieldExpression.name;
+            field.typeName = fieldExpression.typeName;
+            field.type = context.typesByName.get(fieldExpression.typeName);
+            if (fieldExpression.initialValue) {
+                if (field.typeName == StringType_1.StringType.typeName) {
+                    const value = fieldExpression.initialValue;
+                    field.defaultValue = value;
+                }
+                else if (field.typeName == NumberType_1.NumberType.typeName) {
+                    const value = Number(fieldExpression.initialValue);
+                    field.defaultValue = value;
+                }
+                else if (field.typeName == BooleanType_1.BooleanType.typeName) {
+                    let value = false;
+                    if (typeof fieldExpression.initialValue == 'string') {
+                        value = Convert_1.Convert.stringToBoolean(fieldExpression.initialValue);
+                    }
+                    else if (typeof fieldExpression.initialValue == 'boolean') {
+                        value = fieldExpression.initialValue;
+                    }
+                    else {
+                        throw new CompilationError_1.CompilationError(`Unable to transform field type`);
+                    }
+                    field.defaultValue = value;
+                }
+                else {
+                    field.defaultValue = fieldExpression.initialValue;
+                }
+            }
+            if (fieldExpression.associatedExpressions.length > 0) {
+                const getField = new Method_1.Method();
+                getField.name = `~get_${field.name}`;
+                getField.parameters.push(new Parameter_1.Parameter("~value", field.typeName));
+                getField.returnType = field.typeName;
+                for (const associated of fieldExpression.associatedExpressions) {
+                    getField.body.push(...this.transformExpression(associated));
+                }
+                getField.body.push(Instruction_1.Instruction.return());
+                type === null || type === void 0 ? void 0 : type.methods.push(getField);
+            }
+            type === null || type === void 0 ? void 0 : type.fields.push(field);
+        }
     }
     transformEventKind(kind) {
         switch (kind) {
-            case Keywords_1.Keywords.enters: {
-                return EventType_1.EventType.PlayerEntersPlace;
-            }
-            case Keywords_1.Keywords.exits: {
-                return EventType_1.EventType.PlayerExitsPlace;
-            }
-            case Keywords_1.Keywords.taken: {
-                return EventType_1.EventType.ItIsTaken;
-            }
-            case Keywords_1.Keywords.dropped: {
-                return EventType_1.EventType.ItIsDropped;
-            }
-            case Keywords_1.Keywords.used: {
-                return EventType_1.EventType.ItIsUsed;
-            }
+            case Keywords_1.Keywords.enters: return EventType_1.EventType.PlayerEntersPlace;
+            case Keywords_1.Keywords.exits: return EventType_1.EventType.PlayerExitsPlace;
+            case Keywords_1.Keywords.taken: return EventType_1.EventType.ItIsTaken;
+            case Keywords_1.Keywords.dropped: return EventType_1.EventType.ItIsDropped;
+            case Keywords_1.Keywords.used: return EventType_1.EventType.ItIsUsed;
+            case Keywords_1.Keywords.opened: return EventType_1.EventType.ItIsOpened;
+            case Keywords_1.Keywords.closed: return EventType_1.EventType.ItIsClosed;
             default: {
                 throw new CompilationError_1.CompilationError(`Unable to transform unsupported event kind '${kind}'`);
             }
@@ -2387,7 +2515,7 @@ class TalonTransformer {
             }
         }
         else if (expression instanceof ContainsExpression_1.ContainsExpression) {
-            instructions.push(Instruction_1.Instruction.loadNumber(expression.count), Instruction_1.Instruction.loadString(expression.typeName), Instruction_1.Instruction.loadInstance(expression.targetName), Instruction_1.Instruction.loadField(WorldObject_1.WorldObject.contents), Instruction_1.Instruction.instanceCall(List_1.List.contains));
+            instructions.push(Instruction_1.Instruction.loadNumber(expression.count), Instruction_1.Instruction.loadString(expression.typeName), Instruction_1.Instruction.loadInstance(expression.targetName), Instruction_1.Instruction.loadField(WorldObject_1.WorldObject.contents), Instruction_1.Instruction.instanceCall(List_1.List.containsType));
         }
         else if (expression instanceof ConcatenationExpression_1.ConcatenationExpression) {
             const left = this.transformExpression(expression.left, mode);
@@ -2433,12 +2561,70 @@ class TalonTransformer {
         }
         return instructions;
     }
-    transformInitialTypeDeclaration(expression) {
-        return new Type_1.Type(expression.name, expression.baseType.name);
+}
+exports.GlobalTypeTransformer = GlobalTypeTransformer;
+//# sourceMappingURL=../../../../../../ide/js/talon/compiler/transforming/transformers/type/GlobalTypeTransformer.js.map
+
+/***/ }),
+
+/***/ "./out/talon/compiler/transforming/transformers/type/InitialTypeDeclarationTypeTransformer.js":
+/*!****************************************************************************************************!*\
+  !*** ./out/talon/compiler/transforming/transformers/type/InitialTypeDeclarationTypeTransformer.js ***!
+  \****************************************************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.InitialTypeDeclarationTypeTransformer = void 0;
+const Type_1 = __webpack_require__(/*! ../../../../common/Type */ "./out/talon/common/Type.js");
+const TypeDeclarationExpression_1 = __webpack_require__(/*! ../../../parsing/expressions/TypeDeclarationExpression */ "./out/talon/compiler/parsing/expressions/TypeDeclarationExpression.js");
+class InitialTypeDeclarationTypeTransformer {
+    transform(expression, context) {
+        if (!(expression instanceof TypeDeclarationExpression_1.TypeDeclarationExpression)) {
+            return;
+        }
+        const type = new Type_1.Type(expression.name, expression.baseType.name);
+        context.typesByName.set(type.name, type);
     }
 }
-exports.TalonTransformer = TalonTransformer;
-//# sourceMappingURL=../../../../ide/js/talon/compiler/transforming/TalonTransformer.js.map
+exports.InitialTypeDeclarationTypeTransformer = InitialTypeDeclarationTypeTransformer;
+//# sourceMappingURL=../../../../../../ide/js/talon/compiler/transforming/transformers/type/InitialTypeDeclarationTypeTransformer.js.map
+
+/***/ }),
+
+/***/ "./out/talon/compiler/transforming/transformers/type/UnderstandingTypeTransformer.js":
+/*!*******************************************************************************************!*\
+  !*** ./out/talon/compiler/transforming/transformers/type/UnderstandingTypeTransformer.js ***!
+  \*******************************************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UnderstandingTypeTransformer = void 0;
+const Field_1 = __webpack_require__(/*! ../../../../common/Field */ "./out/talon/common/Field.js");
+const Type_1 = __webpack_require__(/*! ../../../../common/Type */ "./out/talon/common/Type.js");
+const Understanding_1 = __webpack_require__(/*! ../../../../library/Understanding */ "./out/talon/library/Understanding.js");
+const UnderstandingDeclarationExpression_1 = __webpack_require__(/*! ../../../parsing/expressions/UnderstandingDeclarationExpression */ "./out/talon/compiler/parsing/expressions/UnderstandingDeclarationExpression.js");
+class UnderstandingTypeTransformer {
+    transform(expression, context) {
+        if (!(expression instanceof UnderstandingDeclarationExpression_1.UnderstandingDeclarationExpression)) {
+            return;
+        }
+        const type = new Type_1.Type(`~${Understanding_1.Understanding.typeName}_${context.dynamicTypeCount}`, Understanding_1.Understanding.typeName);
+        const action = new Field_1.Field();
+        action.name = Understanding_1.Understanding.action;
+        action.defaultValue = expression.value;
+        const meaning = new Field_1.Field();
+        meaning.name = Understanding_1.Understanding.meaning;
+        meaning.defaultValue = expression.meaning;
+        type.fields.push(action);
+        type.fields.push(meaning);
+        context.dynamicTypeCount++;
+        context.typesByName.set(type.name, type);
+    }
+}
+exports.UnderstandingTypeTransformer = UnderstandingTypeTransformer;
+//# sourceMappingURL=../../../../../../ide/js/talon/compiler/transforming/transformers/type/UnderstandingTypeTransformer.js.map
 
 /***/ }),
 
@@ -2760,7 +2946,9 @@ List.count = "~count";
 List.add = "~add";
 List.map = "~map";
 List.contains = "~contains";
+List.containsType = "~containsType";
 List.join = "~join";
+List.valueParameter = "~value";
 List.separatorParameter = "~separator";
 List.instanceParameter = "~instance";
 List.delegateParameter = "~delegate";
@@ -2888,6 +3076,8 @@ Understanding.taking = "~taking";
 Understanding.inventory = "~inventory";
 Understanding.dropping = "~dropping";
 Understanding.using = "~using";
+Understanding.opening = "~opening";
+Understanding.closing = "~closing";
 Understanding.action = "~action";
 Understanding.meaning = "~meaning";
 //# sourceMappingURL=../../../ide/js/talon/library/Understanding.js.map
@@ -2912,6 +3102,7 @@ WorldObject.typeName = "~worldObject";
 WorldObject.description = "~description";
 WorldObject.contents = "~contents";
 WorldObject.observation = "~observation";
+WorldObject.state = "~state";
 WorldObject.describe = "~describe";
 WorldObject.observe = "~observe";
 WorldObject.visible = "~visible";
@@ -3849,15 +4040,11 @@ class CreateDelegateHandler extends OpCodeHandler_1.OpCodeHandler {
         this.code = OpCode_1.OpCode.CreateDelegate;
     }
     handle(thread) {
-        const typeAndMethod = thread.currentInstructionValueAs();
+        const methodName = thread.currentInstructionValueAs();
         const implicitThis = thread.currentMethod.pop();
-        this.logInteraction(thread, typeAndMethod);
-        const parts = typeAndMethod.split(':');
-        const typeName = parts[0];
-        const methodName = parts[1];
-        const type = Memory_1.Memory.findTypeByName(typeName);
-        const method = type.methods.find(method => method.name == methodName);
-        method.actualParameters.push(Variable_1.Variable.forThis(type, implicitThis));
+        this.logInteraction(thread, implicitThis === null || implicitThis === void 0 ? void 0 : implicitThis.typeName, methodName);
+        const method = implicitThis === null || implicitThis === void 0 ? void 0 : implicitThis.methods.get(methodName);
+        method.actualParameters[0] = Variable_1.Variable.forThis(Memory_1.Memory.findTypeByName(implicitThis === null || implicitThis === void 0 ? void 0 : implicitThis.typeName), implicitThis);
         const delegate = new RuntimeDelegate_1.RuntimeDelegate(method);
         thread.currentMethod.push(delegate);
         return super.handle(thread);
@@ -3971,6 +4158,7 @@ const RuntimeDelegate_1 = __webpack_require__(/*! ../library/RuntimeDelegate */ 
 const Variable_1 = __webpack_require__(/*! ../library/Variable */ "./out/talon/runtime/library/Variable.js");
 const RuntimeItem_1 = __webpack_require__(/*! ../library/RuntimeItem */ "./out/talon/runtime/library/RuntimeItem.js");
 const OpCode_1 = __webpack_require__(/*! ../../common/OpCode */ "./out/talon/common/OpCode.js");
+const States_1 = __webpack_require__(/*! ../../common/States */ "./out/talon/common/States.js");
 class HandleCommandHandler extends OpCodeHandler_1.OpCodeHandler {
     constructor(output) {
         super();
@@ -4052,10 +4240,48 @@ class HandleCommandHandler extends OpCodeHandler_1.OpCodeHandler {
                 }
                 break;
             }
+            case Meaning_1.Meaning.Opening: {
+                if (this.isState(thread, actualTarget, States_1.States.opened)) {
+                    this.output.write("It's already open!");
+                    break;
+                }
+                this.removeState(thread, actualTarget, States_1.States.closed);
+                this.includeState(thread, actualTarget, States_1.States.opened);
+                this.tryRaiseItemEvents(thread, thread.currentPlace, EventType_1.EventType.ItIsOpened, actualTarget);
+                break;
+            }
+            case Meaning_1.Meaning.Closing: {
+                if (this.isState(thread, actualTarget, States_1.States.closed)) {
+                    this.output.write("It's already closed!");
+                    break;
+                }
+                this.removeState(thread, actualTarget, States_1.States.opened);
+                this.includeState(thread, actualTarget, States_1.States.closed);
+                this.tryRaiseItemEvents(thread, thread.currentPlace, EventType_1.EventType.ItIsClosed, actualTarget);
+                break;
+            }
             default:
                 throw new RuntimeError_1.RuntimeError("Unsupported meaning found");
         }
         return super.handle(thread);
+    }
+    isState(thread, target, state) {
+        const stateField = target.fields.get(WorldObject_1.WorldObject.state);
+        const stateList = stateField === null || stateField === void 0 ? void 0 : stateField.value;
+        return stateList.items.some(x => x.value === state);
+    }
+    removeState(thread, target, state) {
+        const stateField = target.fields.get(WorldObject_1.WorldObject.state);
+        const stateList = stateField === null || stateField === void 0 ? void 0 : stateField.value;
+        stateList.items = stateList.items.filter(x => x.value !== state);
+    }
+    includeState(thread, target, state) {
+        const stateField = target.fields.get(WorldObject_1.WorldObject.state);
+        const stateList = stateField === null || stateField === void 0 ? void 0 : stateField.value;
+        if (stateList.items.some(x => x.value === state)) {
+            return;
+        }
+        stateList.items.push(Memory_1.Memory.allocateString(state));
     }
     tryRaiseContextualItemEvents(thread, location, type, actor, target) {
         const actorEvents = Array.from(actor.methods.values()).filter(x => x.eventType == type && x.parameters.length > 0 && x.parameters[0].typeName === target.typeName);
@@ -4145,7 +4371,9 @@ class HandleCommandHandler extends OpCodeHandler_1.OpCodeHandler {
             }
             return matchingItems[0];
         }
-        else if (meaning === Meaning_1.Meaning.Using) {
+        else if (meaning === Meaning_1.Meaning.Using ||
+            meaning === Meaning_1.Meaning.Opening ||
+            meaning === Meaning_1.Meaning.Closing) {
             const list = thread.currentPlayer.getContentsField();
             const matchingInventoryItems = list.items.filter(x => x.typeName.toLowerCase() === (targetName === null || targetName === void 0 ? void 0 : targetName.toLowerCase()));
             if (matchingInventoryItems.length > 0) {
@@ -4183,7 +4411,7 @@ class HandleCommandHandler extends OpCodeHandler_1.OpCodeHandler {
     describe(thread, target, isShallowDescription) {
         if (!isShallowDescription) {
             const contents = target.getFieldAsList(WorldObject_1.WorldObject.contents);
-            this.describeContents(thread, contents);
+            //this.describeContents(thread, contents);
         }
         const describe = target.methods.get(WorldObject_1.WorldObject.describe);
         describe.actualParameters.unshift(Variable_1.Variable.forThis(new Type_1.Type(target === null || target === void 0 ? void 0 : target.typeName, target === null || target === void 0 ? void 0 : target.parentTypeName), target));
@@ -4210,6 +4438,8 @@ class HandleCommandHandler extends OpCodeHandler_1.OpCodeHandler {
             case Understanding_1.Understanding.inventory: return Meaning_1.Meaning.Inventory;
             case Understanding_1.Understanding.dropping: return Meaning_1.Meaning.Dropping;
             case Understanding_1.Understanding.using: return Meaning_1.Meaning.Using;
+            case Understanding_1.Understanding.opening: return Meaning_1.Meaning.Opening;
+            case Understanding_1.Understanding.closing: return Meaning_1.Meaning.Closing;
             default:
                 return Meaning_1.Meaning.Custom;
         }
@@ -4680,7 +4910,7 @@ class LoadThisHandler extends OpCodeHandler_1.OpCodeHandler {
         var _a;
         const instance = (_a = thread.currentMethod.method) === null || _a === void 0 ? void 0 : _a.actualParameters[0].value;
         thread.currentMethod.push(instance);
-        this.logInteraction(thread);
+        this.logInteraction(thread, instance.typeName);
         return super.handle(thread);
     }
 }
@@ -5050,8 +5280,10 @@ var Meaning;
     Meaning[Meaning["Inventory"] = 4] = "Inventory";
     Meaning[Meaning["Dropping"] = 5] = "Dropping";
     Meaning[Meaning["Using"] = 6] = "Using";
-    Meaning[Meaning["Quitting"] = 7] = "Quitting";
-    Meaning[Meaning["Custom"] = 8] = "Custom";
+    Meaning[Meaning["Opening"] = 7] = "Opening";
+    Meaning[Meaning["Closing"] = 8] = "Closing";
+    Meaning[Meaning["Quitting"] = 9] = "Quitting";
+    Meaning[Meaning["Custom"] = 10] = "Custom";
 })(Meaning = exports.Meaning || (exports.Meaning = {}));
 //# sourceMappingURL=../../../../ide/js/talon/runtime/library/Meaning.js.map
 
@@ -5288,6 +5520,7 @@ class RuntimeList extends RuntimeAny_1.RuntimeAny {
         this.typeName = List_1.List.typeName;
         this.parentTypeName = Any_1.Any.typeName;
         this.defineContainsMethod();
+        this.defineContainsTypeMethod();
         this.defineMapMethod();
         this.defineAddMethod();
         this.defineCountMethod();
@@ -5326,16 +5559,28 @@ class RuntimeList extends RuntimeAny_1.RuntimeAny {
     defineContainsMethod() {
         const contains = new Method_1.Method();
         contains.name = List_1.List.contains;
+        contains.parameters.push(new Parameter_1.Parameter(List_1.List.valueParameter, StringType_1.StringType.typeName));
+        contains.returnType = BooleanType_1.BooleanType.typeName;
+        contains.body.push(Instruction_1.Instruction.loadLocal(List_1.List.valueParameter), Instruction_1.Instruction.loadThis(), Instruction_1.Instruction.externalCall("containsValue"), Instruction_1.Instruction.return());
+        this.methods.set(List_1.List.contains, contains);
+    }
+    defineContainsTypeMethod() {
+        const contains = new Method_1.Method();
+        contains.name = List_1.List.containsType;
         contains.parameters.push(new Parameter_1.Parameter(List_1.List.typeNameParameter, StringType_1.StringType.typeName), new Parameter_1.Parameter(List_1.List.countParameter, NumberType_1.NumberType.typeName));
         contains.returnType = BooleanType_1.BooleanType.typeName;
         contains.body.push(Instruction_1.Instruction.loadLocal(List_1.List.countParameter), Instruction_1.Instruction.loadLocal(List_1.List.typeNameParameter), Instruction_1.Instruction.loadThis(), Instruction_1.Instruction.externalCall("containsType"), Instruction_1.Instruction.return());
-        this.methods.set(List_1.List.contains, contains);
+        this.methods.set(List_1.List.containsType, contains);
     }
     addInstance(instance) {
         this.items.push(instance);
     }
     countItems() {
         return Memory_1.Memory.allocateNumber(this.items.length);
+    }
+    containsValue(value) {
+        const foundItems = this.items.some(x => x.typeName === StringType_1.StringType.typeName && x.value === value.value);
+        return Memory_1.Memory.allocateBoolean(foundItems);
     }
     containsType(typeName, count) {
         const foundItems = this.items.filter(x => x.typeName === typeName.value);

@@ -26,6 +26,7 @@ import { RuntimeItem } from "../library/RuntimeItem";
 import { OpCode } from "../../common/OpCode";
 import { Instruction } from "../../common/Instruction";
 import { RuntimeEmpty } from "../library/RuntimeEmpty";
+import { States } from "../../common/States";
 
 export class HandleCommandHandler extends OpCodeHandler{
     public readonly code: OpCode = OpCode.HandleCommand;
@@ -129,11 +130,58 @@ export class HandleCommandHandler extends OpCodeHandler{
 
                 break;
             }
+            case Meaning.Opening:{
+                if (this.isState(thread, actualTarget, States.opened)){
+                    this.output.write("It's already open!");
+                    break;
+                }
+
+                this.removeState(thread, actualTarget, States.closed);
+                this.includeState(thread, actualTarget, States.opened);
+                this.tryRaiseItemEvents(thread, thread.currentPlace!, EventType.ItIsOpened, actualTarget);
+                break;
+            }
+            case Meaning.Closing:{
+                if (this.isState(thread, actualTarget, States.closed)){
+                    this.output.write("It's already closed!");
+                    break;
+                }
+
+                this.removeState(thread, actualTarget, States.opened);
+                this.includeState(thread, actualTarget, States.closed);
+                this.tryRaiseItemEvents(thread, thread.currentPlace!, EventType.ItIsClosed, actualTarget);
+                break;
+            }
             default:
                 throw new RuntimeError("Unsupported meaning found");
         }  
 
         return super.handle(thread);
+    }
+
+    private isState(thread:Thread, target:RuntimeWorldObject, state:string){
+        const stateField = target.fields.get(WorldObject.state);
+        const stateList = <RuntimeList>stateField?.value;
+
+        return stateList.items.some(x => (<RuntimeString>x).value === state);
+    }
+
+    private removeState(thread:Thread, target:RuntimeWorldObject, state:string){
+        const stateField = target.fields.get(WorldObject.state);
+        const stateList = <RuntimeList>stateField?.value;
+
+        stateList.items = stateList.items.filter(x => (<RuntimeString>x).value !== state);
+    }
+
+    private includeState(thread:Thread, target:RuntimeWorldObject, state:string){
+        const stateField = target.fields.get(WorldObject.state);
+        const stateList = <RuntimeList>stateField?.value;
+
+        if (stateList.items.some(x => (<RuntimeString>x).value === state)){
+            return;
+        }
+
+        stateList.items.push(Memory.allocateString(state));
     }
 
     private tryRaiseContextualItemEvents(thread:Thread, location:RuntimePlace, type:EventType, actor:RuntimeItem, target:RuntimeItem){
@@ -245,7 +293,9 @@ export class HandleCommandHandler extends OpCodeHandler{
             }
 
             return <RuntimeWorldObject>matchingItems[0];
-        } else if (meaning === Meaning.Using){
+        } else if (meaning === Meaning.Using ||
+                   meaning === Meaning.Opening ||
+                   meaning === Meaning.Closing){
             const list = thread.currentPlayer!.getContentsField();
             const matchingInventoryItems = list.items.filter(x => x.typeName.toLowerCase() === targetName?.toLowerCase());
             
@@ -294,7 +344,7 @@ export class HandleCommandHandler extends OpCodeHandler{
         if (!isShallowDescription){
             const contents = target.getFieldAsList(WorldObject.contents);
 
-            this.describeContents(thread, contents);
+            //this.describeContents(thread, contents);
         }
 
         const describe = target.methods.get(WorldObject.describe)!;
@@ -331,6 +381,8 @@ export class HandleCommandHandler extends OpCodeHandler{
             case Understanding.inventory: return Meaning.Inventory;
             case Understanding.dropping: return Meaning.Dropping;
             case Understanding.using: return Meaning.Using;
+            case Understanding.opening: return Meaning.Opening;
+            case Understanding.closing: return Meaning.Closing;
             default:
                 return Meaning.Custom;
         }

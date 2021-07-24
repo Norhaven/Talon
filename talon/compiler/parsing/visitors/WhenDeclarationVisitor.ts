@@ -30,7 +30,7 @@ export class WhenDeclarationVisitor extends Visitor{
                     target = context.expectIdentifier();
                 }
             } else {
-                eventKind = context.expectAnyOf(Keywords.taken, Keywords.dropped);
+                eventKind = context.expectAnyOf(Keywords.taken, Keywords.dropped, Keywords.opened, Keywords.closed, Keywords.dropped);
             }
         } else {            
             context.expect(Keywords.the);

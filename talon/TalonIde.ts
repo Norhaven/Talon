@@ -161,13 +161,16 @@ export class TalonIde{
             "understand \"take\" as taking. \n" +
             "understand \"inv\" as inventory. \n" +
             "understand \"drop\" as dropping. \n" +
-            "understand \"use\" as using.\n\n" +
+            "understand \"use\" as using.\n" +
+            "understand \"open\" as opening.\n" +
+            "understand \"close\" as closing.\n" +
+            "understand \"opened\" as stateful.\n\n" +
 
             "an Inn is a kind of place. \n" +
             "it is where the player starts. \n" +
             "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. The bartender is behind the bar. An open door to the north leads outside.\" \n" +
             "    and if it contains 1 Coin then \"There's also a coin here.\"; or else \"There is just dust.\"; and then continue.\n" +
-            "it contains 1 Coin, 1 Fireplace.\n" + 
+            "it contains 1 Fireplace, 1 Chest.\n" + 
             "it can reach the Walkway by going \"north\". \n" +
             "it has a value that is false. \n" +
             "when the player exits: \n" +
@@ -178,12 +181,26 @@ export class TalonIde{
             "    and then continue;\n" +
             "    set value to true; \n" +
             "and then stop. \n\n" +
-            
+                        
             "a Fireplace is a kind of decoration. \n" +
             "it is described as \"The fireplace crackles. It's full of fire.\".\n" +
             "when it is used with a Coin:\n" +
             "    say \"The firelight flickers on the surface of the coin.\";\n" +
             "and then stop.\n\n" +
+
+            "a Chest is a kind of Container.\n" +
+            "it is described as \"The chest looks very heavy.\".\n" +
+            "it is observed as \"A large chest sits in the corner.\".\n" +
+            "it contains 1 Coin.\n" +
+            "when it is opened:\n" +
+            "    say \"The lid creaks with the effort.\";\n" +
+            "and then stop.\n" +
+            "when it is closed:\n" +
+            "    say \"The lid slams closed.\";\n" +
+            "and then stop.\n\n" +
+
+            "a Container is a kind of decoration.\n" +
+            "it is described as \"It's a container.\".\n\n" +
 
             "a Walkway is a kind of place. \n" +
             "it is described as \"The walkway in front of the inn is empty, just a cobblestone entrance. The inn is to the south.\". \n" +
@@ -197,12 +214,13 @@ export class TalonIde{
             
             "a Coin is a kind of item. \n" +
             "it is described as \"It's a small coin.\".\n" +
+            "it is observed as \"You see a coin.\".\n" +
             "when it is taken:\n" +
             "    say \"You got a coin!\";\n" +
             "and then stop.\n" +
             "when it is dropped:\n" +
             "    say \"You put the coin down!\";\n" +
-            "and then stop.\n\n" +
+            "and then stop.\n" +
             "when it is used:\n" +
             "    say \"You used the coin somehow!\";\n" +
             "and then stop.\n\n" +

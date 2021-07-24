@@ -10,7 +10,7 @@ export class LoadThisHandler extends OpCodeHandler{
 
         thread.currentMethod.push(instance);
 
-        this.logInteraction(thread);
+        this.logInteraction(thread, instance.typeName);
 
         return super.handle(thread);
     }

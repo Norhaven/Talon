@@ -1,3 +1,4 @@
+import { List } from "../library/List";
 import { OpCode } from "./OpCode";
 
 export class Instruction{
@@ -113,8 +114,8 @@ export class Instruction{
         return new Instruction(OpCode.SetLocal, name);
     }
 
-    static createDelegate(typeName:string, methodName:string){
-        return new Instruction(OpCode.CreateDelegate, `${typeName}:${methodName}`);
+    static createDelegate(methodName:string){
+        return new Instruction(OpCode.CreateDelegate, methodName);
     }
 
     static loadEmpty(){
@@ -135,6 +136,46 @@ export class Instruction{
         result.push(
             Instruction.branchRelativeIfFalse(instructions.length),
             ...instructions
+        );
+
+        return result;
+    }
+
+    static containsTextValue(value:string, propertyName:string){
+        const result:Instruction[] = [];
+
+        result.push(
+            Instruction.loadString(value),
+            Instruction.loadThis(),
+            Instruction.loadProperty(propertyName),
+            Instruction.instanceCall(List.contains)
+        );
+
+        return result;
+    }
+
+    static joinList(separator:string, ...instructions:Instruction[]){
+        const result:Instruction[] = [];
+
+        result.push(
+            Instruction.loadString(separator),
+            ...instructions,            
+            Instruction.instanceCall(List.join)
+        );
+
+        return result;
+    }
+
+    static mapList(mappedFunctionName:string, listPropertyName:string){
+        const result:Instruction[] = [];
+
+        result.push(
+            Instruction.loadThis(),
+            Instruction.createDelegate(mappedFunctionName),
+
+            Instruction.loadThis(),
+            Instruction.loadProperty(listPropertyName),
+            Instruction.instanceCall(List.map)
         );
 
         return result;

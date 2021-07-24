@@ -57,6 +57,11 @@ export class Keywords{
     static readonly using = "using";
     static readonly used = "used";
     static readonly with = "with";
+    static readonly opening = "opening";
+    static readonly closing = "closing";
+    static readonly opened = "opened";
+    static readonly closed = "closed";
+    static readonly stateful = "stateful";
 
     static getAll():Set<string>{
         type KeywordProperties = keyof Keywords;

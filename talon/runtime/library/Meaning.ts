@@ -6,6 +6,8 @@ export enum Meaning{
     Inventory,
     Dropping,
     Using,
+    Opening,
+    Closing,
     Quitting,
     Custom
 }

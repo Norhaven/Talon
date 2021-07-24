@@ -22,7 +22,8 @@ export class RuntimeList extends RuntimeAny{
     constructor(public items:RuntimeAny[]){
         super();
 
-        this.defineContainsMethod();
+        this.defineContainsMethod()
+        this.defineContainsTypeMethod();
         this.defineMapMethod();
         this.defineAddMethod();
         this.defineCountMethod();
@@ -122,6 +123,25 @@ export class RuntimeList extends RuntimeAny{
         const contains = new Method();
         contains.name = List.contains;
         contains.parameters.push(
+            new Parameter(List.valueParameter, StringType.typeName)
+        );
+
+        contains.returnType = BooleanType.typeName;
+
+        contains.body.push(
+            Instruction.loadLocal(List.valueParameter),  
+            Instruction.loadThis(),
+            Instruction.externalCall("containsValue"),
+            Instruction.return()
+        );
+
+        this.methods.set(List.contains, contains);
+    }
+
+    private defineContainsTypeMethod(){
+        const contains = new Method();
+        contains.name = List.containsType;
+        contains.parameters.push(
             new Parameter(List.typeNameParameter, StringType.typeName),
             new Parameter(List.countParameter, NumberType.typeName)
         );
@@ -136,7 +156,7 @@ export class RuntimeList extends RuntimeAny{
             Instruction.return()
         );
 
-        this.methods.set(List.contains, contains);
+        this.methods.set(List.containsType, contains);
     }
 
     private addInstance(instance:RuntimeAny){
@@ -147,6 +167,12 @@ export class RuntimeList extends RuntimeAny{
         return Memory.allocateNumber(this.items.length);
     }
 
+    private containsValue(value:RuntimeString){
+        const foundItems = this.items.some(x => x.typeName === StringType.typeName && (<RuntimeString>x).value === value.value);
+
+        return Memory.allocateBoolean(foundItems);
+    }
+    
     private containsType(typeName:RuntimeString, count:RuntimeInteger){
         const foundItems = this.items.filter(x => x.typeName === typeName.value);
         const found = foundItems.length === count.value;

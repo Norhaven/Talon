@@ -8,8 +8,10 @@ export class List{
     static readonly add = "~add";
     static readonly map = "~map";
     static readonly contains = "~contains";
+    static readonly containsType = "~containsType";
     static readonly join = "~join";
 
+    static readonly valueParameter = "~value";
     static readonly separatorParameter = "~separator";
     static readonly instanceParameter = "~instance";
     static readonly delegateParameter = "~delegate";
