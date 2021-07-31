@@ -9,6 +9,7 @@ import { Type } from "../../common/Type";
 import { Field } from "../../common/Field";
 import { List } from "../../library/List";
 import { StringType } from "../../library/StringType";
+import { RuntimeBoolean } from "./RuntimeBoolean";
 
 export class RuntimeWorldObject extends RuntimeAny{
     parentTypeName = Any.typeName;
@@ -53,5 +54,9 @@ export class RuntimeWorldObject extends RuntimeAny{
 
     getFieldAsString(name:string):RuntimeString{
         return <RuntimeString>this.getFieldValueByName(name);
+    }
+
+    getFieldAsBoolean(name:string):RuntimeBoolean{
+        return <RuntimeBoolean>this.getFieldValueByName(name);
     }
 }

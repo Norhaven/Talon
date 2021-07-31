@@ -31,6 +31,8 @@ import { States } from "../../common/States";
 export class HandleCommandHandler extends OpCodeHandler{
     public readonly code: OpCode = OpCode.HandleCommand;
 
+    private readonly endOfInteraction = "=========END OF INTERACTION=========";
+
     constructor(private readonly output:IOutput){
         super();
     }
@@ -55,6 +57,7 @@ export class HandleCommandHandler extends OpCodeHandler{
 
         if (!understanding){
             this.output.write("I don't know how to do that.");
+            thread.writeInfo(this.endOfInteraction);
             return super.handle(thread);
         }
 
@@ -66,6 +69,7 @@ export class HandleCommandHandler extends OpCodeHandler{
         
         if (!actualTarget){
             this.output.write("I don't know what you're referring to.");
+            thread.writeInfo(this.endOfInteraction);
             return super.handle(thread);
         }
 
@@ -88,6 +92,7 @@ export class HandleCommandHandler extends OpCodeHandler{
             case Meaning.Taking: {
                 if (!(actualTarget instanceof RuntimeItem)){
                     this.output.write("I can't take that.");
+                    thread.writeInfo(this.endOfInteraction);
                     return super.handle(thread);
                 }
 
@@ -133,6 +138,7 @@ export class HandleCommandHandler extends OpCodeHandler{
             case Meaning.Opening:{
                 if (this.isState(thread, actualTarget, States.opened)){
                     this.output.write("It's already open!");
+                    thread.writeInfo(this.endOfInteraction);
                     break;
                 }
 
@@ -144,6 +150,7 @@ export class HandleCommandHandler extends OpCodeHandler{
             case Meaning.Closing:{
                 if (this.isState(thread, actualTarget, States.closed)){
                     this.output.write("It's already closed!");
+                    thread.writeInfo(this.endOfInteraction);
                     break;
                 }
 
@@ -156,6 +163,7 @@ export class HandleCommandHandler extends OpCodeHandler{
                 throw new RuntimeError("Unsupported meaning found");
         }  
 
+        thread.writeInfo(this.endOfInteraction);
         return super.handle(thread);
     }
 
@@ -242,6 +250,58 @@ export class HandleCommandHandler extends OpCodeHandler{
         }
     }
 
+    private isItemVisible(item:RuntimeWorldObject){
+        const visible = item.getFieldAsBoolean(WorldObject.visible);
+        return visible.value;
+    }
+
+    private findTargetNameIn(thread:Thread, sourceItem:RuntimeWorldObject, targetName:string, removeWhenFound:boolean):RuntimeWorldObject|undefined{
+        thread.writeInfo(`Looking for target '${targetName}' in '${sourceItem}'`);
+
+        const isAvailable = (item:RuntimeWorldObject) => this.isItemVisible(item) && !this.isState(thread, item, States.closed);
+        const isClosed = this.isState(thread, sourceItem, States.closed);
+        const isOpened = this.isState(thread, sourceItem, States.opened);
+
+        if (!this.isItemVisible(sourceItem) || isClosed){
+            thread.writeInfo(`Target container not applicable, is invisible or closed`);
+            return undefined;
+        }
+
+        const contents = sourceItem.getContentsField();
+        const items = contents.items.map(x => (<RuntimeWorldObject>x));
+
+        const directMatches = items.filter(x => x.typeName.toLowerCase() === targetName.toLowerCase() && this.isItemVisible(x));
+
+        if (directMatches.length > 0){
+            thread.writeInfo(`One or more direct matches were found, target matched`);
+
+            const matchedItem = directMatches[0];
+
+            if (removeWhenFound){
+                contents.items = items.filter(x => x !== matchedItem);
+            }
+
+            return directMatches[0];
+        }
+
+        thread.writeInfo(`No direct matches were found, continuing search in contents`);
+
+        for(const item of items){
+            if (!isAvailable(item)){
+                thread.writeInfo(`Item '${item.typeName}' is unavailable, skipping`)
+                continue;
+            }
+
+            const locatedItem = this.findTargetNameIn(thread, item, targetName, removeWhenFound);
+
+            if (locatedItem){
+                return locatedItem;
+            }
+        }
+
+        return undefined;
+    }
+
     private inferTargetFrom(thread:Thread, targetName:string|undefined, meaning:Meaning):RuntimeWorldObject|undefined{
         const lookupInstance = (name:string) => {
             try{     
@@ -251,6 +311,8 @@ export class HandleCommandHandler extends OpCodeHandler{
             }
         };
 
+        thread.writeInfo(`Inferring target '${targetName}' from meaning '${meaning}'`);
+        
         if (meaning === Meaning.Moving){
             const placeName = <RuntimeString>thread.currentPlace?.fields.get(`~${targetName}`)?.value;
 
@@ -266,24 +328,13 @@ export class HandleCommandHandler extends OpCodeHandler{
                 return thread.currentPlace;
             }
 
-            const placeContents = thread.currentPlace?.getContentsField()!;
-
-            const itemOrDecoration = placeContents.items.find(x => x.typeName.toLowerCase() === targetName?.toLowerCase());
-
-            if (itemOrDecoration instanceof RuntimeWorldObject){
-                return itemOrDecoration;
-            }
-
-            return lookupInstance(thread.currentPlace?.typeName!);            
+            return this.findTargetNameIn(thread, thread.currentPlace!, targetName, false);          
         } else if (meaning === Meaning.Taking){
-            const list = thread.currentPlace!.getContentsField();
-            const matchingItems = list.items.filter(x => x.typeName.toLowerCase() === targetName?.toLowerCase());
-            
-            if (matchingItems.length == 0){
+            if (!targetName){
                 return undefined;
             }
 
-            return <RuntimeWorldObject>matchingItems[0];
+            return this.findTargetNameIn(thread, thread.currentPlace!, targetName, true);
         } else if (meaning === Meaning.Dropping){
             const list = thread.currentPlayer!.getContentsField();
             const matchingItems = list.items.filter(x => x.typeName.toLowerCase() === targetName?.toLowerCase());
@@ -296,21 +347,21 @@ export class HandleCommandHandler extends OpCodeHandler{
         } else if (meaning === Meaning.Using ||
                    meaning === Meaning.Opening ||
                    meaning === Meaning.Closing){
+            
+            if (!targetName){
+                thread.writeInfo("No target name was supplied, inferred no target");
+                return undefined;
+            }
+
             const list = thread.currentPlayer!.getContentsField();
             const matchingInventoryItems = list.items.filter(x => x.typeName.toLowerCase() === targetName?.toLowerCase());
             
             if (matchingInventoryItems.length > 0){
+                thread.writeInfo("Found target in player's inventory");
                 return <RuntimeWorldObject>matchingInventoryItems[0];
             }
 
-            const contents = thread.currentPlace!.getContentsField();
-            const matchingPlaceItems = contents.items.filter(x => x.typeName.toLowerCase() === targetName?.toLowerCase());
-
-            if (matchingPlaceItems.length > 0){
-                return <RuntimeWorldObject>matchingPlaceItems[0];
-            }
-
-            return undefined;
+            return this.findTargetNameIn(thread, thread.currentPlace!, targetName, false);
         } else {
             return undefined;
         }

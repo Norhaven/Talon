@@ -5,17 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "chrome",
+            "type": "pwa-chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
             "file": "${workspaceFolder}/ide/index.html",
-            "webRoot": "${workspaceFolder}/ide", 
+            "webRoot": "${workspaceFolder}/ide/js", 
             "preLaunchTask": "Run Webpack",
             "smartStep": true,
-            "sourceMaps": true,
-            "sourceMapPathOverrides": {
-              "webpack:///./*": "${workspaceFolder}/out/*"
-          }
+            "sourceMaps": true
         },
         {
             "type": "node",

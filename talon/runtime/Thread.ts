@@ -16,6 +16,7 @@ export class Thread{
     currentPlace?:RuntimePlace;
     currentPlayer?:RuntimePlayer;
     log?:ILogOutput;
+    logInfo?:ILogOutput;
     
     get currentMethod() {
         return this.methods[this.methods.length - 1];
@@ -34,6 +35,14 @@ export class Thread{
         this.methods.push(method);
     }
 
+    writeDebug(message:string){
+        this.log?.debug(message);
+    }
+
+    writeInfo(message:string){
+        this.logInfo?.debug(message);
+    }
+
     currentInstructionValueAs<T>(){
         return <T>this.currentInstruction?.value!;
     }
@@ -42,7 +51,7 @@ export class Thread{
         const activation = new MethodActivation(method);
         const current = this.currentMethod;
 
-        this.log?.debug(`${current.method?.name} => ${method.name}`);
+        this.writeDebug(`${current.method?.name} => ${method.name}`);
 
         this.methods.push(activation);
     }
@@ -59,7 +68,7 @@ export class Thread{
         const expectReturnType = this.currentMethod.method!.returnType != "";
         const returnedMethod = this.methods.pop();
 
-        this.log?.debug(`${this.currentMethod.method?.name} <= ${returnedMethod?.method?.name}`);
+        this.writeDebug(`${this.currentMethod.method?.name} <= ${returnedMethod?.method?.name}`);
 
         if (!expectReturnType){
             return new RuntimeEmpty();

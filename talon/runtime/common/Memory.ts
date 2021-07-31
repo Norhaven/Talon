@@ -140,15 +140,20 @@ export class Memory{
         const runtimeItems:RuntimeAny[] = [];
 
         for(const item of items){
-            const itemList = <Object[]>item;
-            const count = <number>itemList[0];
-            const typeName = <string>itemList[1];
+            if (Array.isArray(item)){
+                const itemList = <Object[]>item;
+                const count = <number>itemList[0];
+                const typeName = <string>itemList[1];
 
-            const type = Memory.typesByName.get(typeName)!;
+                const type = Memory.typesByName.get(typeName)!;
 
-            for(let current = 0; current < count; current++){                
-                const instance = Memory.allocate(type);
-                runtimeItems.push(instance);
+                for(let current = 0; current < count; current++){                
+                    const instance = Memory.allocate(type);
+                    runtimeItems.push(instance);
+                }
+            } else {
+                const value = Memory.allocateString(<string>item);
+                runtimeItems.push(value);
             }
         }
 

@@ -61,9 +61,8 @@ export class TalonRuntime{
     private thread?:Thread;
     private readonly handlers:Map<OpCode, OpCodeHandler>;
 
-    constructor(private readonly userOutput:IOutput, private readonly logOutput?:ILogOutput){
-        this.userOutput = userOutput;
-
+    constructor(private readonly userOutput:IOutput, private readonly logOutput?:ILogOutput, private readonly logOutputReadable?:ILogOutput){
+        
         const handlerInstances:OpCodeHandler[] = [
             new NoOpHandler(),
             new LoadStringHandler(),
@@ -187,7 +186,8 @@ export class TalonRuntime{
         const activation = new MethodActivation(mainMethod!);
         
         this.thread = new Thread(loadedTypes, activation);  
-        this.thread.log = this.logOutput;   
+        this.thread.log = this.logOutput;
+        this.thread.logInfo = this.logOutputReadable;   
 
         return true;
     }

@@ -57,6 +57,13 @@
     background-color: beige;
 }
 
+#log-pane-readable{
+    @extend %pane;
+
+    background-color: beige;
+    display: none;
+} 
+
 #user-command-text{
     width: 400px;
     height: 40px;

@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
   entry: './out/talon/main.js',
-  devtool: "source-map",
+  devtool: "inline-source-map",
   output: {
     filename: 'talon.js',
     path: path.resolve(__dirname, 'ide/js'),

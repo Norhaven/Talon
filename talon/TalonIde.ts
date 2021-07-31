@@ -18,11 +18,13 @@ export class TalonIde{
     private readonly gamePane:HTMLDivElement;
     private readonly compilationOutput:HTMLDivElement;
     private readonly gameLogOutput:HTMLDivElement;
+    private readonly gameLogReadableOutput:HTMLDivElement;
     private readonly openButton:HTMLButtonElement;
     private readonly saveButton:HTMLButtonElement;
     private readonly example1Button:HTMLButtonElement;
     private readonly compileButton:HTMLButtonElement;
     private readonly startNewGameButton:HTMLButtonElement;
+    private readonly toggleRuntimeLogs:HTMLButtonElement;
     private readonly userCommandText:HTMLInputElement;
     private readonly sendUserCommandButton:HTMLButtonElement;
     private readonly caretPosition:HTMLDivElement;
@@ -30,6 +32,7 @@ export class TalonIde{
     private readonly compilationOutputPane:PaneOutput;
     private readonly runtimeOutputPane:PaneOutput;
     private readonly runtimeLogOutputPane:PaneOutput;
+    private readonly runtimeLogReadableOutputPane:PaneOutput;
 
     private readonly codePaneAnalyzer:CodePaneAnalyzer;
     private readonly analysisCoordinator:AnalysisCoordinator;
@@ -38,6 +41,8 @@ export class TalonIde{
 
     private readonly compiler:TalonCompiler;
     private readonly runtime:TalonRuntime;
+
+    private areLogsReadableFormat = true;
     
     private compiledTypes:Type[] = [];
 
@@ -51,11 +56,13 @@ export class TalonIde{
         this.gamePane = TalonIde.getById<HTMLDivElement>("game-pane")!;
         this.compilationOutput = TalonIde.getById<HTMLDivElement>("compilation-output")!;
         this.gameLogOutput = TalonIde.getById<HTMLDivElement>("log-pane")!;
+        this.gameLogReadableOutput = TalonIde.getById<HTMLDivElement>("log-pane-readable")!;
         this.openButton = TalonIde.getById<HTMLButtonElement>("open");
         this.saveButton = TalonIde.getById<HTMLButtonElement>("save");
         this.example1Button = TalonIde.getById<HTMLButtonElement>("example1")!;
         this.compileButton = TalonIde.getById<HTMLButtonElement>("compile")!;
         this.startNewGameButton = TalonIde.getById<HTMLButtonElement>("start-new-game")!;
+        this.toggleRuntimeLogs = TalonIde.getById<HTMLButtonElement>("toggle-runtime-logs");
         this.userCommandText = TalonIde.getById<HTMLInputElement>("user-command-text")!;
         this.sendUserCommandButton = TalonIde.getById<HTMLButtonElement>("send-user-command");
         this.caretPosition = TalonIde.getById<HTMLDivElement>("caret-position");
@@ -65,6 +72,7 @@ export class TalonIde{
         this.example1Button.addEventListener('click', e => this.loadExample());
         this.compileButton.addEventListener('click', e => this.compile());
         this.startNewGameButton.addEventListener('click', e => this.startNewGame());
+        this.toggleRuntimeLogs.addEventListener('click', e => this.toggleRuntimeLogView());
         this.sendUserCommandButton.addEventListener('click', e => this.sendUserCommand());
         this.userCommandText.addEventListener('keyup', e => {
             if (e.key === "Enter") { 
@@ -77,6 +85,7 @@ export class TalonIde{
         this.compilationOutputPane = new PaneOutput(this.compilationOutput);
         this.runtimeOutputPane = new PaneOutput(this.gamePane);
         this.runtimeLogOutputPane = new PaneOutput(this.gameLogOutput);
+        this.runtimeLogReadableOutputPane = new PaneOutput(this.gameLogReadableOutput);
 
         this.codePaneAnalyzer = new CodePaneAnalyzer(this.codePane);
         this.analysisCoordinator = new AnalysisCoordinator(this.codePaneAnalyzer, this.caretPosition);
@@ -84,7 +93,7 @@ export class TalonIde{
         this.codePaneStyleFormatter = new CodePaneStyleFormatter(this.codePane);
 
         this.compiler = new TalonCompiler(this.compilationOutputPane);
-        this.runtime = new TalonRuntime(this.runtimeOutputPane, this.runtimeLogOutputPane);
+        this.runtime = new TalonRuntime(this.runtimeOutputPane, this.runtimeLogOutputPane, this.runtimeLogReadableOutputPane);
     }
 
     private sendUserCommand(){
@@ -92,6 +101,18 @@ export class TalonIde{
         this.runtime.sendCommand(command);
 
         this.userCommandText.value = "";
+    }
+
+    private toggleRuntimeLogView(){
+        if (this.areLogsReadableFormat){
+            this.gameLogReadableOutput.style.display = 'block';
+            this.gameLogOutput.style.display = 'none';
+        } else {
+            this.gameLogReadableOutput.style.display = 'none';
+            this.gameLogOutput.style.display = 'block';
+        }
+
+        this.areLogsReadableFormat = !this.areLogsReadableFormat;
     }
 
     private compile(){

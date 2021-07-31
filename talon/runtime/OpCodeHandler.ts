@@ -13,7 +13,7 @@ export abstract class OpCodeHandler{
             formattedLine += ' ' + parameters.join(' ');
         }
         
-        thread.log?.debug(formattedLine);
+        thread.writeDebug(formattedLine);
     }
 
     handle(thread:Thread){       

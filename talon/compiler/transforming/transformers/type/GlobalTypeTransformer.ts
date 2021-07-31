@@ -7,8 +7,10 @@ import { States } from "../../../../common/States";
 import { Type } from "../../../../common/Type";
 import { BooleanType } from "../../../../library/BooleanType";
 import { Convert } from "../../../../library/Convert";
+import { Item } from "../../../../library/Item";
 import { List } from "../../../../library/List";
 import { NumberType } from "../../../../library/NumberType";
+import { Place } from "../../../../library/Place";
 import { StringType } from "../../../../library/StringType";
 import { WorldObject } from "../../../../library/WorldObject";
 import { CompilationError } from "../../../exceptions/CompilationError";
@@ -43,9 +45,11 @@ export class GlobalTypeTransformer implements ITypeTransformer{
 
         this.transformCustomFields(expression, context, type);
         
-        if (this.isWorldObject(type, context)){
+        if (this.inheritsFromType(type, context, WorldObject.typeName)){
+            const isPlace = this.inheritsFromType(type, context, Place.typeName);
+            const defaultState = isPlace ? States.opened : States.closed;
 
-            this.createFieldIfNotExists(WorldObject.state, List.typeName, [], type);
+            this.createFieldIfNotExists(WorldObject.state, List.typeName, [defaultState], type);
             this.createFieldIfNotExists(WorldObject.visible, BooleanType.typeName, true, type);
             this.createFieldIfNotExists(WorldObject.contents, List.typeName, [], type);
             this.createFieldIfNotExists(WorldObject.observation, StringType.typeName, "", type);
@@ -162,11 +166,11 @@ export class GlobalTypeTransformer implements ITypeTransformer{
         type.fields.push(state);
     }
 
-    private isWorldObject(type:Type, context:TransformerContext){
+    private inheritsFromType(type:Type, context:TransformerContext, typeName:string){
         for(let current = type;
             current;
             current = context.typesByName.get(current.baseTypeName)!){
-                if (current.name == WorldObject.typeName){
+                if (current.name == typeName){
                     return true;
                 } 
         }
