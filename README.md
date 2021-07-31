@@ -1,10 +1,11 @@
 # Talon
 
+This is a programming language, compiler, and runtime for creating text adventures. It's a work in progress.
+
 # Developing
 
-You'll need to have Visual Studio Code, clone the repository, and install the following through NPM.
+After you clone the repo, run `npm install` at the root to acquire the necessary packages. Build/Run configurations are already set up for VS Code, so I would recommend using that. Just open the root folder with it to get started.
 
+# Running
 
-- npm install typescript
-- npm install jasmine jasmine-ts
-- npm install browserify tsify
+Using VS Code, use the `Launch Chrome against localhost` run/debug option. This will build the project and open a browser window with the rudimentary IDE that you can use to play around with.
