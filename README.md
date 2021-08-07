@@ -2,6 +2,8 @@
 
 This is a programming language, compiler, and runtime for creating text adventures. It's a work in progress.
 
+![Current Build](https://github.com/Norhaven/Talon/actions/workflows/ci-build.yml/badge.svg?branch=master)
+
 # Developing
 
 After you clone the repo, run `npm install` at the root to acquire the necessary packages. Build/Run configurations are already set up for VS Code, so I would recommend using that. Just open the root folder with it to get started.
