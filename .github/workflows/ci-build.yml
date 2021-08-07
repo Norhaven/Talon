@@ -28,5 +28,5 @@ jobs:
       - name: Install NPM packages
         run: |
           npm install
-          node_modules/.bin/tsc.cmd -p tsconfig.json
+          tsc -p tsconfig.json
           npx webpack
