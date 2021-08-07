@@ -15,6 +15,7 @@ import { ListExpression } from "../expressions/ListExpression";
 import { ComparisonExpressionVisitor } from "./ComparisonExpressionVisitor";
 import { BooleanType } from "../../../library/BooleanType";
 import { Convert } from "../../../library/Convert";
+import { AbortEventExpression } from "../expressions/AbortEventExpression";
 
 export class ExpressionVisitor extends Visitor{
     visit(context: ParseContext): Expression {
@@ -23,13 +24,19 @@ export class ExpressionVisitor extends Visitor{
             return visitor.visit(context);
         } else if (context.is(Keywords.it)){
         
-            context.expect(Keywords.it);
-            context.expect(Keywords.contains);
+            if (context.isFollowedBy(Keywords.contains))
+            {
+                context.expect(Keywords.it);
+                context.expect(Keywords.contains);
 
-            const count = context.expectNumber();
-            const typeName = context.expectIdentifier();
+                const count = context.expectNumber();
+                const typeName = context.expectIdentifier();
 
-            return new ContainsExpression("~it", Number(count.value), typeName.value);
+                return new ContainsExpression("~it", Number(count.value), typeName.value);
+            } else {
+                const visitor = new ComparisonExpressionVisitor();
+                return visitor.visit(context);
+            }
         } else if (context.is(Keywords.set)){
             context.expect(Keywords.set);
 
@@ -37,6 +44,9 @@ export class ExpressionVisitor extends Visitor{
 
             if (context.isTypeOf(TokenType.Identifier)){
                 variableName = context.expectIdentifier().value;
+            } else if (context.is(Keywords.it)){
+                context.expect(Keywords.it);
+                variableName = "~it";
             } else {
                 // TODO: Support dereferencing arbitrary instances.
                 throw new CompilationError("Currently unable to dereference a field, planned for a future release");
@@ -79,6 +89,11 @@ export class ExpressionVisitor extends Visitor{
         } else if (context.isFollowedBy(Keywords.is)){
             const visitor = new ComparisonExpressionVisitor();
             return visitor.visit(context);
+        } else if (context.is(Keywords.abort)){
+            context.expect(Keywords.abort);
+            context.expect(Keywords.event);
+
+            return new AbortEventExpression();
         } else {
             throw new CompilationError(`Unable to parse expression at ${context.currentToken}`);
         }

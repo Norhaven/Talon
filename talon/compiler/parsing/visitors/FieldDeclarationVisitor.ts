@@ -91,7 +91,7 @@ export class FieldDeclarationVisitor extends Visitor{
         } else if (context.is(Keywords.has)){
 
             context.expect(Keywords.has);
-            context.expect(Keywords.a);
+            context.expectAnyOf(Keywords.a, Keywords.an);
             
             const name = context.expectIdentifier();
 
@@ -138,19 +138,22 @@ export class FieldDeclarationVisitor extends Visitor{
         } else if (context.is(Keywords.can)){
 
             context.expect(Keywords.can);
-            context.expect(Keywords.reach);
-            context.expect(Keywords.the);
 
-            const placeName = context.expectIdentifier();
+            if (context.is(Keywords.reach)){
+                context.expect(Keywords.reach);
+                context.expect(Keywords.the);
 
-            context.expect(Keywords.by);
-            context.expect(Keywords.going);
+                const placeName = context.expectIdentifier();
 
-            const direction = context.expectString();
+                context.expect(Keywords.by);
+                context.expect(Keywords.going);
 
-            field.name = `~${direction.value}`;
-            field.typeName = StringType.typeName;
-            field.initialValue = `${placeName.value}`;
+                const direction = context.expectString();
+
+                field.name = `~${direction.value}`;
+                field.typeName = StringType.typeName;
+                field.initialValue = `${placeName.value}`;
+            }
         } else {
             throw new CompilationError("Unable to determine field");
         }

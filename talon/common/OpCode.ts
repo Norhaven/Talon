@@ -31,5 +31,7 @@ export enum OpCode {
     SetLocal = ".set.local",
     CreateDelegate = ".new.dlgt",
     LoadEmpty = ".load.empty",
-    InvokeDelegateOnInstance = ".call.func.inst"
+    InvokeDelegateOnInstance = ".call.func.inst",
+    IncludeState = ".include.state",
+    RemoveState = ".remove.state"
 }

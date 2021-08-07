@@ -136,26 +136,10 @@ export class HandleCommandHandler extends OpCodeHandler{
                 break;
             }
             case Meaning.Opening:{
-                if (this.isState(thread, actualTarget, States.opened)){
-                    this.output.write("It's already open!");
-                    thread.writeInfo(this.endOfInteraction);
-                    break;
-                }
-
-                this.removeState(thread, actualTarget, States.closed);
-                this.includeState(thread, actualTarget, States.opened);
                 this.tryRaiseItemEvents(thread, thread.currentPlace!, EventType.ItIsOpened, actualTarget);
                 break;
             }
             case Meaning.Closing:{
-                if (this.isState(thread, actualTarget, States.closed)){
-                    this.output.write("It's already closed!");
-                    thread.writeInfo(this.endOfInteraction);
-                    break;
-                }
-
-                this.removeState(thread, actualTarget, States.opened);
-                this.includeState(thread, actualTarget, States.closed);
                 this.tryRaiseItemEvents(thread, thread.currentPlace!, EventType.ItIsClosed, actualTarget);
                 break;
             }
@@ -172,24 +156,6 @@ export class HandleCommandHandler extends OpCodeHandler{
         const stateList = <RuntimeList>stateField?.value;
 
         return stateList.items.some(x => (<RuntimeString>x).value === state);
-    }
-
-    private removeState(thread:Thread, target:RuntimeWorldObject, state:string){
-        const stateField = target.fields.get(WorldObject.state);
-        const stateList = <RuntimeList>stateField?.value;
-
-        stateList.items = stateList.items.filter(x => (<RuntimeString>x).value !== state);
-    }
-
-    private includeState(thread:Thread, target:RuntimeWorldObject, state:string){
-        const stateField = target.fields.get(WorldObject.state);
-        const stateList = <RuntimeList>stateField?.value;
-
-        if (stateList.items.some(x => (<RuntimeString>x).value === state)){
-            return;
-        }
-
-        stateList.items.push(Memory.allocateString(state));
     }
 
     private tryRaiseContextualItemEvents(thread:Thread, location:RuntimePlace, type:EventType, actor:RuntimeItem, target:RuntimeItem){
@@ -233,7 +199,7 @@ export class HandleCommandHandler extends OpCodeHandler{
 
             const delegate = new RuntimeDelegate(event);
 
-            thread.currentMethod.push(delegate);
+            thread.currentMethod.push(delegate);           
         }
     }
 

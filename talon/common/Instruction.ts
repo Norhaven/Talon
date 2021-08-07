@@ -130,6 +130,14 @@ export class Instruction{
         return new Instruction(OpCode.InvokeDelegateOnInstance);
     }
 
+    static includeState(){
+        return new Instruction(OpCode.IncludeState);
+    }
+
+    static removeState(){
+        return new Instruction(OpCode.RemoveState);
+    }
+
     static ifTrueThen(...instructions:Instruction[]){
         const result:Instruction[] = [];
 
@@ -176,6 +184,30 @@ export class Instruction{
             Instruction.loadThis(),
             Instruction.loadProperty(listPropertyName),
             Instruction.instanceCall(List.map)
+        );
+
+        return result;
+    }
+
+    static includeStateInThis(state:string){
+        const result:Instruction[] = [];
+
+        result.push(
+            Instruction.loadThis(),
+            Instruction.loadString(state),
+            Instruction.includeState(),
+        );
+
+        return result;
+    }
+
+    static removeStateFromThis(state:string){
+        const result:Instruction[] = [];
+
+        result.push(
+            Instruction.loadThis(),
+            Instruction.loadString(state),
+            Instruction.removeState(),
         );
 
         return result;

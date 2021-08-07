@@ -10,6 +10,8 @@ export class List{
     static readonly contains = "~contains";
     static readonly containsType = "~containsType";
     static readonly join = "~join";
+    static readonly remove = "~remove";
+    static readonly ensureOne = "~ensureOne";
 
     static readonly valueParameter = "~value";
     static readonly separatorParameter = "~separator";

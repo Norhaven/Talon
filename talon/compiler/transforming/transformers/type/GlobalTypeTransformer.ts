@@ -15,6 +15,7 @@ import { StringType } from "../../../../library/StringType";
 import { WorldObject } from "../../../../library/WorldObject";
 import { CompilationError } from "../../../exceptions/CompilationError";
 import { Keywords } from "../../../lexing/Keywords";
+import { AbortEventExpression } from "../../../parsing/expressions/AbortEventExpression";
 import { ActionsExpression } from "../../../parsing/expressions/ActionsExpression";
 import { ComparisonExpression } from "../../../parsing/expressions/ComparisonExpression";
 import { ConcatenationExpression } from "../../../parsing/expressions/ConcatenationExpression";
@@ -70,6 +71,7 @@ export class GlobalTypeTransformer implements ITypeTransformer{
 
             method.name = `~event_${event.actor}_${event.eventKind}_${eventCount}`;
             method.eventType = this.transformEventKind(event.eventKind);
+            method.returnType = BooleanType.typeName;
 
             if (event.target){
                 method.parameters.push(
@@ -88,7 +90,20 @@ export class GlobalTypeTransformer implements ITypeTransformer{
                 );
             }
 
+            if (method.eventType == EventType.ItIsOpened){
+                method.body.push(
+                    ...Instruction.includeStateInThis(States.opened),
+                    ...Instruction.removeStateFromThis(States.closed)
+                );
+            } else if (method.eventType == EventType.ItIsClosed){
+                method.body.push(
+                    ...Instruction.includeStateInThis(States.closed),
+                    ...Instruction.removeStateFromThis(States.opened)
+                );
+            }
+
             method.body.push(
+                Instruction.loadBoolean(true),
                 Instruction.return()
             );
 
@@ -292,12 +307,31 @@ export class GlobalTypeTransformer implements ITypeTransformer{
             );
         } else if (expression instanceof SetVariableExpression){
             const right = this.transformExpression(expression.evaluationExpression);
+            const left:Instruction[] = [];
+            const assign:Instruction[] = [];
+
+            if (expression.variableName === "~it"){
+                left.push(
+                    Instruction.loadThis(),
+                    Instruction.loadField(WorldObject.state)
+                );
+
+                assign.push(
+                    Instruction.instanceCall(List.ensureOne)
+                );
+            } else {
+                left.push(
+                    Instruction.loadThis(),
+                    Instruction.loadField(expression.variableName)
+                );
+
+                assign.push(Instruction.assign());
+            }
 
             instructions.push(
                 ...right,
-                Instruction.loadThis(),
-                Instruction.loadField(expression.variableName),
-                Instruction.assign()
+                ...left,
+                ...assign
             );
         } else if (expression instanceof LiteralExpression){
             if (expression.typeName == StringType.typeName){
@@ -310,9 +344,16 @@ export class GlobalTypeTransformer implements ITypeTransformer{
                 throw new CompilationError(`Unable to transform unsupported literal expression '${expression}'`);
             }
         } else if (expression instanceof IdentifierExpression){
-            instructions.push(
-                Instruction.loadThis(),
-                Instruction.loadField(expression.variableName));
+            if (expression.variableName === "~it"){
+                instructions.push(
+                    Instruction.loadThis(),
+                    Instruction.loadField(WorldObject.state)
+                );
+            } else {
+                instructions.push(
+                    Instruction.loadThis(),
+                    Instruction.loadField(expression.variableName));
+            }
         } else if (expression instanceof ComparisonExpression){
             const right = this.transformExpression(expression.right!);
             const left = this.transformExpression(expression.left!);
@@ -324,6 +365,11 @@ export class GlobalTypeTransformer implements ITypeTransformer{
             );
         } else if (expression instanceof ActionsExpression){
             expression.actions.forEach(x => instructions.push(...this.transformExpression(x, mode)));
+        } else if (expression instanceof AbortEventExpression){
+            instructions.push(
+                Instruction.loadBoolean(false),
+                Instruction.return()
+            );
         } else {
             throw new CompilationError(`Unable to transform unsupported expression: ${expression}`);
         }

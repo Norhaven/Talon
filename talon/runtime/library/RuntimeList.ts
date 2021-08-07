@@ -28,6 +28,8 @@ export class RuntimeList extends RuntimeAny{
         this.defineAddMethod();
         this.defineCountMethod();
         this.defineJoinMethod();
+        this.defineRemoveMethod();
+        this.defineEnsureOneMethod();
     }
 
     private defineJoinMethod(){
@@ -157,6 +159,63 @@ export class RuntimeList extends RuntimeAny{
         );
 
         this.methods.set(List.containsType, contains);
+    }
+    
+    private defineRemoveMethod(){
+        const remove = new Method();
+        remove.name = List.remove;
+        remove.parameters.push(
+            new Parameter(List.valueParameter, Any.typeName)
+        );
+
+        remove.body.push(
+            Instruction.loadLocal(List.valueParameter),  
+            Instruction.loadThis(),
+            Instruction.externalCall("removeInstance"),
+            Instruction.return()
+        );
+
+        this.methods.set(List.remove, remove);
+    }
+
+    private defineEnsureOneMethod(){
+        const ensureOne = new Method();
+        ensureOne.name = List.ensureOne;
+        ensureOne.parameters.push(
+            new Parameter(List.valueParameter, Any.typeName)
+        );
+
+        ensureOne.body.push(
+            Instruction.loadLocal(List.valueParameter),  
+            Instruction.loadThis(),
+            Instruction.externalCall("ensureOneInstance"),
+            Instruction.return()
+        );
+
+        this.methods.set(List.ensureOne, ensureOne);
+    }
+
+    private ensureOneInstance(instance:RuntimeAny){
+        if (!(instance instanceof RuntimeString)){
+            throw new RuntimeError(`Unable to remove instance of unsupported type '${instance.typeName}' from list`)
+        }
+
+        if (this.containsValue(instance)){
+            return;
+        }
+
+        this.addInstance(instance);
+    }
+
+    private removeInstance(instance:RuntimeAny){
+
+        this.items = this.items.filter(x => {
+            if (instance instanceof RuntimeString){
+                return (<RuntimeString>x).value != instance.value;
+            } else {
+                throw new RuntimeError(`Unable to remove instance of unsupported type '${instance.typeName}' from list`);
+            }
+        });
     }
 
     private addInstance(instance:RuntimeAny){

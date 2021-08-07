@@ -54,6 +54,8 @@ import { LoadElementHandler } from "./handlers/LoadElementHandler";
 import { SetLocalHandler } from "./handlers/SetLocalHandler";
 import { LoadEmptyHandler } from "./handlers/LoadEmptyHandler";
 import { InvokeDelegateOnInstanceHandler } from "./handlers/InvokeDelegateOnInstanceHandler";
+import { IncludeStateHandler } from "./handlers/IncludeStateHandler";
+import { RemoveStateHandler } from "./handlers/RemoveStateHandler";
 
 export class TalonRuntime{
 
@@ -96,7 +98,9 @@ export class TalonRuntime{
             new LoadElementHandler(),
             new SetLocalHandler(),
             new LoadEmptyHandler(),
-            new InvokeDelegateOnInstanceHandler()
+            new InvokeDelegateOnInstanceHandler(),
+            new IncludeStateHandler(),
+            new RemoveStateHandler()
         ];
 
         this.handlers = new Map<OpCode, OpCodeHandler>(handlerInstances.map(x => [x.code, x]));

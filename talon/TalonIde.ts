@@ -185,13 +185,14 @@ export class TalonIde{
             "understand \"use\" as using.\n" +
             "understand \"open\" as opening.\n" +
             "understand \"close\" as closing.\n" +
-            "understand \"opened\" as stateful.\n\n" +
+            "understand \"opened\" as stateful.\n" +
+            "understand \"closed\" as stateful.\n\n" +
 
             "an Inn is a kind of place. \n" +
             "it is where the player starts. \n" +
             "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. The bartender is behind the bar. An open door to the north leads outside.\" \n" +
             "    and if it contains 1 Coin then \"There's also a coin here.\"; or else \"There is just dust.\"; and then continue.\n" +
-            "it contains 1 Fireplace, 1 Chest.\n" + 
+            "it contains 1 Fireplace, 1 Chest, 1 Key.\n" + 
             "it can reach the Walkway by going \"north\". \n" +
             "it has a value that is false. \n" +
             "when the player exits: \n" +
@@ -203,6 +204,9 @@ export class TalonIde{
             "    set value to true; \n" +
             "and then stop. \n\n" +
                         
+            "a Key is a kind of item.\n" +
+            "it is described as \"The key is small but sturdy.\".\n\n" +
+
             "a Fireplace is a kind of decoration. \n" +
             "it is described as \"The fireplace crackles. It's full of fire.\".\n" +
             "when it is used with a Coin:\n" +
@@ -213,11 +217,37 @@ export class TalonIde{
             "it is described as \"The chest looks very heavy.\".\n" +
             "it is observed as \"A large chest sits in the corner.\".\n" +
             "it contains 1 Coin.\n" +
+            "it has an isLocked that is false.\n" +
             "when it is opened:\n" +
-            "    say \"The lid creaks with the effort.\";\n" +
+            "    if it is \"opened\" then\n" +
+            "        say \"It's already open.\";\n" +
+            "        abort event;\n" +
+            "    and then continue;\n" +
+            "    if isLocked is true then\n" +
+            "        say \"The lid won't budge.\";\n" +
+            "        abort event;\n" +
+            "    or else\n" +
+            "        say \"The lid creaks with the effort.\";\n" +
+            "    and then continue;\n" +
             "and then stop.\n" +
             "when it is closed:\n" +
+            "    if it is \"closed\" then\n" +
+            "        say \"It's already closed.\";\n" +
+            "        abort event;\n" +
+            "    and then continue;\n" +
             "    say \"The lid slams closed.\";\n" +
+            "and then stop.\n" +
+            "when it is used with a Key:\n" +
+            "    if it is \"opened\" then\n" +
+            "        say \"You can't lock it when it's open.\";\n" +
+            "        abort event;\n" +
+            "    and then continue;\n" +
+            "    say \"The key turns easily in the lock.\";\n" +
+            "    if isLocked is true then\n" +
+            "        set isLocked to false;\n" +
+            "    or else\n" +
+            "        set isLocked to true;\n" +
+            "    and then continue;\n" +
             "and then stop.\n\n" +
 
             "a Container is a kind of decoration.\n" +

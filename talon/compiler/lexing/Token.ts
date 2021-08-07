@@ -6,6 +6,7 @@ import { BooleanType } from "../../library/BooleanType";
 import { Item } from "../../library/Item";
 import { List } from "../../library/List";
 import { Decoration } from "../../library/Decoration";
+import { StringType } from "../../library/StringType";
 
 export class Token{
     static get empty():Token{
@@ -36,12 +37,16 @@ export class Token{
         return Token.getTokenWithTypeOf(BooleanType.typeName, TokenType.Keyword);
     }
 
+    static forString(value:string):Token{
+        return Token.getTokenWithTypeOf(value, TokenType.String);
+    }
+
     static get forList():Token{
         return Token.getTokenWithTypeOf(List.typeName, TokenType.Keyword);
     }
 
     private static getTokenWithTypeOf(name:string, type:TokenType){
-        const token = new Token(-1,-1,name);
+        const token = new Token(-1, -1, name);
         token.type = type;
         return token;
     }

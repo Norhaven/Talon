@@ -62,6 +62,9 @@ export class Keywords{
     static readonly opened = "opened";
     static readonly closed = "closed";
     static readonly stateful = "stateful";
+    static readonly abort = "abort";
+    static readonly event = "event";
+    static readonly be = "be";
 
     static getAll():Set<string>{
         type KeywordProperties = keyof Keywords;
