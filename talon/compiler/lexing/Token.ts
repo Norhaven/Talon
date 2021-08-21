@@ -7,6 +7,7 @@ import { Item } from "../../library/Item";
 import { List } from "../../library/List";
 import { Decoration } from "../../library/Decoration";
 import { StringType } from "../../library/StringType";
+import { Creature } from "../../library/Creature";
 
 export class Token{
     static get empty():Token{
@@ -27,6 +28,10 @@ export class Token{
 
     static get forDecoration():Token{
         return Token.getTokenWithTypeOf(Decoration.typeName, TokenType.Keyword);
+    }
+
+    static get forCreature():Token{
+        return Token.getTokenWithTypeOf(Creature.typeName, TokenType.Keyword);
     }
 
     static get forWorldObject():Token{

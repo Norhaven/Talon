@@ -200,7 +200,8 @@ export class RuntimeList extends RuntimeAny{
             throw new RuntimeError(`Unable to remove instance of unsupported type '${instance.typeName}' from list`)
         }
 
-        if (this.containsValue(instance)){
+        if (this.containsValue(instance).value){
+            console.log(`List already contains '${instance.value}', returning...`);
             return;
         }
 
@@ -219,6 +220,8 @@ export class RuntimeList extends RuntimeAny{
     }
 
     private addInstance(instance:RuntimeAny){
+        console.log("Adding an instance...");
+        console.log(instance);
         this.items.push(instance);
     }
 
@@ -227,6 +230,8 @@ export class RuntimeList extends RuntimeAny{
     }
 
     private containsValue(value:RuntimeString){
+        console.log(`Contains ${this.items.length} items, checking for '${value.value}'...`);
+        console.log(this.items.map(x => (<RuntimeString>x).value));
         const foundItems = this.items.some(x => x.typeName === StringType.typeName && (<RuntimeString>x).value === value.value);
 
         return Memory.allocateBoolean(foundItems);

@@ -5,6 +5,7 @@ export class Understanding{
     static typeName = "~understanding";
 
     static describing = "~describing";  
+    static observing = "~observing";
     static moving = "~moving";
     static direction = "~direction";
     static taking = "~taking";

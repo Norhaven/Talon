@@ -24,6 +24,11 @@ import { RuntimeInteger } from "../library/RuntimeInteger";
 import { NumberType } from "../../library/NumberType";
 import { RuntimeDecoration } from "../library/RuntimeDecoration";
 import { Decoration } from "../../library/Decoration";
+import { WorldObject } from "../../library/WorldObject";
+import { RuntimeWorldObject } from "../library/RuntimeWorldObject";
+import { Any } from "../../library/Any";
+import { Creature } from "../../library/Creature";
+import { RuntimeCreature } from "../library/RuntimeCreature";
 
 export class Memory{
     private static typesByName = new Map<string, Type>();
@@ -177,35 +182,52 @@ export class Memory{
                 inheritanceChain.push(current);
         }
 
-        const firstSystemTypeAncestorIndex = inheritanceChain.findIndex(x => x.isSystemType);
-                
-        if (firstSystemTypeAncestorIndex < 0){
+        const systemTypeRoot = inheritanceChain[inheritanceChain.length - 1];
+        
+        if (!systemTypeRoot.isSystemType){        
             throw new RuntimeError("Type must ultimately inherit from a system type");
         }
 
-        const instance = this.allocateSystemTypeByName(inheritanceChain[firstSystemTypeAncestorIndex].name);
-        
-        instance.parentTypeName = instance.typeName;
-        instance.typeName = inheritanceChain[0].name;
+        const instanceChain:RuntimeAny[] = [];
 
-        // TODO: Inherit more than just fields/methods.
-        // TODO: Type check field inheritance for shadowing/overriding.
-
-        // Inherit fields/methods from types in the hierarchy from least to most derived.
-        
-        for(let i = firstSystemTypeAncestorIndex; i >= 0; i--){
-            const currentType = inheritanceChain[i];
-
-            for(const field of currentType.fields){
-                const variable = this.initializeVariableWith(field);
-                instance.fields.set(field.name, variable);
-            }
-
-            for(const method of currentType.methods){
-                instance.methods.set(method.name, method);
-            }
+        for(const type of inheritanceChain){
+            const instance = Memory.constructInstanceFromStandaloneType(type);
+            instanceChain.push(instance);
         }
-        
+
+        for(let i = 0; i < instanceChain.length - 1; i++){
+            const currentInstance = instanceChain[i];
+            currentInstance.base = instanceChain[i + 1];
+        }
+
+        return instanceChain[0];
+    }
+
+    private static constructInstanceFromStandaloneType(type:Type){
+        const allocate = () => {
+            if (type.isSystemType){
+                return Memory.allocateSystemTypeByName(type.name);
+            }
+
+            const any = new RuntimeWorldObject();
+
+            any.typeName = type.name;
+            any.parentTypeName = type.baseTypeName;
+
+            return any;
+        }
+
+        const instance = allocate();
+
+        for(const field of type.fields){
+            const variable = Memory.initializeVariableWith(field);
+            instance.fields.set(field.name, variable);
+        }
+
+        for(const method of type.methods){
+            instance.methods.set(method.name, method);
+        }
+
         return instance;
     }
 
@@ -217,6 +239,9 @@ export class Memory{
             case List.typeName: return new RuntimeList([]);     
             case Say.typeName: return new RuntimeSay();    
             case Decoration.typeName: return new RuntimeDecoration();   
+            case Creature.typeName: return new RuntimeCreature();
+            case WorldObject.typeName: return new RuntimeWorldObject();
+            case Any.typeName: return new RuntimeAny();
             default:{
                 throw new RuntimeError(`Unable to instantiate type '${typeName}'`);
             }

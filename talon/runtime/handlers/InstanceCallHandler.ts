@@ -8,6 +8,7 @@ import { RuntimeAny } from "../library/RuntimeAny";
 import { MethodActivation } from "../MethodActivation";
 import { Type } from "../../common/Type";
 import { OpCode } from "../../common/OpCode";
+import { RuntimeError } from "../errors/RuntimeError";
 
 export class InstanceCallHandler extends OpCodeHandler{
     public readonly code: OpCode = OpCode.InstanceCall;
@@ -27,7 +28,7 @@ export class InstanceCallHandler extends OpCodeHandler{
         try{
             const instance = current.pop();
 
-            const method = instance?.methods.get(this.methodName)!;
+            const method = this.getMostDerivedMethodFrom(instance!, this.methodName);
 
             this.logInteraction(thread, `${instance?.typeName}::${this.methodName}(...${method.parameters.length})`);
             

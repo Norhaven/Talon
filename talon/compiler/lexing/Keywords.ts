@@ -65,6 +65,7 @@ export class Keywords{
     static readonly abort = "abort";
     static readonly event = "event";
     static readonly be = "be";
+    static readonly creature = "creature";
 
     static getAll():Set<string>{
         type KeywordProperties = keyof Keywords;

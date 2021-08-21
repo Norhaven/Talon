@@ -1,4 +1,6 @@
 import { OpCode } from "../../common/OpCode";
+import { RuntimeError } from "../errors/RuntimeError";
+import { RuntimeAny } from "../library/RuntimeAny";
 import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
 
@@ -6,10 +8,10 @@ export class LoadFieldHandler extends OpCodeHandler{
     public readonly code: OpCode = OpCode.LoadField;
 
     handle(thread:Thread){
-        const instance = thread.currentMethod.pop();
+        const instance = thread.currentMethod.pop()!;
         const fieldName = thread.currentInstructionValueAs<string>();
 
-        const field = instance?.fields.get(fieldName);
+        const field = this.getMostDerivedFieldFrom(instance, fieldName);
 
         const value = field?.value;
 
@@ -18,5 +20,5 @@ export class LoadFieldHandler extends OpCodeHandler{
         thread.currentMethod.push(value!);
 
         return super.handle(thread);
-    }
+    }    
 }

@@ -41,6 +41,7 @@ import { UnderstandingTypeTransformer } from "./transformers/type/UnderstandingT
 import { InitialTypeDeclarationTypeTransformer } from "./transformers/type/InitialTypeDeclarationTypeTransformer";
 import { GlobalSaysTypeTransformer } from "./transformers/type/GlobalSaysTypeTransformer";
 import { GlobalTypeTransformer } from "./transformers/type/GlobalTypeTransformer";
+import { Creature } from "../../library/Creature";
 
 export class TalonTransformer{
     constructor(private readonly out:IOutput){
@@ -63,6 +64,7 @@ export class TalonTransformer{
         types.push(new Type(Player.typeName, Player.parentTypeName));
         types.push(new Type(Say.typeName, Say.parentTypeName));
         types.push(new Type(Decoration.typeName, Decoration.parentTypeName));
+        types.push(new Type(Creature.typeName, Creature.parentTypeName));
 
         return new Map<string, Type>(types.map(x => [x.name, x]));
     }

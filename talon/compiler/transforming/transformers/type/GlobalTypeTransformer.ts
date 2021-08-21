@@ -47,6 +47,7 @@ export class GlobalTypeTransformer implements ITypeTransformer{
         this.transformCustomFields(expression, context, type);
         
         if (this.inheritsFromType(type, context, WorldObject.typeName)){
+            
             const isPlace = this.inheritsFromType(type, context, Place.typeName);
             const defaultState = isPlace ? States.opened : States.closed;
 
@@ -64,46 +65,56 @@ export class GlobalTypeTransformer implements ITypeTransformer{
     }
 
     private createEvents(expression:TypeDeclarationExpression, context:TransformerContext, type:Type){
-        let eventCount = 0;
-
+        
         for (const event of expression.events){
             const method = new Method();
 
-            method.name = `~event_${event.actor}_${event.eventKind}_${eventCount}`;
+            method.name = `~event_${event.actor}_${event.eventKind}`;
             method.eventType = this.transformEventKind(event.eventKind);
             method.returnType = BooleanType.typeName;
 
             if (event.target){
+                method.name = `${method.name}_${event.target}`;
+                
                 method.parameters.push(
                     new Parameter(WorldObject.contextParameter, event.target)
                 );
             }
 
-            eventCount++;
+            const instructions:Instruction[] = [];
 
             const actions = <ActionsExpression>event.actions;
 
             for(const action of actions.actions){
                 const body = this.transformExpression(action, ExpressionTransformationMode.IgnoreResultsOfSayExpression);
-                method.body.push(
+                instructions.push(
                     ...body                                    
                 );
             }
 
             if (method.eventType == EventType.ItIsOpened){
-                method.body.push(
+                instructions.push(
                     ...Instruction.includeStateInThis(States.opened),
                     ...Instruction.removeStateFromThis(States.closed)
                 );
             } else if (method.eventType == EventType.ItIsClosed){
-                method.body.push(
+                instructions.push(
                     ...Instruction.includeStateInThis(States.closed),
                     ...Instruction.removeStateFromThis(States.opened)
                 );
             }
 
-            method.body.push(
+            instructions.push(
                 Instruction.loadBoolean(true),
+                Instruction.return()
+            );
+
+            method.body.push(
+                Instruction.baseTypeInstanceCall(),
+                ...Instruction.ifTrueThen(
+                    ...instructions
+                ),
+                Instruction.loadBoolean(false),
                 Instruction.return()
             );
 
@@ -252,6 +263,8 @@ export class GlobalTypeTransformer implements ITypeTransformer{
             case Keywords.used: return EventType.ItIsUsed;
             case Keywords.opened: return EventType.ItIsOpened;
             case Keywords.closed: return EventType.ItIsClosed;
+            case Keywords.described: return EventType.ItIsDescribed;
+            case Keywords.observed: return EventType.ItIsObserved;
             default:{
                 throw new CompilationError(`Unable to transform unsupported event kind '${kind}'`);
             }
@@ -316,9 +329,15 @@ export class GlobalTypeTransformer implements ITypeTransformer{
                     Instruction.loadField(WorldObject.state)
                 );
 
-                assign.push(
-                    Instruction.instanceCall(List.ensureOne)
-                );
+                if (expression.isNegated){
+                    assign.push(
+                        Instruction.instanceCall(List.remove)
+                    );
+                } else {
+                    assign.push(
+                        Instruction.instanceCall(List.ensureOne)
+                    );
+                }
             } else {
                 left.push(
                     Instruction.loadThis(),

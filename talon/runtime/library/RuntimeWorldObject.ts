@@ -34,29 +34,7 @@ export class RuntimeWorldObject extends RuntimeAny{
         return type;
     }
 
-    private getFieldValueByName(name:string):RuntimeAny{
-        const instance = this.fields.get(name)?.value;
-
-        if (instance == undefined){
-            throw new RuntimeError(`Attempted field access for unknown field '${name}'`);
-        }
-
-        return instance;
-    }
-
     getContentsField():RuntimeList{
         return this.getFieldAsList(WorldObject.contents);
-    }
-
-    getFieldAsList(name:string):RuntimeList{
-        return <RuntimeList>this.getFieldValueByName(name);
-    }
-
-    getFieldAsString(name:string):RuntimeString{
-        return <RuntimeString>this.getFieldValueByName(name);
-    }
-
-    getFieldAsBoolean(name:string):RuntimeBoolean{
-        return <RuntimeBoolean>this.getFieldValueByName(name);
-    }
+    }    
 }

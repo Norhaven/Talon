@@ -27,6 +27,12 @@ import { OpCode } from "../../common/OpCode";
 import { Instruction } from "../../common/Instruction";
 import { RuntimeEmpty } from "../library/RuntimeEmpty";
 import { States } from "../../common/States";
+import { RaiseEventHandler } from "./RaiseEventHandler";
+import { Item } from "../../library/Item";
+import { RaiseContextualEventHandler } from "./RaiseContextualEventHandler";
+import { EvaluationResult } from "../EvaluationResult";
+import { Method } from "../../common/Method";
+import { BooleanType } from "../../library/BooleanType";
 
 export class HandleCommandHandler extends OpCodeHandler{
     public readonly code: OpCode = OpCode.HandleCommand;
@@ -75,7 +81,7 @@ export class HandleCommandHandler extends OpCodeHandler{
 
         switch(meaning){
             case Meaning.Describing:{
-                this.describe(thread, actualTarget, false);
+                this.describe(thread, actualTarget);
                 break;
             }
             case Meaning.Moving: {    
@@ -84,14 +90,32 @@ export class HandleCommandHandler extends OpCodeHandler{
 
                 thread.currentPlace = nextPlace;
                 
-                this.describe(thread, actualTarget, false);
-                this.raisePlaceEvent(thread, nextPlace, EventType.PlayerEntersPlace);
-                this.raisePlaceEvent(thread, currentPlace!, EventType.PlayerExitsPlace);
+                const method = new Method();
+                method.name = "~anonWrapper";
+                method.body = [
+                    Instruction.invokeDelegate(),
+                    ...Instruction.ifTrueThen(
+                        Instruction.invokeDelegate(),
+                        ...Instruction.ifTrueThen(
+                            Instruction.invokeDelegate(),
+                            Instruction.return()
+                        ),
+                    ),
+                    Instruction.return()
+                ];
+
+                thread.activateMethod(method);
+
+                this.describe(thread, actualTarget);
+                this.raiseEvent(thread, EventType.PlayerEntersPlace, nextPlace);
+                this.raiseEvent(thread, EventType.PlayerExitsPlace, currentPlace!);
+                                    
                 break;
             }
             case Meaning.Taking: {
-                if (!(actualTarget instanceof RuntimeItem)){
+                if (!actualTarget.isTypeOf(Item.typeName)){
                     this.output.write("I can't take that.");
+                    thread.writeInfo(`Unable to take '${actualTarget.typeName}:${actualTarget.parentTypeName}', not an item`);
                     thread.writeInfo(this.endOfInteraction);
                     return super.handle(thread);
                 }
@@ -102,10 +126,9 @@ export class HandleCommandHandler extends OpCodeHandler{
                 const inventory = thread.currentPlayer!.getContentsField();
                 inventory.items.push(actualTarget);
 
-                this.describe(thread, thread.currentPlace!, false);
+                this.describe(thread, thread.currentPlace!);
                 
-                this.tryRaiseItemEvents(thread, thread.currentPlace!, EventType.ItIsTaken, actualTarget);
-                break;
+                return this.raiseEvent(thread, EventType.ItIsTaken, actualTarget);                
             }
             case Meaning.Inventory:{
                 const inventory = (<RuntimePlayer>actualTarget).getContentsField();
@@ -120,28 +143,26 @@ export class HandleCommandHandler extends OpCodeHandler{
                 const contents = thread.currentPlace!.getContentsField();
                 contents.items.push(actualTarget);
 
-                this.describe(thread, thread.currentPlace!, false);
+                this.describe(thread, thread.currentPlace!);
                 
-                this.tryRaiseItemEvents(thread, thread.currentPlace!, EventType.ItIsDropped, actualTarget);
-                break;
+                return this.raiseEvent(thread, EventType.ItIsDropped, actualTarget);
             }
             case Meaning.Using:{
                 if (actualActor){
-                    this.tryRaiseContextualItemEvents(thread, thread.currentPlace!, EventType.ItIsUsed, actualActor, actualTarget);
-                    this.tryRaiseItemEvents(thread, thread.currentPlace!, EventType.ItIsUsed, actualActor);
+                    if (this.tryRaiseContextualItemEvents(thread, EventType.ItIsUsed, actualActor, actualTarget) === EvaluationResult.Continue){
+                        return this.raiseEvent(thread, EventType.ItIsUsed, actualActor);
+                    }
                 } else {
-                    this.tryRaiseItemEvents(thread, thread.currentPlace!, EventType.ItIsUsed, actualTarget);
+                    return this.raiseEvent(thread, EventType.ItIsUsed, actualTarget);
                 }
 
                 break;
             }
             case Meaning.Opening:{
-                this.tryRaiseItemEvents(thread, thread.currentPlace!, EventType.ItIsOpened, actualTarget);
-                break;
+                return this.raiseEvent(thread, EventType.ItIsOpened, actualTarget);
             }
             case Meaning.Closing:{
-                this.tryRaiseItemEvents(thread, thread.currentPlace!, EventType.ItIsClosed, actualTarget);
-                break;
+                return this.raiseEvent(thread, EventType.ItIsClosed, actualTarget);
             }
             default:
                 throw new RuntimeError("Unsupported meaning found");
@@ -158,62 +179,23 @@ export class HandleCommandHandler extends OpCodeHandler{
         return stateList.items.some(x => (<RuntimeString>x).value === state);
     }
 
-    private tryRaiseContextualItemEvents(thread:Thread, location:RuntimePlace, type:EventType, actor:RuntimeItem, target:RuntimeItem){
-        const actorEvents = Array.from(actor.methods.values()!).filter(x => x.eventType == type && x.parameters.length > 0 && x.parameters[0].typeName === target.typeName);
-        const targetEvents = Array.from(target.methods.values()!).filter(x => x.eventType == type && x.parameters.length > 0 && x.parameters[0].typeName === actor.typeName);
+    private tryRaiseContextualItemEvents(thread:Thread, type:EventType, actor:RuntimeItem, target:RuntimeItem){
 
-        const actorThis = Variable.forThis(new Type(actor.typeName, actor.parentTypeName), actor);
-        const targetThis = Variable.forThis(new Type(target.typeName, target.parentTypeName), target);
-        
-        for(const event of actorEvents){
-            event.actualParameters = [
-                actorThis,
-                new Variable(WorldObject.contextParameter, new Type(RuntimeItem.name, RuntimeAny.name), target)
-            ];
+        thread.currentMethod.push(target);
+        thread.currentMethod.push(actor);
 
-            const delegate = new RuntimeDelegate(event);
+        const handler = new RaiseContextualEventHandler(type);
 
-            thread.currentMethod.push(delegate);
-        }
-
-        for(const event of targetEvents){
-            event.actualParameters = [
-                targetThis,
-                new Variable(WorldObject.contextParameter, new Type(RuntimeItem.name, RuntimeAny.name), actor)
-            ];
-
-            const delegate = new RuntimeDelegate(event);
-
-            thread.currentMethod.push(delegate);
-        }
+        return handler.handle(thread);
     }
 
-    private tryRaiseItemEvents(thread:Thread, location:RuntimePlace, type:EventType, target:RuntimeItem){
-        const events = Array.from(target.methods.values()!).filter(x => x.eventType == type && x.parameters.length === 0);
+    private raiseEvent(thread:Thread, type:EventType, target:RuntimeAny){
+        thread.currentMethod.push(target);
+        thread.currentMethod.push(Memory.allocateString(type));
 
-        for(const event of events){
+        const handler = new RaiseEventHandler();
 
-            event.actualParameters = [
-                Variable.forThis(new Type(target.typeName, target.parentTypeName), target)
-            ];
-
-            const delegate = new RuntimeDelegate(event);
-
-            thread.currentMethod.push(delegate);           
-        }
-    }
-
-    private raisePlaceEvent(thread:Thread, location:RuntimePlace, type:EventType){
-        const events = Array.from(location.methods.values()!).filter(x => x.eventType == type);
-
-        for(const event of events){
-            const method = location.methods.get(event.name)!;
-            method.actualParameters = [Variable.forThis(new Type(location?.typeName!, location?.parentTypeName!), location)];
-
-            const delegate = new RuntimeDelegate(method);
-
-            thread.currentMethod.push(delegate);
-        }
+        return handler.handle(thread);
     }
 
     private isItemVisible(item:RuntimeWorldObject){
@@ -356,33 +338,13 @@ export class HandleCommandHandler extends OpCodeHandler{
         namedValues.forEach(x => this.output.write(x));
     }
 
-    private describe(thread:Thread, target:RuntimeWorldObject, isShallowDescription:boolean){
+    private describe(thread:Thread, target:RuntimeWorldObject){
                 
-        if (!isShallowDescription){
-            const contents = target.getFieldAsList(WorldObject.contents);
-
-            //this.describeContents(thread, contents);
-        }
-
         const describe = target.methods.get(WorldObject.describe)!;
 
         describe.actualParameters.unshift(Variable.forThis(new Type(target?.typeName!, target?.parentTypeName!), target));
 
         thread.currentMethod.push(new RuntimeDelegate(describe));
-    }
-
-    private observe(thread:Thread, target:RuntimeWorldObject){
-        const observe = target.methods.get(WorldObject.observe)!;
-
-        observe.actualParameters.unshift(Variable.forThis(new Type(target?.typeName!, target?.parentTypeName!), target));
-
-        thread.currentMethod.push(new RuntimeDelegate(observe));        
-    }
-
-    private describeContents(thread:Thread, target:RuntimeList){
-        for(const item of target.items){
-            this.observe(thread, <RuntimeWorldObject>item);
-        }
     }
 
     private determineMeaningFor(action:string):Meaning{
@@ -400,6 +362,7 @@ export class HandleCommandHandler extends OpCodeHandler{
             case Understanding.using: return Meaning.Using;
             case Understanding.opening: return Meaning.Opening;
             case Understanding.closing: return Meaning.Closing;
+            case Understanding.observing: return Meaning.Observing;
             default:
                 return Meaning.Custom;
         }

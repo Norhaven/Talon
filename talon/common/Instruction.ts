@@ -138,6 +138,10 @@ export class Instruction{
         return new Instruction(OpCode.RemoveState);
     }
 
+    static baseTypeInstanceCall(){
+        return new Instruction(OpCode.BaseTypeInstanceCall);
+    }
+
     static ifTrueThen(...instructions:Instruction[]){
         const result:Instruction[] = [];
 

@@ -185,14 +185,13 @@ export class TalonIde{
             "understand \"use\" as using.\n" +
             "understand \"open\" as opening.\n" +
             "understand \"close\" as closing.\n" +
-            "understand \"opened\" as stateful.\n" +
-            "understand \"closed\" as stateful.\n\n" +
+            "understand \"locked\" as stateful.\n\n" +
 
             "an Inn is a kind of place. \n" +
             "it is where the player starts. \n" +
-            "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. The bartender is behind the bar. An open door to the north leads outside.\" \n" +
+            "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. An open door to the north leads outside.\" \n" +
             "    and if it contains 1 Coin then \"There's also a coin here.\"; or else \"There is just dust.\"; and then continue.\n" +
-            "it contains 1 Fireplace, 1 Chest, 1 Key.\n" + 
+            "it contains 1 Fireplace, 1 Chest, 1 Key, 1 Bartender.\n" + 
             "it can reach the Walkway by going \"north\". \n" +
             "it has a value that is false. \n" +
             "when the player exits: \n" +
@@ -217,24 +216,15 @@ export class TalonIde{
             "it is described as \"The chest looks very heavy.\".\n" +
             "it is observed as \"A large chest sits in the corner.\".\n" +
             "it contains 1 Coin.\n" +
-            "it has an isLocked that is false.\n" +
-            "when it is opened:\n" +
-            "    if it is \"opened\" then\n" +
-            "        say \"It's already open.\";\n" +
-            "        abort event;\n" +
-            "    and then continue;\n" +
-            "    if isLocked is true then\n" +
+            "when it is opened:\n" +            
+            "    if it is \"locked\" then\n" +
             "        say \"The lid won't budge.\";\n" +
             "        abort event;\n" +
             "    or else\n" +
             "        say \"The lid creaks with the effort.\";\n" +
             "    and then continue;\n" +
             "and then stop.\n" +
-            "when it is closed:\n" +
-            "    if it is \"closed\" then\n" +
-            "        say \"It's already closed.\";\n" +
-            "        abort event;\n" +
-            "    and then continue;\n" +
+            "when it is closed:\n" +            
             "    say \"The lid slams closed.\";\n" +
             "and then stop.\n" +
             "when it is used with a Key:\n" +
@@ -243,15 +233,27 @@ export class TalonIde{
             "        abort event;\n" +
             "    and then continue;\n" +
             "    say \"The key turns easily in the lock.\";\n" +
-            "    if isLocked is true then\n" +
-            "        set isLocked to false;\n" +
+            "    if it is \"locked\" then\n" +
+            "        set it to not \"locked\";\n" +
             "    or else\n" +
-            "        set isLocked to true;\n" +
+            "        set it to \"locked\";\n" +
             "    and then continue;\n" +
             "and then stop.\n\n" +
 
             "a Container is a kind of decoration.\n" +
-            "it is described as \"It's a container.\".\n\n" +
+            "it is described as \"It's a container.\".\n" +
+            "when it is opened:\n" +
+            "    if it is \"opened\" then\n" +
+            "        say \"It's already open.\";\n" +
+            "        abort event;\n" +
+            "    and then continue;\n" +
+            "and then stop.\n" +
+            "when it is closed:\n" +
+            "    if it is \"closed\" then\n" +
+            "        say \"It's already closed.\";\n" +
+            "        abort event;\n" +
+            "    and then continue;\n" +
+            "and then stop.\n\n" +
 
             "a Walkway is a kind of place. \n" +
             "it is described as \"The walkway in front of the inn is empty, just a cobblestone entrance. The inn is to the south.\". \n" +
@@ -275,7 +277,11 @@ export class TalonIde{
             "when it is used:\n" +
             "    say \"You used the coin somehow!\";\n" +
             "and then stop.\n\n" +
-            
+
+            "a Bartender is a kind of creature.\n" +
+            "it is described as \"He's smiling and whistling a tune.\".\n" +
+            "it is observed as \"A portly gentleman is behind the bar. He looks up as you come in.\".\n\n" +
+                        
             "say \"This is the end.\".\n";
     }
 }

@@ -15,7 +15,7 @@ export class InvokeDelegateHandler extends OpCodeHandler{
         
         const delegate = thread.currentMethod.pop()!;
 
-        if (delegate instanceof RuntimeDelegate){
+        if (delegate instanceof RuntimeDelegate){            
             const activation = thread.activateMethod(delegate.wrappedMethod);
         } else {
             throw new RuntimeError(`Unable to invoke delegate for non-delegate instance '${delegate}'`);

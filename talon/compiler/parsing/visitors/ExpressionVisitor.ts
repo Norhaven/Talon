@@ -54,10 +54,17 @@ export class ExpressionVisitor extends Visitor{
 
             context.expect(Keywords.to);
 
+            let isNegated = false;
+
+            if (context.is(Keywords.not)){
+                context.expect(Keywords.not);
+                isNegated = true;
+            }
+
             const visitor = new ExpressionVisitor();
             const value = visitor.visit(context);
 
-            return new SetVariableExpression(undefined, variableName, value);
+            return new SetVariableExpression(undefined, variableName, value, isNegated);
         } else if (context.is(Keywords.say)){
             context.expect(Keywords.say);
             
