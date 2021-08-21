@@ -28,8 +28,14 @@ export class RuntimeWorldObject extends RuntimeAny{
         description.typeName = StringType.typeName;
         description.defaultValue = "";
 
+        const aliases = new Field();
+        aliases.name = WorldObject.aliases;
+        aliases.typeName = List.typeName;
+        aliases.defaultValue = [];
+
         type.fields.push(contents);
         type.fields.push(description);
+        type.fields.push(aliases);
 
         return type;
     }

@@ -33,6 +33,7 @@ import { RaiseContextualEventHandler } from "./RaiseContextualEventHandler";
 import { EvaluationResult } from "../EvaluationResult";
 import { Method } from "../../common/Method";
 import { BooleanType } from "../../library/BooleanType";
+import { List } from "../../library/List";
 
 export class HandleCommandHandler extends OpCodeHandler{
     public readonly code: OpCode = OpCode.HandleCommand;
@@ -203,6 +204,26 @@ export class HandleCommandHandler extends OpCodeHandler{
         return visible.value;
     }
 
+    private objectNameMatches(worldObject:RuntimeWorldObject, name:string){
+        if (worldObject.typeName.toLowerCase() === name.toLowerCase()){
+            return true;
+        }
+
+        const aliases = <RuntimeList>worldObject.fields.get(WorldObject.aliases)?.value;
+
+        for(const alias of aliases.items){
+            if (alias instanceof RuntimeString){
+                if (alias.value.toLowerCase() === name.toLowerCase()){
+                    return true;
+                }
+            } else {
+                throw new RuntimeError(`Found type '${alias.typeName}' instead of string during alias match attempt`);
+            }
+        }
+
+        return false;
+    }
+
     private findTargetNameIn(thread:Thread, sourceItem:RuntimeWorldObject, targetName:string, removeWhenFound:boolean):RuntimeWorldObject|undefined{
         thread.writeInfo(`Looking for target '${targetName}' in '${sourceItem}'`);
 
@@ -218,7 +239,7 @@ export class HandleCommandHandler extends OpCodeHandler{
         const contents = sourceItem.getContentsField();
         const items = contents.items.map(x => (<RuntimeWorldObject>x));
 
-        const directMatches = items.filter(x => x.typeName.toLowerCase() === targetName.toLowerCase() && this.isItemVisible(x));
+        const directMatches = items.filter(x => this.objectNameMatches(x, targetName) && this.isItemVisible(x));
 
         if (directMatches.length > 0){
             thread.writeInfo(`One or more direct matches were found, target matched`);

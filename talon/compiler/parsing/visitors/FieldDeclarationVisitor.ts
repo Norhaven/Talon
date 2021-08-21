@@ -85,6 +85,24 @@ export class FieldDeclarationVisitor extends Visitor{
                 field.typeName = BooleanType.typeName;
                 field.initialValue = true;
         
+            } else if (context.is(Keywords.also)){
+                context.expect(Keywords.also);
+
+                context.expect(Keywords.known);
+                context.expect(Keywords.as);
+                
+                const aliases = [context.expectString().value];
+
+                while (context.isTypeOf(TokenType.ListSeparator)){
+                    context.consumeCurrentToken();
+
+                    const alias = context.expectString();
+                    aliases.push(alias.value);
+                }
+
+                field.name = WorldObject.aliases;
+                field.typeName = List.typeName;
+                field.initialValue = aliases; 
             } else {
                 throw new CompilationError("Unable to determine property field");
             }

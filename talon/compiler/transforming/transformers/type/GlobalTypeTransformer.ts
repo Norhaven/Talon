@@ -56,6 +56,7 @@ export class GlobalTypeTransformer implements ITypeTransformer{
             this.createFieldIfNotExists(WorldObject.contents, List.typeName, [], type);
             this.createFieldIfNotExists(WorldObject.observation, StringType.typeName, "", type);
             this.createFieldIfNotExists(WorldObject.description, StringType.typeName, "", type);
+            this.createFieldIfNotExists(WorldObject.aliases, List.typeName, [], type);
 
             this.createDescribeMethod(type);
             this.createObserveMethod(type);

@@ -8,6 +8,7 @@ export class WorldObject {
     static contents = "~contents";    
     static observation = "~observation";
     static state = "~state";
+    static aliases = "~aliases";
 
     static describe = "~describe";
     static observe = "~observe";

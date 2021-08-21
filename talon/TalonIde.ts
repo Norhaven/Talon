@@ -280,7 +280,8 @@ export class TalonIde{
 
             "a Bartender is a kind of creature.\n" +
             "it is described as \"He's smiling and whistling a tune.\".\n" +
-            "it is observed as \"A portly gentleman is behind the bar. He looks up as you come in.\".\n\n" +
+            "it is observed as \"A portly gentleman is behind the bar. He looks up as you come in.\".\n" +
+            "it is also known as \"man\", \"gentleman\".\n\n" +
                         
             "say \"This is the end.\".\n";
     }
