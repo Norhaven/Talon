@@ -266,6 +266,7 @@ export class GlobalTypeTransformer implements ITypeTransformer{
             case Keywords.closed: return EventType.ItIsClosed;
             case Keywords.described: return EventType.ItIsDescribed;
             case Keywords.observed: return EventType.ItIsObserved;
+            case Keywords.combined: return EventType.ItIsCombined;
             default:{
                 throw new CompilationError(`Unable to transform unsupported event kind '${kind}'`);
             }

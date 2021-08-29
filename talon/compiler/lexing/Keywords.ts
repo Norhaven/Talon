@@ -68,6 +68,8 @@ export class Keywords{
     static readonly creature = "creature";
     static readonly also = "also";
     static readonly known = "known";
+    static readonly combining = "combining";
+    static readonly combined = "combined";
 
     static getAll():Set<string>{
         type KeywordProperties = keyof Keywords;

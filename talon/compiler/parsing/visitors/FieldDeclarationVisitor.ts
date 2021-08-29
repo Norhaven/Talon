@@ -90,6 +90,7 @@ export class FieldDeclarationVisitor extends Visitor{
 
                 context.expect(Keywords.known);
                 context.expect(Keywords.as);
+                context.expectAnyOf(Keywords.a, Keywords.an);
                 
                 const aliases = [context.expectString().value];
 

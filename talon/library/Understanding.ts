@@ -12,6 +12,7 @@ export class Understanding{
     static inventory = "~inventory";
     static dropping = "~dropping";
     static using = "~using";
+    static combining = "~combining";
     static opening = "~opening";
     static closing = "~closing";
 

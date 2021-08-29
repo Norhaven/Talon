@@ -21,6 +21,7 @@ export class UnderstandingDeclarationVisitor extends Visitor{
                                             Keywords.using,
                                             Keywords.opening,
                                             Keywords.closing,
+                                            Keywords.combining,
                                             Keywords.stateful);
 
         context.expectTerminator();

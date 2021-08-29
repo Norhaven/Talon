@@ -30,6 +30,7 @@ export class RuntimeList extends RuntimeAny{
         this.defineJoinMethod();
         this.defineRemoveMethod();
         this.defineEnsureOneMethod();
+        this.defineGetEnumeratorMethod();
     }
 
     private defineJoinMethod(){
@@ -195,6 +196,24 @@ export class RuntimeList extends RuntimeAny{
         this.methods.set(List.ensureOne, ensureOne);
     }
 
+    private defineGetEnumeratorMethod(){
+        const getEnumeratorMethod = new Method();
+        getEnumeratorMethod.name = List.getEnumerator;
+        getEnumeratorMethod.returnType = RuntimeInteger.name;
+
+        getEnumeratorMethod.body.push(
+            Instruction.loadThis(),
+            Instruction.externalCall("getEnumerator"),
+            Instruction.return()
+        );
+
+        this.methods.set(List.getEnumerator, getEnumeratorMethod);
+    }
+
+    private getEnumerator(){
+        return Memory.allocateEnumerator(this.items);
+    }
+
     private ensureOneInstance(instance:RuntimeAny){
         if (!(instance instanceof RuntimeString)){
             throw new RuntimeError(`Unable to remove instance of unsupported type '${instance.typeName}' from list`)
@@ -226,6 +245,7 @@ export class RuntimeList extends RuntimeAny{
     }
 
     private countItems(){
+        console.log(`ITEMS= ${this.items.length}`);
         return Memory.allocateNumber(this.items.length);
     }
 

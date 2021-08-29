@@ -34,6 +34,7 @@ import { EvaluationResult } from "../EvaluationResult";
 import { Method } from "../../common/Method";
 import { BooleanType } from "../../library/BooleanType";
 import { List } from "../../library/List";
+import { RaiseEvent } from "./internal/RaiseEvent";
 
 export class HandleCommandHandler extends OpCodeHandler{
     public readonly code: OpCode = OpCode.HandleCommand;
@@ -77,13 +78,18 @@ export class HandleCommandHandler extends OpCodeHandler{
         if (!actualTarget){
             this.output.write("I don't know what you're referring to.");
             thread.writeInfo(this.endOfInteraction);
+            thread.currentMethod.push(new RuntimeEmpty());
+            
             return super.handle(thread);
         }
 
         switch(meaning){
             case Meaning.Describing:{
-                this.describe(thread, actualTarget);
-                break;
+                const delegate = this.describe(thread, actualTarget);
+
+                thread.currentMethod.push(delegate);
+
+                return EvaluationResult.Continue;
             }
             case Meaning.Moving: {    
                 const nextPlace = <RuntimePlace>actualTarget;
@@ -91,26 +97,19 @@ export class HandleCommandHandler extends OpCodeHandler{
 
                 thread.currentPlace = nextPlace;
                 
-                const method = new Method();
-                method.name = "~anonWrapper";
-                method.body = [
-                    Instruction.invokeDelegate(),
-                    ...Instruction.ifTrueThen(
-                        Instruction.invokeDelegate(),
-                        ...Instruction.ifTrueThen(
-                            Instruction.invokeDelegate(),
-                            Instruction.return()
-                        ),
-                    ),
-                    Instruction.return()
+                const delegate = this.describe(thread, actualTarget);
+                const delegates = this.prepareRaiseEvent(thread, EventType.PlayerEntersPlace, nextPlace);
+                const delegates1 = this.prepareRaiseEvent(thread, EventType.PlayerExitsPlace, currentPlace!);
+                     
+                const allDelegates = [
+                    ...delegates1,
+                    ...delegates,
+                    delegate
                 ];
 
-                thread.activateMethod(method);
+                thread.writeInfo(`Moving with ${allDelegates.length} events to be raised`);
 
-                this.describe(thread, actualTarget);
-                this.raiseEvent(thread, EventType.PlayerEntersPlace, nextPlace);
-                this.raiseEvent(thread, EventType.PlayerExitsPlace, currentPlace!);
-                                    
+                thread.currentMethod.push(Memory.allocateList(allDelegates));
                 break;
             }
             case Meaning.Taking: {
@@ -127,9 +126,12 @@ export class HandleCommandHandler extends OpCodeHandler{
                 const inventory = thread.currentPlayer!.getContentsField();
                 inventory.items.push(actualTarget);
 
-                this.describe(thread, thread.currentPlace!);
-                
-                return this.raiseEvent(thread, EventType.ItIsTaken, actualTarget);                
+                const describeEvent = this.describe(thread, thread.currentPlace!);                
+                const takeEvent = this.prepareRaiseEvent(thread, EventType.ItIsTaken, actualTarget);                
+
+                thread.currentMethod.push(Memory.allocateList([...takeEvent, describeEvent]))
+
+                break;
             }
             case Meaning.Inventory:{
                 const inventory = (<RuntimePlayer>actualTarget).getContentsField();
@@ -144,32 +146,52 @@ export class HandleCommandHandler extends OpCodeHandler{
                 const contents = thread.currentPlace!.getContentsField();
                 contents.items.push(actualTarget);
 
-                this.describe(thread, thread.currentPlace!);
-                
-                return this.raiseEvent(thread, EventType.ItIsDropped, actualTarget);
+                const describeEvent = this.describe(thread, thread.currentPlace!);                
+                const event = this.prepareRaiseEvent(thread, EventType.ItIsDropped, actualTarget);
+
+                thread.currentMethod.push(Memory.allocateList([...event, describeEvent]));
+
+                break;
             }
             case Meaning.Using:{
                 if (actualActor){
-                    if (this.tryRaiseContextualItemEvents(thread, EventType.ItIsUsed, actualActor, actualTarget) === EvaluationResult.Continue){
-                        return this.raiseEvent(thread, EventType.ItIsUsed, actualActor);
-                    }
+                    const contextual = this.prepareRaiseContextualItemEvents(thread, EventType.ItIsUsed, actualActor, actualTarget);
+                    const event = this.prepareRaiseEvent(thread, EventType.ItIsUsed, actualActor);
+
+                    thread.currentMethod.push(Memory.allocateList([...event, ...contextual]));
                 } else {
-                    return this.raiseEvent(thread, EventType.ItIsUsed, actualTarget);
+                    this.raiseEvent(thread, EventType.ItIsUsed, actualTarget);
                 }
 
                 break;
             }
             case Meaning.Opening:{
-                return this.raiseEvent(thread, EventType.ItIsOpened, actualTarget);
+                this.raiseEvent(thread, EventType.ItIsOpened, actualTarget);
+                break;
             }
             case Meaning.Closing:{
-                return this.raiseEvent(thread, EventType.ItIsClosed, actualTarget);
+                this.raiseEvent(thread, EventType.ItIsClosed, actualTarget);
+                break;
+            }
+            case Meaning.Combining:{
+                
+                if (actualActor){
+                    const contextual = this.prepareRaiseContextualItemEvents(thread, EventType.ItIsCombined, actualActor, actualTarget);
+                    const event = this.prepareRaiseEvent(thread, EventType.ItIsCombined, actualActor);
+
+                    thread.currentMethod.push(Memory.allocateList([...event, ...contextual]));
+                } else {
+                    this.raiseEvent(thread, EventType.ItIsCombined, actualTarget);
+                }
+
+                break;
             }
             default:
                 throw new RuntimeError("Unsupported meaning found");
         }  
 
         thread.writeInfo(this.endOfInteraction);
+
         return super.handle(thread);
     }
 
@@ -180,23 +202,31 @@ export class HandleCommandHandler extends OpCodeHandler{
         return stateList.items.some(x => (<RuntimeString>x).value === state);
     }
 
-    private tryRaiseContextualItemEvents(thread:Thread, type:EventType, actor:RuntimeItem, target:RuntimeItem){
+    private prepareRaiseContextualItemEvents(thread:Thread, type:EventType, actor:RuntimeAny, target:RuntimeAny){
+        if (!(actor instanceof RuntimeWorldObject)){
+            throw new RuntimeError(`Attempted to raise a contextual event on a non-world-object actor instance of type '${actor.typeName}'`);
+        }
 
-        thread.currentMethod.push(target);
-        thread.currentMethod.push(actor);
-
-        const handler = new RaiseContextualEventHandler(type);
-
-        return handler.handle(thread);
+        if (!(target instanceof RuntimeWorldObject)){
+            throw new RuntimeError(`Attempted to raise an event on a non-world-object instance of type '${target.typeName}'`);
+        }
+        
+        return RaiseEvent.contextual(thread, type, actor, target);
     }
 
     private raiseEvent(thread:Thread, type:EventType, target:RuntimeAny){
-        thread.currentMethod.push(target);
-        thread.currentMethod.push(Memory.allocateString(type));
+        
+        const eventDelegates = this.prepareRaiseEvent(thread, type, target);
 
-        const handler = new RaiseEventHandler();
+        thread.currentMethod.push(Memory.allocateList(eventDelegates));
+    }
 
-        return handler.handle(thread);
+    private prepareRaiseEvent(thread:Thread, type:EventType, target:RuntimeAny){
+        if (!(target instanceof RuntimeWorldObject)){
+            throw new RuntimeError(`Attempted to raise an event on a non-world-object instance of type '${target.typeName}'`);
+        }
+
+        return RaiseEvent.nonContextual(thread, type, target);
     }
 
     private isItemVisible(item:RuntimeWorldObject){
@@ -314,6 +344,7 @@ export class HandleCommandHandler extends OpCodeHandler{
 
             return <RuntimeWorldObject>matchingItems[0];
         } else if (meaning === Meaning.Using ||
+                   meaning === Meaning.Combining ||
                    meaning === Meaning.Opening ||
                    meaning === Meaning.Closing){
             
@@ -359,13 +390,19 @@ export class HandleCommandHandler extends OpCodeHandler{
         namedValues.forEach(x => this.output.write(x));
     }
 
+    private raiseDescribeEvent(thread:Thread, target:RuntimeWorldObject){
+        const delegate = this.describe(thread, target);
+
+        thread.currentMethod.push(Memory.allocateList([delegate]));
+    }
+
     private describe(thread:Thread, target:RuntimeWorldObject){
                 
         const describe = target.methods.get(WorldObject.describe)!;
 
         describe.actualParameters.unshift(Variable.forThis(new Type(target?.typeName!, target?.parentTypeName!), target));
 
-        thread.currentMethod.push(new RuntimeDelegate(describe));
+        return new RuntimeDelegate(describe);
     }
 
     private determineMeaningFor(action:string):Meaning{
@@ -384,6 +421,7 @@ export class HandleCommandHandler extends OpCodeHandler{
             case Understanding.opening: return Meaning.Opening;
             case Understanding.closing: return Meaning.Closing;
             case Understanding.observing: return Meaning.Observing;
+            case Understanding.combining: return Meaning.Combining;
             default:
                 return Meaning.Custom;
         }

@@ -12,6 +12,7 @@ import { IOutput } from "../runtime/IOutput";
 import { CompilationError } from "./exceptions/CompilationError";
 import { Delegate } from "../library/Delegate";
 import * as buildInfo from "../../build-info.json";
+import { List } from "../library/List";
 
 export class TalonCompiler{
     get languageVersion(){
@@ -62,6 +63,8 @@ export class TalonCompiler{
 
         type.attributes.push(new EntryPointAttribute());
 
+        const handledCommandLocal = "~handledCommand";
+
         const main = new Method();
         main.name = Any.main;
         main.body.push(
@@ -81,9 +84,28 @@ export class TalonCompiler{
             Instruction.print(),
             Instruction.parseCommand(),    
             Instruction.handleCommand(),
+            Instruction.setLocal(handledCommandLocal),
+            Instruction.loadLocal(handledCommandLocal),
             Instruction.isTypeOf(Delegate.typeName),
             ...Instruction.ifTrueThen(
-                Instruction.invokeDelegate()
+                Instruction.invokeDelegate(),
+                Instruction.goTo(7)
+            ),
+            Instruction.loadLocal(handledCommandLocal),
+            Instruction.isTypeOf(List.typeName),
+            ...Instruction.ifTrueThen(
+                Instruction.loadLocal(handledCommandLocal),
+                Instruction.instanceCall(List.count),
+                Instruction.loadNumber(0),
+                Instruction.compareEqual(),
+                ...Instruction.ifTrueThen(
+                    Instruction.loadString("I don't know how to do that."),
+                    Instruction.print(),
+                    Instruction.goTo(7)
+                ),
+                ...Instruction.forEach(
+                    Instruction.invokeDelegate()
+                )
             ),
             Instruction.goTo(7)
         );

@@ -29,6 +29,7 @@ import { RuntimeWorldObject } from "../library/RuntimeWorldObject";
 import { Any } from "../../library/Any";
 import { Creature } from "../../library/Creature";
 import { RuntimeCreature } from "../library/RuntimeCreature";
+import { RuntimeEnumerator } from "../library/RuntimeEnumerator";
 
 export class Memory{
     private static typesByName = new Map<string, Type>();
@@ -93,6 +94,14 @@ export class Memory{
 
     static allocateString(text:string):RuntimeString{
         return new RuntimeString(text);
+    }
+
+    static allocateEnumerator(items:RuntimeAny[]){
+        return new RuntimeEnumerator(items);
+    }
+
+    static allocateList(items:RuntimeAny[]){
+        return new RuntimeList(items);
     }
 
     static allocate(type:Type):RuntimeAny{

@@ -20,8 +20,8 @@ export class WhenDeclarationVisitor extends Visitor{
             context.expect(Keywords.it);
             context.expect(Keywords.is);
 
-            if (context.is(Keywords.used)){
-                eventKind = context.expect(Keywords.used);
+            if (context.isAnyOf(Keywords.used, Keywords.combined)){
+                eventKind = context.expectAnyOf(Keywords.used, Keywords.combined);
 
                 if (context.is(Keywords.with)){
                     context.expect(Keywords.with);

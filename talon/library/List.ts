@@ -12,6 +12,7 @@ export class List{
     static readonly join = "~join";
     static readonly remove = "~remove";
     static readonly ensureOne = "~ensureOne";
+    static readonly getEnumerator = "~getEnumerator";
 
     static readonly valueParameter = "~value";
     static readonly separatorParameter = "~separator";

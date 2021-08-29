@@ -185,6 +185,7 @@ export class TalonIde{
             "understand \"use\" as using.\n" +
             "understand \"open\" as opening.\n" +
             "understand \"close\" as closing.\n" +
+            "understand \"combine\" as combining.\n" +
             "understand \"locked\" as stateful.\n\n" +
 
             "an Inn is a kind of place. \n" +
@@ -204,7 +205,10 @@ export class TalonIde{
             "and then stop. \n\n" +
                         
             "a Key is a kind of item.\n" +
-            "it is described as \"The key is small but sturdy.\".\n\n" +
+            "it is described as \"The key is small but sturdy.\".\n" +
+            "when it is combined with a Coin:\n" +
+            "    say \"You fit the coin into the key.\";\n" +
+            "and then stop.\n\n" +
 
             "a Fireplace is a kind of decoration. \n" +
             "it is described as \"The fireplace crackles. It's full of fire.\".\n" +
@@ -274,6 +278,9 @@ export class TalonIde{
             "when it is dropped:\n" +
             "    say \"You put the coin down!\";\n" +
             "and then stop.\n" +
+            "when it is combined:\n" +
+            "    say \"You combined the coin!\";\n" +
+            "and then stop.\n" +
             "when it is used:\n" +
             "    say \"You used the coin somehow!\";\n" +
             "and then stop.\n\n" +
@@ -281,7 +288,7 @@ export class TalonIde{
             "a Bartender is a kind of creature.\n" +
             "it is described as \"He's smiling and whistling a tune.\".\n" +
             "it is observed as \"A portly gentleman is behind the bar. He looks up as you come in.\".\n" +
-            "it is also known as \"man\", \"gentleman\".\n\n" +
+            "it is also known as a \"man\", \"gentleman\".\n\n" +
                         
             "say \"This is the end.\".\n";
     }

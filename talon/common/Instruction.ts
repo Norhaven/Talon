@@ -1,7 +1,11 @@
+import { Enumerator } from "../library/Enumerator";
 import { List } from "../library/List";
 import { OpCode } from "./OpCode";
 
 export class Instruction{
+    private static generatedForeachLocals = 0;
+    private static generatedEnumerationLocals = 0;
+
     static assign(){
         return new Instruction(OpCode.Assign);
     }
@@ -148,6 +152,41 @@ export class Instruction{
         result.push(
             Instruction.branchRelativeIfFalse(instructions.length),
             ...instructions
+        );
+
+        return result;
+    }
+
+    static forEach(...instructions:Instruction[]){
+        const result:Instruction[] = [];
+        const enumeratorLocal = `~enumerator.${this.generatedForeachLocals}`;
+
+        this.generatedForeachLocals++;
+
+        result.push(
+            Instruction.instanceCall(List.getEnumerator),
+            Instruction.setLocal(enumeratorLocal),
+            ...Instruction.enumerate(enumeratorLocal, ...instructions)
+        );
+
+        return result;
+    }
+
+    static enumerate(enumeratorLocal:string, ...instructions:Instruction[]){
+        const result:Instruction[] = [];
+        const valueLocal = `~enumerated.value.${this.generatedEnumerationLocals}`;
+
+        this.generatedEnumerationLocals++;
+
+        result.push(
+            Instruction.loadLocal(enumeratorLocal),
+            Instruction.instanceCall(Enumerator.moveNext),
+            ...Instruction.ifTrueThen(
+                Instruction.loadLocal(enumeratorLocal),
+                Instruction.instanceCall(Enumerator.current),
+                ...instructions,
+                Instruction.branchRelative(-(instructions.length + 6))
+            )
         );
 
         return result;

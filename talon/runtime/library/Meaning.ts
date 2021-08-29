@@ -10,5 +10,6 @@ export enum Meaning{
     Opening = "opening",
     Closing = "closing",
     Quitting = "quitting",
-    Custom = "custom"
+    Custom = "custom",
+    Combining = "combining"
 }
