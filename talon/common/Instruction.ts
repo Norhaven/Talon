@@ -150,6 +150,10 @@ export class Instruction{
         return new Instruction(OpCode.BaseTypeInstanceCall);
     }
 
+    static replaceInstancesWith(typeName:string){
+        return new Instruction(OpCode.ReplaceInstances, typeName);
+    }
+
     static ifTrueThen(...instructions:Instruction[]){
         const result:Instruction[] = [];
 

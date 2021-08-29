@@ -37,5 +37,6 @@ export enum OpCode {
     BaseTypeInstanceCall = "call.inst.base",
     RaiseEvent = ".raise.event",
     RaiseContextualEvent = ".raise.event.ctx",
-    LoadPlace = ".load.place"
+    LoadPlace = ".load.place",
+    ReplaceInstances = ".replace.inst"
 }

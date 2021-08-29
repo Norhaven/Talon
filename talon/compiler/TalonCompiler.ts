@@ -94,7 +94,7 @@ export class TalonCompiler{
             Instruction.isTypeOf(Delegate.typeName),
             ...Instruction.ifTrueThen(
                 Instruction.invokeDelegate(),
-                Instruction.goTo(7)
+                Instruction.goTo(11)
             ),
             Instruction.loadLocal(handledCommandLocal),
             Instruction.isTypeOf(List.typeName),
@@ -106,13 +106,13 @@ export class TalonCompiler{
                 ...Instruction.ifTrueThen(
                     Instruction.loadString("I don't know how to do that."),
                     Instruction.print(),
-                    Instruction.goTo(7)
+                    Instruction.goTo(11)
                 ),
                 ...Instruction.forEach(
                     Instruction.invokeDelegate()
                 )
             ),
-            Instruction.goTo(7)
+            Instruction.goTo(11)
         );
 
         type.methods.push(main);

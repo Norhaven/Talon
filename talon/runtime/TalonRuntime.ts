@@ -60,6 +60,7 @@ import { BaseTypeInstanceCallHandler } from "./handlers/BaseTypeInstanceCallHand
 import { RaiseEventHandler } from "./handlers/RaiseEventHandler";
 import { RaiseContextualEventHandler } from "./handlers/RaiseContextualEventHandler";
 import { LoadPlaceHandler } from "./handlers/LoadPlaceHandler";
+import { ReplaceInstancesHandler } from "./handlers/ReplaceInstancesHandler";
 
 export class TalonRuntime{
 
@@ -108,7 +109,8 @@ export class TalonRuntime{
             new BaseTypeInstanceCallHandler(),
             new RaiseEventHandler(),
             new RaiseContextualEventHandler(),
-            new LoadPlaceHandler()
+            new LoadPlaceHandler(),
+            new ReplaceInstancesHandler()
         ];
 
         this.handlers = new Map<OpCode, OpCodeHandler>(handlerInstances.map(x => [x.code, x]));

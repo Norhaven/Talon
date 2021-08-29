@@ -25,6 +25,7 @@ import { FieldDeclarationExpression } from "../../../parsing/expressions/FieldDe
 import { IdentifierExpression } from "../../../parsing/expressions/IdentifierExpression";
 import { IfExpression } from "../../../parsing/expressions/IfExpression";
 import { LiteralExpression } from "../../../parsing/expressions/LiteralExpression";
+import { ReplaceExpression } from "../../../parsing/expressions/ReplaceExpression";
 import { SayExpression } from "../../../parsing/expressions/SayExpression";
 import { SetVariableExpression } from "../../../parsing/expressions/SetVariableExpression";
 import { TypeDeclarationExpression } from "../../../parsing/expressions/TypeDeclarationExpression";
@@ -391,6 +392,28 @@ export class GlobalTypeTransformer implements ITypeTransformer{
                 Instruction.loadBoolean(false),
                 Instruction.return()
             );
+        } else if (expression instanceof ReplaceExpression){
+            for(const identifier of expression.replacedEntities){
+                if (identifier.variableName === "~it"){
+                    instructions.push(
+                        Instruction.loadThis()
+                    );
+                } else {
+                    // TODO: Currently, we're assuming that the only thing that they can replace is the context instance.
+                    //       This could be expanded to allow replacing anything within the current player context (e.g. inventory, place, etc).
+                    
+                    instructions.push(
+                        Instruction.loadLocal(WorldObject.contextParameter)
+                    );
+                }
+            }
+
+            instructions.push(
+                Instruction.loadNumber(expression.replacedEntities.length),
+                Instruction.replaceInstancesWith(expression.newEntity.variableName)
+            );
+
+            
         } else {
             throw new CompilationError(`Unable to transform unsupported expression: ${expression}`);
         }

@@ -14,6 +14,7 @@ import { RuntimeDelegate } from "./RuntimeDelegate";
 import { Variable } from "./Variable";
 import { Type } from "../../common/Type";
 import { RuntimeError } from "../errors/RuntimeError";
+import { RuntimeWorldObject } from "./RuntimeWorldObject";
 
 export class RuntimeList extends RuntimeAny{
     typeName = List.typeName;
@@ -210,6 +211,10 @@ export class RuntimeList extends RuntimeAny{
         this.methods.set(List.getEnumerator, getEnumeratorMethod);
     }
 
+    private replace(instance:RuntimeWorldObject){
+
+    }
+
     private getEnumerator(){
         return Memory.allocateEnumerator(this.items);
     }
@@ -227,18 +232,24 @@ export class RuntimeList extends RuntimeAny{
         this.addInstance(instance);
     }
 
-    private removeInstance(instance:RuntimeAny){
+    removeInstance(instance:RuntimeAny){
 
         this.items = this.items.filter(x => {
             if (instance instanceof RuntimeString){
                 return (<RuntimeString>x).value != instance.value;
+            } else if (instance instanceof RuntimeWorldObject){
+                const result = Object.is(x, instance);
+
+                console.log(`Compared ${x.typeName} = ${instance.typeName} : ${result}`);
+
+                return !result;
             } else {
                 throw new RuntimeError(`Unable to remove instance of unsupported type '${instance.typeName}' from list`);
             }
         });
     }
 
-    private addInstance(instance:RuntimeAny){
+    addInstance(instance:RuntimeAny){
         console.log("Adding an instance...");
         console.log(instance);
         this.items.push(instance);
@@ -247,6 +258,16 @@ export class RuntimeList extends RuntimeAny{
     private countItems(){
         console.log(`ITEMS= ${this.items.length}`);
         return Memory.allocateNumber(this.items.length);
+    }
+
+    contains(instance:RuntimeWorldObject){
+        const item = this.items.find(x => x === instance);
+
+        if (item){
+            return Memory.allocateBoolean(true);
+        }
+
+        return Memory.allocateBoolean(false);
     }
 
     private containsValue(value:RuntimeString){

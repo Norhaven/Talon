@@ -177,9 +177,10 @@ export class HandleCommandHandler extends OpCodeHandler{
                 
                 if (actualActor){
                     const contextual = this.prepareRaiseContextualItemEvents(thread, EventType.ItIsCombined, actualActor, actualTarget);
-                    const event = this.prepareRaiseEvent(thread, EventType.ItIsCombined, actualActor);
+                    const event1 = this.prepareRaiseEvent(thread, EventType.ItIsCombined, actualActor);
+                    const event2 = this.prepareRaiseEvent(thread, EventType.ItIsCombined, actualTarget); 
 
-                    thread.currentMethod.push(Memory.allocateList([...event, ...contextual]));
+                    thread.currentMethod.push(Memory.allocateList([...event1, ...event2, ...contextual]));
                 } else {
                     this.raiseEvent(thread, EventType.ItIsCombined, actualTarget);
                 }
@@ -388,6 +389,7 @@ export class HandleCommandHandler extends OpCodeHandler{
         }
 
         namedValues.forEach(x => this.output.write(x));
+        this.output.write("");
     }
 
     private raiseDescribeEvent(thread:Thread, target:RuntimeWorldObject){

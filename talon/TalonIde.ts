@@ -208,6 +208,7 @@ export class TalonIde{
             "it is described as \"The key is small but sturdy.\".\n" +
             "when it is combined with a Coin:\n" +
             "    say \"You fit the coin into the key.\";\n" +
+            "    replace it, Coin with CoinKey;\n" +
             "and then stop.\n\n" +
 
             "a Fireplace is a kind of decoration. \n" +
@@ -284,6 +285,10 @@ export class TalonIde{
             "when it is used:\n" +
             "    say \"You used the coin somehow!\";\n" +
             "and then stop.\n\n" +
+
+            "a CoinKey is a kind of item.\n" +
+            "it is described as \"It's a key with a coin embedded in it.\".\n" +
+            "it is observed as \"A key with a coin in it lays on the floor.\".\n\n" +
 
             "a Bartender is a kind of creature.\n" +
             "it is described as \"He's smiling and whistling a tune.\".\n" +

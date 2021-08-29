@@ -70,6 +70,7 @@ export class Keywords{
     static readonly known = "known";
     static readonly combining = "combining";
     static readonly combined = "combined";
+    static readonly replace = "replace";
 
     static getAll():Set<string>{
         type KeywordProperties = keyof Keywords;
