@@ -18,7 +18,7 @@ export class CreateDelegateHandler extends OpCodeHandler{
 
         const method = implicitThis?.methods.get(methodName)!;
 
-        method.actualParameters[0] = Variable.forThis(Memory.findTypeByName(implicitThis?.typeName!)!, implicitThis);
+        method.actualParameters[0] = Variable.forThis(implicitThis!);
 
         const delegate = new RuntimeDelegate(method);
 

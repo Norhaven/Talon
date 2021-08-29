@@ -15,8 +15,8 @@ export class RaiseEvent{
         const actorEvents = Array.from(actor.methods.values()!).filter(x => x.eventType == eventType && x.parameters.length > 0 && x.parameters[0].typeName === target.typeName);
         const targetEvents = Array.from(target.methods.values()!).filter(x => x.eventType == eventType && x.parameters.length > 0 && x.parameters[0].typeName === actor.typeName);
 
-        const actorThis = Variable.forThis(new Type(actor.typeName, actor.parentTypeName), actor);
-        const targetThis = Variable.forThis(new Type(target.typeName, target.parentTypeName), target);
+        const actorThis = Variable.forThis(actor);
+        const targetThis = Variable.forThis(target);
         
         thread.logInfo?.debug(`Raising ${actorEvents.length} contextual events`);
 
@@ -58,7 +58,7 @@ export class RaiseEvent{
         for(const event of events){
 
             event.actualParameters = [
-                Variable.forThis(new Type(target.typeName, target.parentTypeName), target)
+                Variable.forThis(target)
             ];
 
             const delegate = new RuntimeDelegate(event);

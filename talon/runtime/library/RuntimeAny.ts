@@ -5,6 +5,7 @@ import { RuntimeError } from "../errors/RuntimeError";
 import { RuntimeList } from "./RuntimeList";
 import { RuntimeString } from "./RuntimeString";
 import { RuntimeBoolean } from "./RuntimeBoolean";
+import { Type } from "../../common/Type";
 
 export class RuntimeAny{
     parentTypeName:string = "";
@@ -59,6 +60,10 @@ export class RuntimeAny{
 
     getFieldAsBoolean(name:string):RuntimeBoolean{
         return <RuntimeBoolean>this.getFieldValueByName(name);
+    }
+
+    getType(){
+        return new Type(this.typeName, this.parentTypeName);
     }
 
     toString(){

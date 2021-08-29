@@ -10,7 +10,7 @@ export class Variable{
                 public value?:RuntimeAny){
     }
 
-    static forThis(type:Type, value?:RuntimeAny){
-        return new Variable(Variable.thisTypeName, type, value);
+    static forThis(value:RuntimeAny){
+        return new Variable(Variable.thisTypeName, value.getType(), value);
     }
 }

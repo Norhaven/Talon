@@ -21,7 +21,7 @@ export class InvokeDelegateOnInstanceHandler extends OpCodeHandler{
             const actualParametersWithoutThis = delegate.wrappedMethod.actualParameters.filter(x => x.name != "~this");
 
             actualParametersWithoutThis.push(
-                Variable.forThis(type, instance)
+                Variable.forThis(instance)
             );
 
             delegate.wrappedMethod.actualParameters = actualParametersWithoutThis;

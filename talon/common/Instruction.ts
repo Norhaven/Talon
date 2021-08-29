@@ -54,6 +54,10 @@ export class Instruction{
         return new Instruction(OpCode.LoadThis);
     }
 
+    static loadPlace(typeName?:string){
+        return new Instruction(OpCode.LoadPlace, typeName);
+    }
+
     static instanceCall(methodName:string){
         return new Instruction(OpCode.InstanceCall, methodName);
     }

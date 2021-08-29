@@ -79,7 +79,7 @@ export class HandleCommandHandler extends OpCodeHandler{
             this.output.write("I don't know what you're referring to.");
             thread.writeInfo(this.endOfInteraction);
             thread.currentMethod.push(new RuntimeEmpty());
-            
+
             return super.handle(thread);
         }
 
@@ -400,7 +400,7 @@ export class HandleCommandHandler extends OpCodeHandler{
                 
         const describe = target.methods.get(WorldObject.describe)!;
 
-        describe.actualParameters.unshift(Variable.forThis(new Type(target?.typeName!, target?.parentTypeName!), target));
+        describe.actualParameters.unshift(Variable.forThis(target));
 
         return new RuntimeDelegate(describe);
     }

@@ -13,6 +13,7 @@ import { CompilationError } from "./exceptions/CompilationError";
 import { Delegate } from "../library/Delegate";
 import * as buildInfo from "../../build-info.json";
 import { List } from "../library/List";
+import { WorldObject } from "../library/WorldObject";
 
 export class TalonCompiler{
     get languageVersion(){
@@ -76,7 +77,11 @@ export class TalonCompiler{
             Instruction.print(),
             Instruction.staticCall("~globalSays", "~say"),        
             Instruction.loadString(""),
-            Instruction.print(),
+            Instruction.print(),       
+            Instruction.loadPlace(),
+            Instruction.instanceCall(WorldObject.describe),  
+            Instruction.loadString(""),
+            Instruction.print(),      
             Instruction.loadString("What would you like to do?"),
             Instruction.print(),
             Instruction.readInput(),

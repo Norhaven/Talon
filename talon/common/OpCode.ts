@@ -36,5 +36,6 @@ export enum OpCode {
     RemoveState = ".remove.state",
     BaseTypeInstanceCall = "call.inst.base",
     RaiseEvent = ".raise.event",
-    RaiseContextualEvent = ".raise.event.ctx"
+    RaiseContextualEvent = ".raise.event.ctx",
+    LoadPlace = ".load.place"
 }

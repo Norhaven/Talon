@@ -44,7 +44,7 @@ export class InstanceCallHandler extends OpCodeHandler{
             
             // HACK: We shouldn't create our own type, we should inherently know what it is.
 
-            parameterValues.unshift(Variable.forThis(new Type(instance?.typeName!, instance?.parentTypeName!), instance));
+            parameterValues.unshift(Variable.forThis(instance!));
 
             method.actualParameters = parameterValues;
 
