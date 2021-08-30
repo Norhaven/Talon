@@ -35,6 +35,7 @@ import { Method } from "../../common/Method";
 import { BooleanType } from "../../library/BooleanType";
 import { List } from "../../library/List";
 import { RaiseEvent } from "./internal/RaiseEvent";
+import { Lookup } from "./internal/Lookup";
 
 export class HandleCommandHandler extends OpCodeHandler{
     public readonly code: OpCode = OpCode.HandleCommand;
@@ -196,13 +197,6 @@ export class HandleCommandHandler extends OpCodeHandler{
         return super.handle(thread);
     }
 
-    private isState(thread:Thread, target:RuntimeWorldObject, state:string){
-        const stateField = target.fields.get(WorldObject.state);
-        const stateList = <RuntimeList>stateField?.value;
-
-        return stateList.items.some(x => (<RuntimeString>x).value === state);
-    }
-
     private prepareRaiseContextualItemEvents(thread:Thread, type:EventType, actor:RuntimeAny, target:RuntimeAny){
         if (!(actor instanceof RuntimeWorldObject)){
             throw new RuntimeError(`Attempted to raise a contextual event on a non-world-object actor instance of type '${actor.typeName}'`);
@@ -228,78 +222,6 @@ export class HandleCommandHandler extends OpCodeHandler{
         }
 
         return RaiseEvent.nonContextual(thread, type, target);
-    }
-
-    private isItemVisible(item:RuntimeWorldObject){
-        const visible = item.getFieldAsBoolean(WorldObject.visible);
-        return visible.value;
-    }
-
-    private objectNameMatches(worldObject:RuntimeWorldObject, name:string){
-        if (worldObject.typeName.toLowerCase() === name.toLowerCase()){
-            return true;
-        }
-
-        const aliases = <RuntimeList>worldObject.fields.get(WorldObject.aliases)?.value;
-
-        for(const alias of aliases.items){
-            if (alias instanceof RuntimeString){
-                if (alias.value.toLowerCase() === name.toLowerCase()){
-                    return true;
-                }
-            } else {
-                throw new RuntimeError(`Found type '${alias.typeName}' instead of string during alias match attempt`);
-            }
-        }
-
-        return false;
-    }
-
-    private findTargetNameIn(thread:Thread, sourceItem:RuntimeWorldObject, targetName:string, removeWhenFound:boolean):RuntimeWorldObject|undefined{
-        thread.writeInfo(`Looking for target '${targetName}' in '${sourceItem}'`);
-
-        const isAvailable = (item:RuntimeWorldObject) => this.isItemVisible(item) && !this.isState(thread, item, States.closed);
-        const isClosed = this.isState(thread, sourceItem, States.closed);
-        const isOpened = this.isState(thread, sourceItem, States.opened);
-
-        if (!this.isItemVisible(sourceItem) || isClosed){
-            thread.writeInfo(`Target container not applicable, is invisible or closed`);
-            return undefined;
-        }
-
-        const contents = sourceItem.getContentsField();
-        const items = contents.items.map(x => (<RuntimeWorldObject>x));
-
-        const directMatches = items.filter(x => this.objectNameMatches(x, targetName) && this.isItemVisible(x));
-
-        if (directMatches.length > 0){
-            thread.writeInfo(`One or more direct matches were found, target matched`);
-
-            const matchedItem = directMatches[0];
-
-            if (removeWhenFound){
-                contents.items = items.filter(x => x !== matchedItem);
-            }
-
-            return directMatches[0];
-        }
-
-        thread.writeInfo(`No direct matches were found, continuing search in contents`);
-
-        for(const item of items){
-            if (!isAvailable(item)){
-                thread.writeInfo(`Item '${item.typeName}' is unavailable, skipping`)
-                continue;
-            }
-
-            const locatedItem = this.findTargetNameIn(thread, item, targetName, removeWhenFound);
-
-            if (locatedItem){
-                return locatedItem;
-            }
-        }
-
-        return undefined;
     }
 
     private inferTargetFrom(thread:Thread, targetName:string|undefined, meaning:Meaning):RuntimeWorldObject|undefined{
@@ -328,13 +250,17 @@ export class HandleCommandHandler extends OpCodeHandler{
                 return thread.currentPlace;
             }
 
-            return this.findTargetNameIn(thread, thread.currentPlace!, targetName, false);          
+            const [_, target] = Lookup.findTargetByNameIn(thread, thread.currentPlace!, targetName, false);
+
+            return target;
         } else if (meaning === Meaning.Taking){
             if (!targetName){
                 return undefined;
             }
 
-            return this.findTargetNameIn(thread, thread.currentPlace!, targetName, true);
+            const [_, target] = Lookup.findTargetByNameIn(thread, thread.currentPlace!, targetName, true);
+
+            return target;
         } else if (meaning === Meaning.Dropping){
             const list = thread.currentPlayer!.getContentsField();
             const matchingItems = list.items.filter(x => x.typeName.toLowerCase() === targetName?.toLowerCase());
@@ -362,7 +288,9 @@ export class HandleCommandHandler extends OpCodeHandler{
                 return <RuntimeWorldObject>matchingInventoryItems[0];
             }
 
-            return this.findTargetNameIn(thread, thread.currentPlace!, targetName, false);
+            const [_, target] = Lookup.findTargetByNameIn(thread, thread.currentPlace!, targetName, false);
+
+            return target;
         } else {
             return undefined;
         }

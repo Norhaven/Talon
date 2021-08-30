@@ -4,6 +4,14 @@
     </head>
     <body>
         <div id="ide">
+            <div id="dev-views-container">
+                <div>
+                    <button id="show-library">Library</button>                    
+                </div>
+                <div>
+                    <button id="show-code-pane">Dev</button>
+                </div>
+            </div>
             <div id="dev-container">
                 <div class ="dev-toolbar">
                     <button id="open">Open</button>
@@ -13,6 +21,7 @@
                 </div>
                 <div>
                     <div id="code-pane" contenteditable="true" class="code-pane"></div>
+                    <div id="library-pane" contenteditable="true" class="code-pane"></div>
                     <div class="dev-footer">
                         <div id="caret-position"></div>
                     </div>

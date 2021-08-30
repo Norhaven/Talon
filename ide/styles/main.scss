@@ -16,12 +16,21 @@
     justify-content: end;
 }
 
+#dev-views-container{
+    @extend %vertical-container;
+}
+
 #dev-container{
     @extend %vertical-container;
 }
 
 #test-container{
     @extend %vertical-container;
+}
+
+#library-pane{
+    @extend %pane;
+    display: none;
 }
 
 .code-pane{

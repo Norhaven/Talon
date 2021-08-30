@@ -15,6 +15,7 @@ export class TalonIde{
     private static readonly TalonCodeFileExtension = ".tln";
 
     private readonly codePane:HTMLDivElement;
+    private readonly libraryPane:HTMLDivElement;
     private readonly gamePane:HTMLDivElement;
     private readonly compilationOutput:HTMLDivElement;
     private readonly gameLogOutput:HTMLDivElement;
@@ -28,6 +29,8 @@ export class TalonIde{
     private readonly userCommandText:HTMLInputElement;
     private readonly sendUserCommandButton:HTMLButtonElement;
     private readonly caretPosition:HTMLDivElement;
+    private readonly showLibrary:HTMLButtonElement;
+    private readonly showCodePane:HTMLButtonElement;
 
     private readonly compilationOutputPane:PaneOutput;
     private readonly runtimeOutputPane:PaneOutput;
@@ -53,6 +56,7 @@ export class TalonIde{
     constructor(){
         
         this.codePane = TalonIde.getById<HTMLDivElement>("code-pane")!;
+        this.libraryPane = TalonIde.getById<HTMLDivElement>("library-pane")!;
         this.gamePane = TalonIde.getById<HTMLDivElement>("game-pane")!;
         this.compilationOutput = TalonIde.getById<HTMLDivElement>("compilation-output")!;
         this.gameLogOutput = TalonIde.getById<HTMLDivElement>("log-pane")!;
@@ -66,6 +70,8 @@ export class TalonIde{
         this.userCommandText = TalonIde.getById<HTMLInputElement>("user-command-text")!;
         this.sendUserCommandButton = TalonIde.getById<HTMLButtonElement>("send-user-command");
         this.caretPosition = TalonIde.getById<HTMLDivElement>("caret-position");
+        this.showLibrary = TalonIde.getById<HTMLButtonElement>("show-library");
+        this.showCodePane = TalonIde.getById<HTMLButtonElement>("show-code-pane");
         
         this.saveButton.addEventListener('click', async e => await this.saveCodeFile(this.codePane.innerText));
         this.openButton.addEventListener('click', async e => await this.openCodeFile(e));
@@ -74,6 +80,8 @@ export class TalonIde{
         this.startNewGameButton.addEventListener('click', e => this.startNewGame());
         this.toggleRuntimeLogs.addEventListener('click', e => this.toggleRuntimeLogView());
         this.sendUserCommandButton.addEventListener('click', e => this.sendUserCommand());
+        this.showLibrary.addEventListener('click', e => this.toggleLibraryView());
+        this.showCodePane.addEventListener('click', e => this.toggleCodePaneView());
         this.userCommandText.addEventListener('keyup', e => {
             if (e.key === "Enter") { 
                 this.sendUserCommand();
@@ -81,6 +89,8 @@ export class TalonIde{
         });
 
         this.userCommandText.value = "look";
+
+        this.loadLibrary();
 
         this.compilationOutputPane = new PaneOutput(this.compilationOutput);
         this.runtimeOutputPane = new PaneOutput(this.gamePane);
@@ -103,6 +113,17 @@ export class TalonIde{
         this.userCommandText.value = "";
     }
 
+
+    private toggleLibraryView(){
+        this.codePane.style.display = 'none';
+        this.libraryPane.style.display = 'block';
+    }
+
+    private toggleCodePaneView(){
+        this.codePane.style.display = 'block';
+        this.libraryPane.style.display = 'none';
+    }
+
     private toggleRuntimeLogView(){
         if (this.areLogsReadableFormat){
             this.gameLogReadableOutput.style.display = 'block';
@@ -116,10 +137,13 @@ export class TalonIde{
     }
 
     private compile(){
+        const library = this.libraryPane.innerText;
         const code = this.codePane.innerText;
 
+        const source = `${library} ${code}`;
+
         this.compilationOutputPane.clear();
-        this.compiledTypes = this.compiler.compile(code);
+        this.compiledTypes = this.compiler.compile(source);
     }
 
     private startNewGame(){
@@ -171,6 +195,52 @@ export class TalonIde{
         await writable.close();
     }
 
+    private loadLibrary(){
+        this.libraryPane.innerText =
+            "a Container is a kind of decoration.\n" +
+            "it is described as \"It's a container.\".\n" +
+            "when it is opened:\n" +
+            "    if it is \"opened\" then\n" +
+            "        say \"It's already open.\";\n" +
+            "        abort event;\n" +
+            "    and then continue;\n" +
+            "and then stop.\n" +
+            "when it is closed:\n" +
+            "    if it is \"closed\" then\n" +
+            "        say \"It's already closed.\";\n" +
+            "        abort event;\n" +
+            "    and then continue;\n" +
+            "and then stop.\n\n" +
+
+            "a Chest is a kind of Container.\n" +
+            "it is described as \"The chest looks very heavy.\".\n" +
+            "it is observed as \"A large chest sits in the corner.\".\n" +
+            "it contains 1 Coin.\n" +
+            "when it is opened:\n" +            
+            "    if it is \"locked\" then\n" +
+            "        say \"The lid won't budge.\";\n" +
+            "        abort event;\n" +
+            "    or else\n" +
+            "        say \"The lid creaks with the effort.\";\n" +
+            "    and then continue;\n" +
+            "and then stop.\n" +
+            "when it is closed:\n" +            
+            "    say \"The lid slams closed.\";\n" +
+            "and then stop.\n" +
+            "when it is used with a Key:\n" +
+            "    if it is \"opened\" then\n" +
+            "        say \"You can't lock it when it's open.\";\n" +
+            "        abort event;\n" +
+            "    and then continue;\n" +
+            "    say \"The key turns easily in the lock.\";\n" +
+            "    if it is \"locked\" then\n" +
+            "        set it to not \"locked\";\n" +
+            "    or else\n" +
+            "        set it to \"locked\";\n" +
+            "    and then continue;\n" +
+            "and then stop.\n\n";
+    }
+
     private loadExample(){
         this.codePane.innerText = 
             "say \"This is the start.\".\n\n" +
@@ -215,49 +285,6 @@ export class TalonIde{
             "it is described as \"The fireplace crackles. It's full of fire.\".\n" +
             "when it is used with a Coin:\n" +
             "    say \"The firelight flickers on the surface of the coin.\";\n" +
-            "and then stop.\n\n" +
-
-            "a Chest is a kind of Container.\n" +
-            "it is described as \"The chest looks very heavy.\".\n" +
-            "it is observed as \"A large chest sits in the corner.\".\n" +
-            "it contains 1 Coin.\n" +
-            "when it is opened:\n" +            
-            "    if it is \"locked\" then\n" +
-            "        say \"The lid won't budge.\";\n" +
-            "        abort event;\n" +
-            "    or else\n" +
-            "        say \"The lid creaks with the effort.\";\n" +
-            "    and then continue;\n" +
-            "and then stop.\n" +
-            "when it is closed:\n" +            
-            "    say \"The lid slams closed.\";\n" +
-            "and then stop.\n" +
-            "when it is used with a Key:\n" +
-            "    if it is \"opened\" then\n" +
-            "        say \"You can't lock it when it's open.\";\n" +
-            "        abort event;\n" +
-            "    and then continue;\n" +
-            "    say \"The key turns easily in the lock.\";\n" +
-            "    if it is \"locked\" then\n" +
-            "        set it to not \"locked\";\n" +
-            "    or else\n" +
-            "        set it to \"locked\";\n" +
-            "    and then continue;\n" +
-            "and then stop.\n\n" +
-
-            "a Container is a kind of decoration.\n" +
-            "it is described as \"It's a container.\".\n" +
-            "when it is opened:\n" +
-            "    if it is \"opened\" then\n" +
-            "        say \"It's already open.\";\n" +
-            "        abort event;\n" +
-            "    and then continue;\n" +
-            "and then stop.\n" +
-            "when it is closed:\n" +
-            "    if it is \"closed\" then\n" +
-            "        say \"It's already closed.\";\n" +
-            "        abort event;\n" +
-            "    and then continue;\n" +
             "and then stop.\n\n" +
 
             "a Walkway is a kind of place. \n" +

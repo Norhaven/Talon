@@ -8,13 +8,9 @@ import { Thread } from "../../Thread";
 
 export class Lookup{
     static containingWorldObject(thread:Thread, rootContainer:RuntimeWorldObject, instance:RuntimeWorldObject){
-        const result = Lookup.findTargetIn(thread, rootContainer, x => Object.is(x, instance), false);
+        const [container, _] = Lookup.findTargetIn(thread, rootContainer, x => Object.is(x, instance), false);
 
-        if (result){
-            return result[0];
-        }
-
-        return undefined;
+        return container;
     }
 
     private static objectNameMatches(worldObject:RuntimeWorldObject, name:string){
@@ -47,13 +43,13 @@ export class Lookup{
         return visible.value;
     }
 
-    private static findTargetByNameIn(thread:Thread, sourceItem:RuntimeWorldObject, targetName:string, removeWhenFound:boolean):[RuntimeWorldObject, RuntimeWorldObject]|undefined{
+    static findTargetByNameIn(thread:Thread, sourceItem:RuntimeWorldObject, targetName:string, removeWhenFound:boolean):[RuntimeWorldObject|undefined, RuntimeWorldObject|undefined]{
         thread.writeInfo(`Looking for target '${targetName}' in '${sourceItem}'`);
 
-        return this.findTargetIn(thread, sourceItem, x => x.typeName === targetName, removeWhenFound);
+        return this.findTargetIn(thread, sourceItem, x => Lookup.objectNameMatches(x, targetName), removeWhenFound);
     }
 
-    private static findTargetIn(thread:Thread, sourceItem:RuntimeWorldObject, isMatch:(instance:RuntimeWorldObject)=>boolean, removeWhenFound:boolean):[RuntimeWorldObject, RuntimeWorldObject]|undefined{
+    private static findTargetIn(thread:Thread, sourceItem:RuntimeWorldObject, isMatch:(instance:RuntimeWorldObject)=>boolean, removeWhenFound:boolean):[RuntimeWorldObject|undefined, RuntimeWorldObject|undefined]{
         
         const isAvailable = (item:RuntimeWorldObject) => this.isItemVisible(item) && !this.isState(item, States.closed);
         const isClosed = this.isState(sourceItem, States.closed);
@@ -61,7 +57,7 @@ export class Lookup{
 
         if (!this.isItemVisible(sourceItem) || isClosed){
             thread.writeInfo(`Target container not applicable, is invisible or closed`);
-            return undefined;
+            return [undefined, undefined];
         }
 
         const contents = sourceItem.getContentsField();
@@ -96,6 +92,6 @@ export class Lookup{
             }
         }
 
-        return undefined;
+        return [undefined, undefined];
     }
 }
