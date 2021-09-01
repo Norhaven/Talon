@@ -8,6 +8,10 @@ import { FieldDeclarationVisitor } from "./FieldDeclarationVisitor";
 import { FieldDeclarationExpression } from "../expressions/FieldDeclarationExpression";
 import { WhenDeclarationExpression } from "../expressions/WhenDeclarationExpression";
 import { WhenDeclarationVisitor } from "./WhenDeclarationVisitor";
+import { MenuFieldDeclarationVisitor } from "./MenuFieldDeclarationVisitor";
+import { MenuWhenDeclarationVisitor } from "./MenuWhenDeclarationVisitor";
+import { OptionFieldDeclarationVisitor } from "./OptionFieldDefinitionVisitor";
+import { OptionWhenDeclarationVisitor } from "./OptionWhenDefinitionVisitor";
 
 export class TypeDeclarationVisitor extends Visitor{
     visit(context: ParseContext): Expression {
@@ -24,10 +28,23 @@ export class TypeDeclarationVisitor extends Visitor{
         
         context.expectTerminator();
 
+        let fieldVisitor:Visitor;
+        let whenVisitor:Visitor;
+
+        if (baseType.value === Keywords.menu){
+            fieldVisitor = new MenuFieldDeclarationVisitor();
+            whenVisitor = new MenuWhenDeclarationVisitor();
+        } else if (baseType.value === Keywords.option){
+            fieldVisitor = new OptionFieldDeclarationVisitor();
+            whenVisitor = new OptionWhenDeclarationVisitor();
+        } else {
+            fieldVisitor = new FieldDeclarationVisitor();
+            whenVisitor = new WhenDeclarationVisitor();
+        }
+        
         const fields:FieldDeclarationExpression[] = [];
 
         while (context.is(Keywords.it)){
-            const fieldVisitor = new FieldDeclarationVisitor();
             const field = fieldVisitor.visit(context);
 
             fields.push(<FieldDeclarationExpression>field);
@@ -36,7 +53,6 @@ export class TypeDeclarationVisitor extends Visitor{
         const events:WhenDeclarationExpression[] = [];
 
         while (context.is(Keywords.when)){
-            const whenVisitor = new WhenDeclarationVisitor();
             const when = whenVisitor.visit(context);
 
             events.push(<WhenDeclarationExpression>when);
@@ -47,11 +63,11 @@ export class TypeDeclarationVisitor extends Visitor{
         typeDeclaration.fields = fields;
         typeDeclaration.events = events;
 
-        return typeDeclaration;
+        return typeDeclaration;        
     }
 
     private expectBaseType(context:ParseContext){
-        if (context.isAnyOf(Keywords.place, Keywords.item, Keywords.decoration, Keywords.creature)){
+        if (context.isAnyOf(Keywords.place, Keywords.item, Keywords.decoration, Keywords.creature, Keywords.menu, Keywords.option)){
             return context.consumeCurrentToken();
         } else {
             return context.expectIdentifier();

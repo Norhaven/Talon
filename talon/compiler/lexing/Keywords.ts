@@ -71,6 +71,12 @@ export class Keywords{
     static readonly combining = "combining";
     static readonly combined = "combined";
     static readonly replace = "replace";
+    static readonly menu = "menu";
+    static readonly option = "option";
+    static readonly selected = "selected";
+    static readonly presses = "presses";
+    static readonly show = "show";
+    static readonly hide = "hide";
 
     static getAll():Set<string>{
         type KeywordProperties = keyof Keywords;

@@ -258,6 +258,10 @@ export class TalonIde{
             "understand \"combine\" as combining.\n" +
             "understand \"locked\" as stateful.\n\n" +
 
+            "when the player presses \"Q\":\n" +
+            "    show MainMenu;\n" +
+            "and then stop.\n\n" +
+
             "an Inn is a kind of place. \n" +
             "it is where the player starts. \n" +
             "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. An open door to the north leads outside.\" \n" +
@@ -321,7 +325,24 @@ export class TalonIde{
             "it is described as \"He's smiling and whistling a tune.\".\n" +
             "it is observed as \"A portly gentleman is behind the bar. He looks up as you come in.\".\n" +
             "it is also known as a \"man\", \"gentleman\".\n\n" +
+
+            "a MainMenu is a kind of menu.\n" +
+            "it is described as \"Main Menu\".\n" +
+            "it has a value that is 1.\n" +
+            "when option QuitOption is selected:\n" +
+            "    say \"Goodbye.\";\n" +
+            "and then stop.\n" +
+            "when option BackOption is selected:\n" +
+            "    say \"Back to the game.\";\n" +
+            "    hide MainMenu;\n" +
+            "and then stop.\n\n" +
+
+            "a QuitOption is a kind of option.\n" +
+            "it is described as \"Quit\".\n\n"
                         
+            "a BackOption is a kind of option.\n" +
+            "it is described as \"Back\".\n\n"
+
             "say \"This is the end.\".\n";
     }
 }

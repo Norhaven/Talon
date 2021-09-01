@@ -7,6 +7,7 @@ import { ProgramExpression } from "../expressions/ProgramExpression";
 import { CompilationError } from "../../exceptions/CompilationError";
 import { UnderstandingDeclarationVisitor } from "./UnderstandingDeclarationVisitor";
 import { SayExpressionVisitor } from "./SayExpressionVisitor";
+import { WhenDeclarationVisitor } from "./WhenDeclarationVisitor";
 
 export class ProgramVisitor extends Visitor{
     visit(context: ParseContext): Expression {
@@ -31,6 +32,11 @@ export class ProgramVisitor extends Visitor{
                 // because a say expression normally doesn't require one.
 
                 context.expectTerminator();
+
+                expressions.push(expression);
+            } else if (context.is(Keywords.when)){
+                const whenClause = new WhenDeclarationVisitor();
+                const expression = whenClause.visit(context);
 
                 expressions.push(expression);
             } else{

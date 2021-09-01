@@ -42,6 +42,9 @@ import { InitialTypeDeclarationTypeTransformer } from "./transformers/type/Initi
 import { GlobalSaysTypeTransformer } from "./transformers/type/GlobalSaysTypeTransformer";
 import { GlobalTypeTransformer } from "./transformers/type/GlobalTypeTransformer";
 import { Creature } from "../../library/Creature";
+import { Menu } from "../../library/Menu";
+import { MenuOption } from "../../library/MenuOption";
+import { GlobalWhenTypeTransformer } from "./transformers/type/GlobalWhenTypeTransformer";
 
 export class TalonTransformer{
     constructor(private readonly out:IOutput){
@@ -65,6 +68,8 @@ export class TalonTransformer{
         types.push(new Type(Say.typeName, Say.parentTypeName));
         types.push(new Type(Decoration.typeName, Decoration.parentTypeName));
         types.push(new Type(Creature.typeName, Creature.parentTypeName));
+        types.push(new Type(Menu.typeName, Menu.parentTypeName));
+        types.push(new Type(MenuOption.typeName, MenuOption.parentTypeName));
 
         return new Map<string, Type>(types.map(x => [x.name, x]));
     }
@@ -92,10 +97,14 @@ export class TalonTransformer{
 
         const globalExpressions = expression.expressions;
 
+        // TODO: Transform global 'when' expressions appropriately and then handle menu/option declarations.
+        
+        this.typeTransform(expression, GlobalWhenTypeTransformer, context);   
+
         this.mapTransform(globalExpressions, UnderstandingTypeTransformer, context);
         this.mapTransform(globalExpressions, InitialTypeDeclarationTypeTransformer, context);
-        this.mapTransform(globalExpressions, GlobalTypeTransformer, context);        
-        
+        this.mapTransform(globalExpressions, GlobalTypeTransformer, context);     
+                
         this.out.write(`Created ${context.typesByName.size} types...`);
         
         return context.types;

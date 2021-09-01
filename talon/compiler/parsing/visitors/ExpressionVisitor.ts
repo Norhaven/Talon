@@ -17,6 +17,7 @@ import { BooleanType } from "../../../library/BooleanType";
 import { Convert } from "../../../library/Convert";
 import { AbortEventExpression } from "../expressions/AbortEventExpression";
 import { ReplaceExpressionVisitor } from "./ReplaceExpressionVisitor";
+import { VisibilityExpression } from "../expressions/VisibilityExpression";
 
 export class ExpressionVisitor extends Visitor{
     visit(context: ParseContext): Expression {
@@ -105,6 +106,11 @@ export class ExpressionVisitor extends Visitor{
         } else if (context.is(Keywords.replace)){
             const visitor = new ReplaceExpressionVisitor();
             return visitor.visit(context);
+        } else if (context.isAnyOf(Keywords.show, Keywords.hide)){
+            const action = context.consumeCurrentToken();
+            const target = context.expectIdentifier();
+
+            return new VisibilityExpression(action.value, target.value);
         } else {
             throw new CompilationError(`Unable to parse expression at ${context.currentToken}`);
         }

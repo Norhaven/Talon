@@ -43,7 +43,13 @@ export class WhenDeclarationVisitor extends Visitor{
         } else {            
             context.expect(Keywords.the);
             context.expect(Keywords.player);
-            eventKind = context.expectAnyOf(Keywords.enters, Keywords.exits);
+
+            if (context.is(Keywords.presses)){
+                eventKind = context.expect(Keywords.presses);
+                target = context.expectString();
+            } else {
+                eventKind = context.expectAnyOf(Keywords.enters, Keywords.exits);
+            }
         }
 
         context.expectOpenMethodBlock();

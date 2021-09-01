@@ -15,13 +15,15 @@ export class TalonSemanticAnalyzer{
     private readonly list = new TypeDeclarationExpression(Token.forList, Token.forAny);
     private readonly decoration = new TypeDeclarationExpression(Token.forDecoration, Token.forWorldObject);
     private readonly creature = new TypeDeclarationExpression(Token.forCreature, Token.forWorldObject);
+    private readonly menu = new TypeDeclarationExpression(Token.forMenu, Token.forAny);
+    private readonly option = new TypeDeclarationExpression(Token.forOption, Token.forAny);
 
     constructor(private readonly out:IOutput){
 
     }
     
     analyze(expression:Expression):Expression{
-        const types:TypeDeclarationExpression[] = [this.any, this.worldObject, this.place, this.booleanType, this.item, this.decoration, this.creature];
+        const types:TypeDeclarationExpression[] = [this.any, this.worldObject, this.place, this.booleanType, this.item, this.decoration, this.creature, this.menu, this.option];
 
         if (expression instanceof ProgramExpression){
             for(let child of expression.expressions){
