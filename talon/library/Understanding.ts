@@ -15,6 +15,7 @@ export class Understanding{
     static combining = "~combining";
     static opening = "~opening";
     static closing = "~closing";
+    static options = "~options";
 
     static action = "~action";
     static meaning = "~meaning";  

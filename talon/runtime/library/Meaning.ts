@@ -9,6 +9,7 @@ export enum Meaning{
     Using = "using",
     Opening = "opening",
     Closing = "closing",
+    Pressing = "pressing",
     Quitting = "quitting",
     Custom = "custom",
     Combining = "combining"

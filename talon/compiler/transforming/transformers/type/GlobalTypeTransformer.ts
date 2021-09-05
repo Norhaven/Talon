@@ -32,6 +32,8 @@ import { TypeDeclarationExpression } from "../../../parsing/expressions/TypeDecl
 import { ExpressionTransformationMode } from "../../ExpressionTransformationMode";
 import { ITypeTransformer } from "../../ITypeTransformer";
 import { TransformerContext } from "../../TransformerContext";
+import { EventTransformer } from "../events/EventTransformer";
+import { ExpressionTransformer } from "../expressions/ExpressionTransformer";
 
 export class GlobalTypeTransformer implements ITypeTransformer{
     transform(expression: Expression, context: TransformerContext): void {
@@ -62,68 +64,10 @@ export class GlobalTypeTransformer implements ITypeTransformer{
             this.createDescribeMethod(type);
             this.createObserveMethod(type);
 
-            this.createEvents(expression, context, type);            
+            EventTransformer.createEvents(expression, context, type);            
         } 
     }
-
-    private createEvents(expression:TypeDeclarationExpression, context:TransformerContext, type:Type){
         
-        for (const event of expression.events){
-            const method = new Method();
-
-            method.name = `~event_${event.actor}_${event.eventKind}`;
-            method.eventType = this.transformEventKind(event.eventKind);
-            method.returnType = BooleanType.typeName;
-
-            if (event.target){
-                method.name = `${method.name}_${event.target}`;
-                
-                method.parameters.push(
-                    new Parameter(WorldObject.contextParameter, event.target)
-                );
-            }
-
-            const instructions:Instruction[] = [];
-
-            const actions = <ActionsExpression>event.actions;
-
-            for(const action of actions.actions){
-                const body = this.transformExpression(action, ExpressionTransformationMode.IgnoreResultsOfSayExpression);
-                instructions.push(
-                    ...body                                    
-                );
-            }
-
-            if (method.eventType == EventType.ItIsOpened){
-                instructions.push(
-                    ...Instruction.includeStateInThis(States.opened),
-                    ...Instruction.removeStateFromThis(States.closed)
-                );
-            } else if (method.eventType == EventType.ItIsClosed){
-                instructions.push(
-                    ...Instruction.includeStateInThis(States.closed),
-                    ...Instruction.removeStateFromThis(States.opened)
-                );
-            }
-
-            instructions.push(
-                Instruction.loadBoolean(true),
-                Instruction.return()
-            );
-
-            method.body.push(
-                Instruction.baseTypeInstanceCall(),
-                ...Instruction.ifTrueThen(
-                    ...instructions
-                ),
-                Instruction.loadBoolean(false),
-                Instruction.return()
-            );
-
-            type.methods.push(method);
-        }
-    }
-    
     private createDescribeMethod(type:Type){
         const describe = new Method();
         describe.name = WorldObject.describe;
@@ -244,7 +188,7 @@ export class GlobalTypeTransformer implements ITypeTransformer{
                 getField.returnType = field.typeName;
                 
                 for(const associated of fieldExpression.associatedExpressions){
-                    getField.body.push(...this.transformExpression(associated));
+                    getField.body.push(...ExpressionTransformer.transformExpression(associated));
                 }
 
                 getField.body.push(Instruction.return());
@@ -254,170 +198,5 @@ export class GlobalTypeTransformer implements ITypeTransformer{
 
             type?.fields.push(field);    
         }
-    }
-
-    private transformEventKind(kind:string){
-        switch(kind){
-            case Keywords.enters: return EventType.PlayerEntersPlace;
-            case Keywords.exits: return EventType.PlayerExitsPlace;
-            case Keywords.taken: return EventType.ItIsTaken;
-            case Keywords.dropped: return EventType.ItIsDropped;
-            case Keywords.used: return EventType.ItIsUsed;
-            case Keywords.opened: return EventType.ItIsOpened;
-            case Keywords.closed: return EventType.ItIsClosed;
-            case Keywords.described: return EventType.ItIsDescribed;
-            case Keywords.observed: return EventType.ItIsObserved;
-            case Keywords.combined: return EventType.ItIsCombined;
-            default:{
-                throw new CompilationError(`Unable to transform unsupported event kind '${kind}'`);
-            }
-        }
-    }
-
-    private transformExpression(expression:Expression|null, mode?:ExpressionTransformationMode){
-        const instructions:Instruction[] = [];
-
-        if (expression == null){
-            return instructions;
-        }
-
-        if (expression instanceof IfExpression){            
-            const conditional = this.transformExpression(expression.conditional, mode);
-            instructions.push(...conditional);
-
-            const ifBlock = this.transformExpression(expression.ifBlock, mode);
-            const elseBlock = this.transformExpression(expression.elseBlock, mode);
-
-            ifBlock.push(Instruction.branchRelative(elseBlock.length));
-
-            instructions.push(Instruction.branchRelativeIfFalse(ifBlock.length))
-            instructions.push(...ifBlock);
-            instructions.push(...elseBlock);
-        } else if (expression instanceof SayExpression){
-            instructions.push(Instruction.loadString(expression.text));
-            instructions.push(Instruction.print());
-
-            if (mode != ExpressionTransformationMode.IgnoreResultsOfSayExpression){
-                instructions.push(Instruction.loadString(expression.text));
-            }
-        } else if (expression instanceof ContainsExpression){
-            instructions.push(
-                Instruction.loadNumber(expression.count),
-                Instruction.loadString(expression.typeName),
-                Instruction.loadInstance(expression.targetName),
-                Instruction.loadField(WorldObject.contents),
-                Instruction.instanceCall(List.containsType)
-            );
-            
-        } else if (expression instanceof ConcatenationExpression){
-            const left = this.transformExpression(expression.left!, mode);
-            const right = this.transformExpression(expression.right!, mode);
-
-            instructions.push(...left);
-            instructions.push(...right);
-            instructions.push(Instruction.concatenate());
-        } else if (expression instanceof FieldDeclarationExpression){
-            instructions.push(
-                Instruction.loadThis(),
-                Instruction.loadField(expression.name)
-            );
-        } else if (expression instanceof SetVariableExpression){
-            const right = this.transformExpression(expression.evaluationExpression);
-            const left:Instruction[] = [];
-            const assign:Instruction[] = [];
-
-            if (expression.variableName === "~it"){
-                left.push(
-                    Instruction.loadThis(),
-                    Instruction.loadField(WorldObject.state)
-                );
-
-                if (expression.isNegated){
-                    assign.push(
-                        Instruction.instanceCall(List.remove)
-                    );
-                } else {
-                    assign.push(
-                        Instruction.instanceCall(List.ensureOne)
-                    );
-                }
-            } else {
-                left.push(
-                    Instruction.loadThis(),
-                    Instruction.loadField(expression.variableName)
-                );
-
-                assign.push(Instruction.assign());
-            }
-
-            instructions.push(
-                ...right,
-                ...left,
-                ...assign
-            );
-        } else if (expression instanceof LiteralExpression){
-            if (expression.typeName == StringType.typeName){
-                instructions.push(Instruction.loadString(<string>expression.value));
-            } else if (expression.typeName == NumberType.typeName){
-                instructions.push(Instruction.loadNumber(Number(expression.value)));
-            } else if (expression.typeName == BooleanType.typeName){
-                instructions.push(Instruction.loadBoolean(<boolean>(expression.value)));
-            } else {
-                throw new CompilationError(`Unable to transform unsupported literal expression '${expression}'`);
-            }
-        } else if (expression instanceof IdentifierExpression){
-            if (expression.variableName === "~it"){
-                instructions.push(
-                    Instruction.loadThis(),
-                    Instruction.loadField(WorldObject.state)
-                );
-            } else {
-                instructions.push(
-                    Instruction.loadThis(),
-                    Instruction.loadField(expression.variableName));
-            }
-        } else if (expression instanceof ComparisonExpression){
-            const right = this.transformExpression(expression.right!);
-            const left = this.transformExpression(expression.left!);
-
-            instructions.push(
-                ...left,
-                ...right,
-                Instruction.compareEqual()
-            );
-        } else if (expression instanceof ActionsExpression){
-            expression.actions.forEach(x => instructions.push(...this.transformExpression(x, mode)));
-        } else if (expression instanceof AbortEventExpression){
-            instructions.push(
-                Instruction.loadBoolean(false),
-                Instruction.return()
-            );
-        } else if (expression instanceof ReplaceExpression){
-            for(const identifier of expression.replacedEntities){
-                if (identifier.variableName === "~it"){
-                    instructions.push(
-                        Instruction.loadThis()
-                    );
-                } else {
-                    // TODO: Currently, we're assuming that the only thing that they can replace is the context instance.
-                    //       This could be expanded to allow replacing anything within the current player context (e.g. inventory, place, etc).
-                    
-                    instructions.push(
-                        Instruction.loadLocal(WorldObject.contextParameter)
-                    );
-                }
-            }
-
-            instructions.push(
-                Instruction.loadNumber(expression.replacedEntities.length),
-                Instruction.replaceInstancesWith(expression.newEntity.variableName)
-            );
-
-            
-        } else {
-            throw new CompilationError(`Unable to transform unsupported expression: ${expression}`);
-        }
-
-        return instructions;
-    }
+    }    
 }

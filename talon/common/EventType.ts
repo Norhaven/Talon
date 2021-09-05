@@ -9,5 +9,6 @@ export enum EventType{
     ItIsClosed = "itIsClosed",
     ItIsDescribed = "itIsDescribed",
     ItIsObserved = "itIsObserved",
-    ItIsCombined = "itIsCombined"
+    ItIsCombined = "itIsCombined",
+    KeyIsPressed = "keyIsPressed"
 }

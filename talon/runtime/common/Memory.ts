@@ -30,6 +30,8 @@ import { Any } from "../../library/Any";
 import { Creature } from "../../library/Creature";
 import { RuntimeCreature } from "../library/RuntimeCreature";
 import { RuntimeEnumerator } from "../library/RuntimeEnumerator";
+import { GlobalEvents } from "../../library/GlobalEvents";
+import { RuntimeGlobalEvents } from "../library/RuntimeGlobalEvents";
 
 export class Memory{
     private static typesByName = new Map<string, Type>();
@@ -38,6 +40,12 @@ export class Memory{
     static clear(){
         Memory.typesByName = new Map<string, Type>();
         Memory.heap = new Map<string, RuntimeAny[]>();
+    }
+
+    static dumpTypesToConsole(){
+        for(const type of Memory.typesByName.values()){
+            console.log(type.name);
+        }
     }
 
     static findTypeByName(name:string){
@@ -53,6 +61,26 @@ export class Memory{
 
         if (!instances || instances.length == 0){
             throw new RuntimeError("Object not found");
+        }
+
+        if (instances.length > 1){
+            throw new RuntimeError("Located more than one instance");
+        }
+
+        return instances[0];
+    }
+
+    static findOrAddInstance(name:string){
+        const instances = Memory.heap.get(name);
+
+        if (!instances || instances.length == 0){
+            const type = Memory.findTypeByName(name);
+
+            if (!type){
+                throw new RuntimeError(`Unable to locate type '${name}' for instantiation`);
+            }
+
+            return Memory.constructInstanceFrom(type);
         }
 
         if (instances.length > 1){
@@ -249,6 +277,7 @@ export class Memory{
             case Say.typeName: return new RuntimeSay();    
             case Decoration.typeName: return new RuntimeDecoration();   
             case Creature.typeName: return new RuntimeCreature();
+            case GlobalEvents.typeName: return new RuntimeGlobalEvents();
             case WorldObject.typeName: return new RuntimeWorldObject();
             case Any.typeName: return new RuntimeAny();
             default:{

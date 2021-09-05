@@ -7,7 +7,6 @@ import { Type } from "./common/Type";
 import { AnalysisCoordinator } from "./ide/AnalysisCoordinator";
 import { CodePaneAnalyzer } from "./ide/analyzers/CodePaneAnalyzer";
 import { CodePaneStyleFormatter } from "./ide/formatters/CodePaneStyleFormatter";
-import { FileHandle } from "fs/promises";
 
 export class TalonIde{
 
@@ -256,7 +255,8 @@ export class TalonIde{
             "understand \"open\" as opening.\n" +
             "understand \"close\" as closing.\n" +
             "understand \"combine\" as combining.\n" +
-            "understand \"locked\" as stateful.\n\n" +
+            "understand \"locked\" as stateful.\n" +
+            "understand \"Q\" as options.\n\n" +
 
             "when the player presses \"Q\":\n" +
             "    show MainMenu;\n" +
@@ -338,10 +338,10 @@ export class TalonIde{
             "and then stop.\n\n" +
 
             "a QuitOption is a kind of option.\n" +
-            "it is described as \"Quit\".\n\n"
+            "it is described as \"Quit\".\n\n" +
                         
             "a BackOption is a kind of option.\n" +
-            "it is described as \"Back\".\n\n"
+            "it is described as \"Back\".\n\n" +
 
             "say \"This is the end.\".\n";
     }

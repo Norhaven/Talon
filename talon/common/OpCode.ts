@@ -34,7 +34,7 @@ export enum OpCode {
     InvokeDelegateOnInstance = ".call.func.inst",
     IncludeState = ".include.state",
     RemoveState = ".remove.state",
-    BaseTypeInstanceCall = "call.inst.base",
+    BaseTypeInstanceCall = ".call.inst.base",
     RaiseEvent = ".raise.event",
     RaiseContextualEvent = ".raise.event.ctx",
     LoadPlace = ".load.place",

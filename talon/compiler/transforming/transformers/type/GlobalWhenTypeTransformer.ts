@@ -2,12 +2,14 @@ import { Instruction } from "../../../../common/Instruction";
 import { Method } from "../../../../common/Method";
 import { Type } from "../../../../common/Type";
 import { Any } from "../../../../library/Any";
+import { GlobalEvents } from "../../../../library/GlobalEvents";
 import { Expression } from "../../../parsing/expressions/Expression";
 import { ProgramExpression } from "../../../parsing/expressions/ProgramExpression";
 import { TypeDeclarationExpression } from "../../../parsing/expressions/TypeDeclarationExpression";
 import { WhenDeclarationExpression } from "../../../parsing/expressions/WhenDeclarationExpression";
 import { ITypeTransformer } from "../../ITypeTransformer";
 import { TransformerContext } from "../../TransformerContext";
+import { EventTransformer } from "../events/EventTransformer";
 
 export class GlobalWhenTypeTransformer implements ITypeTransformer{
     transform(expression: Expression, context: TransformerContext): void {
@@ -15,38 +17,20 @@ export class GlobalWhenTypeTransformer implements ITypeTransformer{
             return;
         }
 
-        const globalSaysTypeName = "~globalEvents";
-
-        if (!context.typesByName.has(globalSaysTypeName)){
-            const type = new Type(globalSaysTypeName, Any.typeName);
+        if (!context.typesByName.has(GlobalEvents.typeName)){
+            const type = new Type(GlobalEvents.typeName, GlobalEvents.parentTypeName);
             context.typesByName.set(type.name, type);
         }
 
-        const globalSays = expression.expressions.filter(x => x instanceof WhenDeclarationExpression);
-
+        const globalEvents = expression.expressions.filter(x => x instanceof WhenDeclarationExpression);
         
-        const type = context.typesByName.get(globalSaysTypeName);
+        const type = context.typesByName.get(GlobalEvents.typeName)!;
         
-        const method = new Method();
-        method.name = Say.typeName;
-        method.parameters = [];
+        for(const event of globalEvents){
+            const method = EventTransformer.createEventFor(<WhenDeclarationExpression>event, context);
 
-        const instructions:Instruction[] = [];
-
-        for(const say of globalSays){
-            const sayExpression = <SayExpression>say;
-
-            instructions.push(
-                Instruction.loadString(sayExpression.text),
-                Instruction.print()
-            );
+            type?.methods.push(method);
         }
-
-        instructions.push(Instruction.return());
-
-        method.body = instructions;
-
-        type?.methods.push(method);
+        
     }
-
 }
