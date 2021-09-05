@@ -45,6 +45,9 @@ export class TalonCompiler{
 
             types.push(entryPoint);
 
+            console.log(`Compiled ${types.length} types`);
+            console.log(types);
+
             return types;
         } catch(ex){
             if (ex instanceof CompilationError){

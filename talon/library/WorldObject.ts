@@ -12,6 +12,7 @@ export class WorldObject {
 
     static describe = "~describe";
     static observe = "~observe";
+    static describeContents = "~describeContents";
     
     static visible = "~visible";
 

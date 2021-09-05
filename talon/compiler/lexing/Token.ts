@@ -10,6 +10,7 @@ import { StringType } from "../../library/StringType";
 import { Creature } from "../../library/Creature";
 import { Menu } from "../../library/Menu";
 import { MenuOption } from "../../library/MenuOption";
+import { Player } from "../../library/Player";
 
 export class Token{
     static get empty():Token{
@@ -42,6 +43,10 @@ export class Token{
 
     static get forOption():Token{
         return Token.getTokenWithTypeOf(MenuOption.typeName, TokenType.Keyword);
+    }
+
+    static get forPlayer():Token{
+        return Token.getTokenWithTypeOf(Player.typeName, TokenType.Keyword);
     }
 
     static get forWorldObject():Token{

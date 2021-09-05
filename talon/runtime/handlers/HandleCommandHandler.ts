@@ -97,7 +97,7 @@ export class HandleCommandHandler extends OpCodeHandler{
         const understanding = this.tryGetUnderstandingFromAction(thread, action);
 
         if (!understanding){
-            this.output.write("I don't know how to do that.");
+            thread.currentMethod.push(Memory.allocateList([]));
             thread.writeInfo(this.endOfInteraction);
             return super.handle(thread);
         }
@@ -110,8 +110,7 @@ export class HandleCommandHandler extends OpCodeHandler{
             const actualActor = this.inferTargetFrom(thread, actorName, understanding, meaning);
             const actualTarget = this.inferTargetFrom(thread, targetName, understanding, meaning);
             
-            if (!actualTarget){
-                
+            if (!actualTarget){                
                 this.output.write("I don't know what you're referring to.");
                 thread.writeInfo(this.endOfInteraction);
                 thread.currentMethod.push(Memory.allocateList([]));
@@ -174,32 +173,7 @@ export class HandleCommandHandler extends OpCodeHandler{
 
         thread.currentMethod.push(Memory.allocateList([...takeEvent, describeEvent]))
     }
-
-    private writeDescriptionOfInventory(thread:Thread, target:RuntimeWorldObject){
-        const inventory = (<RuntimePlayer>target).getContentsField();
-        const names = inventory.items.map(x => x.typeName);
-
-        const namesWithCount = new Map<string, number>();
-
-        for(const name of names){
-            if (!namesWithCount.has(name)){
-                namesWithCount.set(name, 1);
-            } else {
-                const count = namesWithCount.get(name)!;
-                namesWithCount.set(name, count + 1);
-            }
-        }
-
-        const namedValues:string[] = [];
-
-        for(const [name, value] of namesWithCount){
-            namedValues.push(`${value} ${name}(s)`);
-        }
-
-        namedValues.forEach(x => this.output.write(x));
-        this.output.write("");
-    }
-
+    
     private tryDropItem(thread:Thread, target:RuntimeWorldObject){
         const [_, item] = Lookup.findTargetByNameIn(thread, thread.currentPlayer!, target.typeName, true);
 
@@ -207,7 +181,14 @@ export class HandleCommandHandler extends OpCodeHandler{
             throw new RuntimeError(`Unable to locate item '${target.typeName}' to drop`);
         }
 
+        if (!thread.currentPlace){
+            throw new RuntimeError(`Unable to drop an item without a current place`);
+        }
+
         const contents = thread.currentPlace!.getContentsField();
+
+        console.log(`CONTENTS ARE ${contents}`);
+        
         contents.items.push(item);
 
         const describeEvent = this.createDescribeDelegate(thread, thread.currentPlace!);                
@@ -247,8 +228,8 @@ export class HandleCommandHandler extends OpCodeHandler{
                 break;
             }
             case Meaning.Inventory:{
-                this.writeDescriptionOfInventory(thread, target);   
-                thread.currentMethod.push(Memory.allocateList([]));           
+                const event = this.prepareDescribeContents(thread, target);
+                thread.currentMethod.push(Memory.allocateList([event]));           
                 break;
             }
             case Meaning.Dropping:{
@@ -296,6 +277,22 @@ export class HandleCommandHandler extends OpCodeHandler{
         thread.writeInfo(this.endOfInteraction);
 
         return super.handle(thread);
+    }
+
+    private prepareDescribeContents(thread:Thread, target:RuntimeAny){
+        if (!(target instanceof RuntimeWorldObject)){
+            throw new RuntimeError(`Attempted to describe contents on a non-world-object instance of type '${target.typeName}'`);
+        }
+
+        const describeContents = target.methods.get(WorldObject.describeContents);
+
+        if (!describeContents){
+            throw new RuntimeError(`Unable to locate ${WorldObject.describeContents} on world object`);
+        }
+
+        describeContents.actualParameters[0] = Variable.forThis(target);
+
+        return new RuntimeDelegate(describeContents);
     }
 
     private prepareRaiseContextualItemEvents(thread:Thread, type:EventType, actor:RuntimeAny, target:RuntimeAny){
@@ -357,7 +354,7 @@ export class HandleCommandHandler extends OpCodeHandler{
                     return undefined;
                 }
     
-                const [_, target] = Lookup.findTargetByNameIn(thread, thread.currentPlace!, targetName, true);
+                const [_, target] = Lookup.findTargetByNameIn(thread, thread.currentPlace!, targetName, false);
     
                 return target;
             }

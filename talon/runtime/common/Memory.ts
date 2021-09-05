@@ -94,7 +94,7 @@ export class Memory{
         Memory.typesByName = new Map<string, Type>(types.map(x => [x.name, x]));   
         
         // Override any provided type stubs with the actual runtime type definitions.
-
+        
         const place = RuntimePlace.type;
         const item = RuntimeItem.type;
         const player = RuntimePlayer.type;
@@ -133,6 +133,9 @@ export class Memory{
     }
 
     static allocate(type:Type):RuntimeAny{
+        console.log(`Allocating type '${type.name}'`);
+        console.log(type);
+
         const instance = Memory.constructInstanceFrom(type);
 
         const instancePool = Memory.heap.get(type.name) || [];
@@ -204,6 +207,8 @@ export class Memory{
 
     private static constructInstanceFrom(type:Type){
         
+        console.log(`Constructing type '${type.name}'`);
+
         let seenTypes = new Set<string>();
         let inheritanceChain:Type[] = [];
 
@@ -211,12 +216,12 @@ export class Memory{
             current; 
             current = Memory.typesByName.get(current.baseTypeName)){
                 
-                if (seenTypes.has(current.name)){
-                    throw new RuntimeError("You can't have cycles in a type hierarchy");
-                }
+            if (seenTypes.has(current.name)){
+                throw new RuntimeError("You can't have cycles in a type hierarchy");
+            }
 
-                seenTypes.add(current.name);
-                inheritanceChain.push(current);
+            seenTypes.add(current.name);
+            inheritanceChain.push(current);
         }
 
         const systemTypeRoot = inheritanceChain[inheritanceChain.length - 1];
@@ -257,6 +262,9 @@ export class Memory{
         const instance = allocate();
 
         for(const field of type.fields){
+            console.log(`Initializing field '${field.name}' in type '${type.name}'`);
+            console.log(field);
+
             const variable = Memory.initializeVariableWith(field);
             instance.fields.set(field.name, variable);
         }

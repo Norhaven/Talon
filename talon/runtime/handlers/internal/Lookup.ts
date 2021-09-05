@@ -38,6 +38,7 @@ export class Lookup{
 
         return stateList.items.some(x => (<RuntimeString>x).value === state);
     }
+    
     private static isItemVisible(item:RuntimeWorldObject){
         const visible = item.getFieldAsBoolean(WorldObject.visible);
         return visible.value;
@@ -51,14 +52,17 @@ export class Lookup{
 
     private static findTargetIn(thread:Thread, sourceItem:RuntimeWorldObject, isMatch:(instance:RuntimeWorldObject)=>boolean, removeWhenFound:boolean):[RuntimeWorldObject|undefined, RuntimeWorldObject|undefined]{
         
+        thread.writeInfo(`Verifying state on source '${sourceItem}`);
+
         const isAvailable = (item:RuntimeWorldObject) => this.isItemVisible(item) && !this.isState(item, States.closed);
         const isClosed = this.isState(sourceItem, States.closed);
-        const isOpened = this.isState(sourceItem, States.opened);
 
         if (!this.isItemVisible(sourceItem) || isClosed){
             thread.writeInfo(`Target container not applicable, is invisible or closed`);
             return [undefined, undefined];
         }
+
+        thread.writeInfo(`Attempting to locate target within source '${sourceItem.typeName}'`);
 
         const contents = sourceItem.getContentsField();
         const items = contents.items.map(x => (<RuntimeWorldObject>x));
