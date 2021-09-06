@@ -106,11 +106,16 @@ export class ExpressionVisitor extends Visitor{
         } else if (context.is(Keywords.replace)){
             const visitor = new ReplaceExpressionVisitor();
             return visitor.visit(context);
-        } else if (context.isAnyOf(Keywords.show, Keywords.hide)){
+        } else if (context.is(Keywords.show)){
             const action = context.consumeCurrentToken();
             const target = context.expectIdentifier();
 
             return new VisibilityExpression(action.value, target.value);
+        } else if (context.is(Keywords.hide)){
+            const action = context.consumeCurrentToken();
+            context.expect(Keywords.this);
+
+            return new VisibilityExpression(action.value);
         } else {
             throw new CompilationError(`Unable to parse expression at ${context.currentToken}`);
         }

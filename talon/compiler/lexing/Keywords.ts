@@ -78,6 +78,9 @@ export class Keywords{
     static readonly show = "show";
     static readonly hide = "hide";
     static readonly options = "options";
+    static readonly called = "called";
+    static readonly value = "value";
+    static readonly this = "this";
 
     static getAll():Set<string>{
         type KeywordProperties = keyof Keywords;

@@ -10,5 +10,6 @@ export enum EventType{
     ItIsDescribed = "itIsDescribed",
     ItIsObserved = "itIsObserved",
     ItIsCombined = "itIsCombined",
-    KeyIsPressed = "keyIsPressed"
+    KeyIsPressed = "keyIsPressed",
+    OptionIsSelected = "optionIsSelected"
 }

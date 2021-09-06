@@ -47,7 +47,9 @@ export class MenuFieldDeclarationVisitor extends Visitor{
         } else if (context.is(Keywords.has)){
 
             context.expect(Keywords.has);
-            context.expectAnyOf(Keywords.a, Keywords.an);
+            context.expect(Keywords.a);
+            context.expect(Keywords.value);
+            context.expect(Keywords.called);
             
             const name = context.expectIdentifier();
 

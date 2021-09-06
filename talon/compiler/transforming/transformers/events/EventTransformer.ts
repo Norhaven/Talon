@@ -94,6 +94,7 @@ export class EventTransformer{
             case Keywords.observed: return EventType.ItIsObserved;
             case Keywords.combined: return EventType.ItIsCombined;
             case Keywords.presses: return EventType.KeyIsPressed;
+            case Keywords.selected: return EventType.OptionIsSelected;
             default:{
                 throw new CompilationError(`Unable to transform unsupported event kind '${kind}'`);
             }

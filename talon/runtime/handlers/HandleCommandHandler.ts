@@ -160,6 +160,7 @@ export class HandleCommandHandler extends OpCodeHandler{
         if (!target.isTypeOf(Item.typeName)){
             this.output.write("I can't take that.");
             thread.writeInfo(`Unable to take '${target.typeName}:${target.parentTypeName}', not an item`);
+            thread.currentMethod.push(Memory.allocateList([]));
             return;
         }
 
@@ -188,7 +189,7 @@ export class HandleCommandHandler extends OpCodeHandler{
         const contents = thread.currentPlace!.getContentsField();
 
         console.log(`CONTENTS ARE ${contents}`);
-        
+
         contents.items.push(item);
 
         const describeEvent = this.createDescribeDelegate(thread, thread.currentPlace!);                

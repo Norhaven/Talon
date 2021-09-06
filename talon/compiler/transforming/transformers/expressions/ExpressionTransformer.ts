@@ -1,6 +1,7 @@
 import { Instruction } from "../../../../common/Instruction";
 import { BooleanType } from "../../../../library/BooleanType";
 import { List } from "../../../../library/List";
+import { Menu } from "../../../../library/Menu";
 import { NumberType } from "../../../../library/NumberType";
 import { StringType } from "../../../../library/StringType";
 import { WorldObject } from "../../../../library/WorldObject";
@@ -18,6 +19,7 @@ import { LiteralExpression } from "../../../parsing/expressions/LiteralExpressio
 import { ReplaceExpression } from "../../../parsing/expressions/ReplaceExpression";
 import { SayExpression } from "../../../parsing/expressions/SayExpression";
 import { SetVariableExpression } from "../../../parsing/expressions/SetVariableExpression";
+import { VisibilityExpression } from "../../../parsing/expressions/VisibilityExpression";
 import { ExpressionTransformationMode } from "../../ExpressionTransformationMode";
 
 export class ExpressionTransformer{
@@ -159,8 +161,18 @@ export class ExpressionTransformer{
                 Instruction.loadNumber(expression.replacedEntities.length),
                 Instruction.replaceInstancesWith(expression.newEntity.variableName)
             );
-
             
+        } else if (expression instanceof VisibilityExpression){
+            if (expression.action.toLowerCase() === 'show'){
+                instructions.push(
+                    Instruction.staticCall(expression.target!, Menu.show)
+                );
+            } else if (expression.action.toLowerCase() === 'hide'){
+                instructions.push(
+                    Instruction.loadThis(),
+                    Instruction.instanceCall(Menu.hide)
+                );
+            }
         } else {
             throw new CompilationError(`Unable to transform unsupported expression: ${expression}`);
         }

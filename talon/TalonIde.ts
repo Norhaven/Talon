@@ -237,7 +237,10 @@ export class TalonIde{
             "    or else\n" +
             "        set it to \"locked\";\n" +
             "    and then continue;\n" +
-            "and then stop.\n\n";
+            "and then stop.\n\n" +
+
+            "a Key is a kind of item.\n" +
+            "it is described as \"The key is small but sturdy.\".\n\n";
     }
 
     private loadExample(){
@@ -265,24 +268,25 @@ export class TalonIde{
             "an Inn is a kind of place. \n" +
             "it is where the player starts. \n" +
             "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. An open door to the north leads outside.\" \n" +
-            "    and if it contains 1 Coin then \"There's also a coin here.\"; or else \"There is just dust.\"; and then continue.\n" +
-            "it contains 1 Fireplace, 1 Chest, 1 Key, 1 Bartender.\n" + 
+            "    and if it contains 1 Key then \"There's a key hanging on the wall.\"; or else \"There's an empy spot where a key once hung.\"; and then continue.\n" +
+            "it contains 1 Fireplace, 1 Chest, 1 Key, 1 Crystal, 1 Bartender.\n" + 
             "it can reach the Walkway by going \"north\". \n" +
-            "it has a value that is false. \n" +
+            "it has a value called hasWaved that is false. \n" +
             "when the player exits: \n" +
-            "    if value is false then \n" +
+            "    if hasWaved is false then \n" +
             "        say \"The bartender waves goodbye.\"; \n" +
             "    or else \n" +
             "        say \"The bartender cleans the bar.\"; \n" +
             "    and then continue;\n" +
-            "    set value to true; \n" +
+            "    set hasWaved to true; \n" +
             "and then stop. \n\n" +
                         
-            "a Key is a kind of item.\n" +
-            "it is described as \"The key is small but sturdy.\".\n" +
+            "a Crystal is a kind of decoration.\n" +
+            "it is described as \"The crystal glows with a soft inner light. It has a small slot for a coin.\".\n" +
+            "it is observed as \"A small crystal rests on the bar.\".\n" +
             "when it is combined with a Coin:\n" +
-            "    say \"You fit the coin into the key.\";\n" +
-            "    replace it, Coin with CoinKey;\n" +
+            "    say \"The coin fits neatly into the crystal.\";\n" +
+            "    replace it, Coin with CoinCrystal;\n" +
             "and then stop.\n\n" +
 
             "a Fireplace is a kind of decoration. \n" +
@@ -317,9 +321,9 @@ export class TalonIde{
             "    say \"You used the coin somehow!\";\n" +
             "and then stop.\n\n" +
 
-            "a CoinKey is a kind of item.\n" +
-            "it is described as \"It's a key with a coin embedded in it.\".\n" +
-            "it is observed as \"A key with a coin in it lays on the floor.\".\n\n" +
+            "a CoinCrystal is a kind of decoration.\n" +
+            "it is described as \"It's a crystal with a coin embedded in it.\".\n" +
+            "it is observed as \"A crystal with a coin in it lays on the bar.\".\n\n" +
 
             "a Bartender is a kind of creature.\n" +
             "it is described as \"He's smiling and whistling a tune.\".\n" +
@@ -328,13 +332,13 @@ export class TalonIde{
 
             "a MainMenu is a kind of menu.\n" +
             "it is described as \"Main Menu\".\n" +
-            "it has a value that is 1.\n" +
+            "it has a value called numberOfTimesShown that is 0.\n" +
             "when option QuitOption is selected:\n" +
             "    say \"Goodbye.\";\n" +
             "and then stop.\n" +
             "when option BackOption is selected:\n" +
             "    say \"Back to the game.\";\n" +
-            "    hide MainMenu;\n" +
+            "    hide this;\n" +
             "and then stop.\n\n" +
 
             "a QuitOption is a kind of option.\n" +

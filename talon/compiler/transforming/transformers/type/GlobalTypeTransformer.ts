@@ -7,8 +7,10 @@ import { States } from "../../../../common/States";
 import { Type } from "../../../../common/Type";
 import { BooleanType } from "../../../../library/BooleanType";
 import { Convert } from "../../../../library/Convert";
+import { Delegate } from "../../../../library/Delegate";
 import { Item } from "../../../../library/Item";
 import { List } from "../../../../library/List";
+import { Menu } from "../../../../library/Menu";
 import { NumberType } from "../../../../library/NumberType";
 import { Place } from "../../../../library/Place";
 import { StringType } from "../../../../library/StringType";
@@ -49,7 +51,17 @@ export class GlobalTypeTransformer implements ITypeTransformer{
 
         this.transformCustomFields(expression, context, type);
         
-        if (this.inheritsFromType(type, context, WorldObject.typeName)){
+        if (type.baseTypeName === Menu.typeName){
+            this.createFieldIfNotExists(WorldObject.visible, BooleanType.typeName, true, type);
+            this.createFieldIfNotExists(WorldObject.description, StringType.typeName, "", type);
+            this.createDescribeMenuMethod(type);
+            this.createShowMethod(type);
+            this.createHideMethod(type);
+            this.createMenuMainMethod(type);
+
+            EventTransformer.createEvents(expression, context, type);
+
+        } else if (this.inheritsFromType(type, context, WorldObject.typeName)){
             
             const isPlace = this.inheritsFromType(type, context, Place.typeName);
             const defaultState = isPlace ? States.opened : States.closed;
@@ -68,6 +80,109 @@ export class GlobalTypeTransformer implements ITypeTransformer{
         } 
     }
         
+    private createDescribeMenuMethod(type:Type){
+        const describe = new Method();
+        describe.name = Menu.describe;
+        describe.body.push(
+            Instruction.loadThis(),
+            Instruction.loadProperty(WorldObject.visible),
+            ...Instruction.ifTrueThen(
+                Instruction.loadThis(),
+                Instruction.loadProperty(WorldObject.description),
+
+                // TODO: Automatically print/handle option numbers based on option event handlers.
+
+                Instruction.print(),
+            ),            
+            Instruction.return()
+        );
+
+        type.methods.push(describe);
+    }
+
+    private createMenuMainMethod(type:Type){
+        const handledCommandLocal = "~handledCommand";
+
+        const main = new Method();
+        main.name = Menu.main;
+        main.parameters = [];
+        main.body.push(
+            Instruction.loadThis(),
+            Instruction.loadField(Menu.visible),
+            ...Instruction.ifTrueThen(
+                Instruction.loadThis(),
+                Instruction.instanceCall(WorldObject.describe),
+                Instruction.readInput(),
+                Instruction.parseCommand(),
+                
+                // TODO: Enforce menu event context so we can't 'look' while in a menu.
+
+                Instruction.handleCommand(),
+                Instruction.setLocal(handledCommandLocal),
+                Instruction.loadLocal(handledCommandLocal),
+                Instruction.isTypeOf(Delegate.typeName),
+                ...Instruction.ifTrueThen(
+                    Instruction.invokeDelegate(),
+                    Instruction.goTo(0)
+                ),
+                Instruction.loadLocal(handledCommandLocal),
+                Instruction.isTypeOf(List.typeName),
+                ...Instruction.ifTrueThen(
+                    Instruction.loadLocal(handledCommandLocal),
+                    Instruction.instanceCall(List.count),
+                    Instruction.loadNumber(0),
+                    Instruction.compareEqual(),
+                    ...Instruction.ifTrueThen(
+                        Instruction.loadString("That doesn't appear to be one of the options."),
+                        Instruction.print(),
+                        Instruction.goTo(0)
+                    ),
+                    ...Instruction.forEach(
+                        Instruction.invokeDelegate()
+                    )
+                ),
+                Instruction.goTo(0)
+            ),
+            Instruction.return()
+        );     
+
+        type.methods.push(main);
+    }
+
+    private createShowMethod(type:Type){
+        const menuInstance = "~menuInstance";
+
+        const show = new Method();
+        show.name = Menu.show;        
+        show.parameters = [];
+        show.body.push(
+            Instruction.newInstance(type.name),
+            Instruction.setLocal(menuInstance),
+            Instruction.loadBoolean(true),
+            Instruction.loadLocal(menuInstance),
+            Instruction.loadField(Menu.visible),
+            Instruction.assign(),
+            Instruction.loadLocal(menuInstance),
+            Instruction.instanceCall(Menu.main),
+            Instruction.return()
+        );
+
+        type.methods.push(show);
+    }
+
+    private createHideMethod(type:Type){
+        const hide = new Method();
+        hide.name = Menu.hide;        
+        hide.parameters = [];
+        hide.body.push(
+            Instruction.loadBoolean(false),
+            Instruction.loadThis(),
+            Instruction.assign()
+        );
+
+        type.methods.push(hide);
+    }
+
     private createDescribeMethod(type:Type){
         const describe = new Method();
         describe.name = WorldObject.describe;
