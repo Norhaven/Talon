@@ -34,7 +34,6 @@ import { LoadPropertyHandler } from "./handlers/LoadPropertyHandler";
 import { LoadFieldHandler } from "./handlers/LoadFieldHandler";
 import { ExternalCallHandler } from "./handlers/ExternalCallHandler";
 import { LoadLocalHandler } from "./handlers/LoadLocalHandler";
-import { ILogOutput } from "./ILogOutput";
 import { LoadThisHandler } from "./handlers/LoadThisHandler";
 import { BranchRelativeHandler } from "./handlers/BranchRelativeHandler";
 import { BranchRelativeIfFalseHandler } from "./handlers/BranchRelativeIfFalseHandler";
@@ -61,6 +60,7 @@ import { RaiseEventHandler } from "./handlers/RaiseEventHandler";
 import { RaiseContextualEventHandler } from "./handlers/RaiseContextualEventHandler";
 import { LoadPlaceHandler } from "./handlers/LoadPlaceHandler";
 import { ReplaceInstancesHandler } from "./handlers/ReplaceInstancesHandler";
+import { ILog } from "../ILog";
 
 export class TalonRuntime{
 
@@ -68,7 +68,7 @@ export class TalonRuntime{
     private thread?:Thread;
     private readonly handlers:Map<OpCode, OpCodeHandler>;
 
-    constructor(private readonly userOutput:IOutput, private readonly logOutput?:ILogOutput, private readonly logOutputReadable?:ILogOutput){
+    constructor(private readonly userOutput:IOutput, private readonly log:ILog){
         
         const handlerInstances:OpCodeHandler[] = [
             new NoOpHandler(),
@@ -124,7 +124,7 @@ export class TalonRuntime{
                 RuntimeState.Loaded,
                 (current:State<RuntimeState>) => {
                     if (current.state === RuntimeState.Started){
-                        this.logOutput?.debug("The runtime has already been started and can't load more types.");
+                        this.log.writeReadable("The runtime has already been started and can't load more types.");
                         return false;
                     } 
 
@@ -135,10 +135,10 @@ export class TalonRuntime{
                 RuntimeState.Started,
                 (current:State<RuntimeState>) => {
                     if (current.state === RuntimeState.Started){
-                        this.logOutput?.debug("The runtime has already been started.");
+                        this.log.writeReadable("The runtime has already been started.");
                         return false;
                     } else if (current.state === RuntimeState.Stopped){
-                        this.logOutput?.debug("The runtime must be loaded with types prior to being started.");
+                        this.log.writeReadable("The runtime must be loaded with types prior to being started.");
                         return false;
                     } 
 
@@ -183,7 +183,7 @@ export class TalonRuntime{
     loadFrom(types:Type[]):boolean{
                 
         if (types.length == 0){
-            this.logOutput?.debug("No types were provided, unable to load runtime.");
+            this.log.writeReadable("No types were provided, unable to load runtime.");
             return false;
         }
 
@@ -199,9 +199,7 @@ export class TalonRuntime{
         const mainMethod = entryPoint?.methods.find(x => x.name == Any.main);        
         const activation = new MethodActivation(mainMethod!);
         
-        this.thread = new Thread(loadedTypes, activation);  
-        this.thread.log = this.logOutput;
-        this.thread.logInfo = this.logOutputReadable;   
+        this.thread = new Thread(loadedTypes, activation, this.log); 
 
         return true;
     }
@@ -244,10 +242,10 @@ export class TalonRuntime{
             }
         } catch(ex){
             if (ex instanceof RuntimeError){
-                this.logOutput?.debug(`Runtime Error: ${ex.message}`);
-                this.logOutput?.debug(`Stack Trace: ${ex.stack}`);
+                this.log.writeFormatted(`Runtime Error: ${ex.message}`);
+                this.log.writeFormatted(`Stack Trace: ${ex.stack}`);
             } else {
-                this.logOutput?.debug(`Encountered unhandled error: ${ex}`);
+                this.log.writeFormatted(`Encountered unhandled error: ${ex}`);
             }          
         }
     }

@@ -1,12 +1,18 @@
 import { TalonCompiler } from "./compiler/TalonCompiler";
 
-import { PaneOutput } from "./PaneOutput";
+import { RuntimeDebugPaneOutput } from "./RuntimeDebugPaneOutput";
 
 import { TalonRuntime } from "./runtime/TalonRuntime";
 import { Type } from "./common/Type";
 import { AnalysisCoordinator } from "./ide/AnalysisCoordinator";
 import { CodePaneAnalyzer } from "./ide/analyzers/CodePaneAnalyzer";
 import { CodePaneStyleFormatter } from "./ide/formatters/CodePaneStyleFormatter";
+import { DefaultPaneOutput } from "./DefaultPaneOutput";
+import { IOutput } from "./runtime/IOutput";
+import { LogOutput } from "./LogOutput";
+import { ILog } from "./ILog";
+import { Log } from "./Log";
+import { ConsoleOutput } from "./ConsoleOutput";
 
 export class TalonIde{
 
@@ -31,10 +37,12 @@ export class TalonIde{
     private readonly showLibrary:HTMLButtonElement;
     private readonly showCodePane:HTMLButtonElement;
 
-    private readonly compilationOutputPane:PaneOutput;
-    private readonly runtimeOutputPane:PaneOutput;
-    private readonly runtimeLogOutputPane:PaneOutput;
-    private readonly runtimeLogReadableOutputPane:PaneOutput;
+    private readonly compilationOutputPane:DefaultPaneOutput;
+    private readonly runtimeOutputPane:DefaultPaneOutput;
+    private readonly runtimeLogOutputPane:RuntimeDebugPaneOutput;
+    private readonly runtimeLogReadableOutputPane:DefaultPaneOutput;
+    private readonly logOutput:IOutput;
+    private readonly log:ILog;
 
     private readonly codePaneAnalyzer:CodePaneAnalyzer;
     private readonly analysisCoordinator:AnalysisCoordinator;
@@ -91,18 +99,21 @@ export class TalonIde{
 
         this.loadLibrary();
 
-        this.compilationOutputPane = new PaneOutput(this.compilationOutput);
-        this.runtimeOutputPane = new PaneOutput(this.gamePane);
-        this.runtimeLogOutputPane = new PaneOutput(this.gameLogOutput);
-        this.runtimeLogReadableOutputPane = new PaneOutput(this.gameLogReadableOutput);
+        this.compilationOutputPane = new DefaultPaneOutput(this.compilationOutput);
+        this.runtimeOutputPane = new DefaultPaneOutput(this.gamePane);
+        this.runtimeLogOutputPane = new RuntimeDebugPaneOutput(this.gameLogOutput);
+        this.runtimeLogReadableOutputPane = new DefaultPaneOutput(this.gameLogReadableOutput);
 
         this.codePaneAnalyzer = new CodePaneAnalyzer(this.codePane);
         this.analysisCoordinator = new AnalysisCoordinator(this.codePaneAnalyzer, this.caretPosition);
 
         this.codePaneStyleFormatter = new CodePaneStyleFormatter(this.codePane);
 
+        this.logOutput = new LogOutput();
+        this.log = new Log(this.runtimeLogOutputPane, this.logOutput, this.runtimeLogReadableOutputPane, new ConsoleOutput());
+        
         this.compiler = new TalonCompiler(this.compilationOutputPane);
-        this.runtime = new TalonRuntime(this.runtimeOutputPane, this.runtimeLogOutputPane, this.runtimeLogReadableOutputPane);
+        this.runtime = new TalonRuntime(this.runtimeOutputPane, this.log);
     }
 
     private sendUserCommand(){
@@ -332,6 +343,7 @@ export class TalonIde{
 
             "a MainMenu is a kind of menu.\n" +
             "it is described as \"Main Menu\".\n" +
+            "it contains options QuitOption, BackOption.\n" +
             "it has a value called numberOfTimesShown that is 0.\n" +
             "when option QuitOption is selected:\n" +
             "    say \"Goodbye.\";\n" +

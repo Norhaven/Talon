@@ -1,8 +1,7 @@
 import { IOutput } from "./runtime/IOutput";
 
 export class ConsoleOutput implements IOutput{
-    write(line: string): void {
-        console.log(line);
+    write(line: string, ...parameters: any[]): void {
+        console.log(line, parameters);
     }
-
 }

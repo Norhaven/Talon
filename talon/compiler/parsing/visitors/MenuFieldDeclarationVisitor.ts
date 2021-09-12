@@ -1,4 +1,5 @@
 import { BooleanType } from "../../../library/BooleanType";
+import { List } from "../../../library/List";
 import { NumberType } from "../../../library/NumberType";
 import { StringType } from "../../../library/StringType";
 import { WorldObject } from "../../../library/WorldObject";
@@ -44,6 +45,24 @@ export class MenuFieldDeclarationVisitor extends Visitor{
 
                 field.associatedExpressions.push(concat);
             }
+        } else if (context.is(Keywords.contains)){
+            context.expect(Keywords.contains);
+            
+            context.expect(Keywords.options);
+
+            let currentOptionNumber = 1;
+
+            const items = [[currentOptionNumber, context.expectIdentifier().value]];
+
+            while (context.isTypeOf(TokenType.ListSeparator)){
+                context.consumeCurrentToken();
+                currentOptionNumber++;
+                items.push([currentOptionNumber, context.expectIdentifier().value]);
+            }
+
+            field.name = WorldObject.contents;
+            field.typeName = List.typeName;
+            field.initialValue = items; 
         } else if (context.is(Keywords.has)){
 
             context.expect(Keywords.has);

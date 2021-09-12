@@ -34,6 +34,8 @@ import { GlobalEvents } from "../../library/GlobalEvents";
 import { RuntimeGlobalEvents } from "../library/RuntimeGlobalEvents";
 import { Menu } from "../../library/Menu";
 import { RuntimeMenu } from "../library/RuntimeMenu";
+import { MenuOption } from "../../library/MenuOption";
+import { RuntimeMenuOption } from "../library/RuntimeMenuOption";
 
 export class Memory{
     private static typesByName = new Map<string, Type>();
@@ -288,6 +290,7 @@ export class Memory{
             case Decoration.typeName: return new RuntimeDecoration();   
             case Creature.typeName: return new RuntimeCreature();
             case Menu.typeName: return new RuntimeMenu();
+            case MenuOption.typeName: return new RuntimeMenuOption();
             case GlobalEvents.typeName: return new RuntimeGlobalEvents();
             case WorldObject.typeName: return new RuntimeWorldObject();
             case Any.typeName: return new RuntimeAny();

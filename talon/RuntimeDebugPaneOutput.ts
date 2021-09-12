@@ -1,7 +1,6 @@
 import { IOutput } from "./runtime/IOutput";
-import { ILogOutput } from "./runtime/ILogOutput";
 
-export class PaneOutput implements IOutput, ILogOutput{
+export class RuntimeDebugPaneOutput implements IOutput{
     constructor(private pane:HTMLDivElement){
 
     }
@@ -10,7 +9,7 @@ export class PaneOutput implements IOutput, ILogOutput{
         this.pane.innerHTML = "";
     }
 
-    debug(line: string): void {
+    write(line: string): void {
 
         if (line.startsWith('.')){
             const parts = line.split(' ');
@@ -20,11 +19,6 @@ export class PaneOutput implements IOutput, ILogOutput{
             line = parts.join(' ');
         } 
 
-        this.pane.innerHTML += line + "<br />";
-        this.pane.scrollTo(0, this.pane.scrollHeight);
-    }
-
-    write(line: string): void {
         this.pane.innerHTML += line + "<br />";
         this.pane.scrollTo(0, this.pane.scrollHeight);
     }

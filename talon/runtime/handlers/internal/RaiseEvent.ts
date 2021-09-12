@@ -31,7 +31,7 @@ export class RaiseEvent{
         const actorThis = Variable.forThis(actor);
         const targetThis = Variable.forThis(target);
         
-        thread.logInfo?.debug(`Raising ${actorEvents.length} contextual events`);
+        thread.logReadable(`Raising ${actorEvents.length} contextual events`);
 
         const results:RuntimeDelegate[] = [];
 
@@ -64,7 +64,7 @@ export class RaiseEvent{
         
         const events = Array.from(target.methods.values()!).filter(x => x.eventType == eventType && x.parameters.length === 0);
 
-        thread.writeInfo(`Attempting to raise '${events.length}' non-contextual events for '${eventType}' on '${target.typeName}'...`);
+        thread.logReadable(`Attempting to raise '${events.length}' non-contextual events for '${eventType}' on '${target.typeName}'...`);
 
         const results:RuntimeDelegate[] = [];
     

@@ -44,7 +44,7 @@ export class ReplaceInstancesHandler extends OpCodeHandler{
             let container = Lookup.containingWorldObject(thread, thread.currentPlace!, entity);
 
             if (container){
-                thread.logInfo?.debug(`Found '${entity.typeName}' in '${container.typeName}'`);
+                thread.logReadable(`Found '${entity.typeName}' in '${container.typeName}'`);
                 container.getContentsField().removeInstance(entity);
                 entitiesAreInPlace = true;
                 continue;

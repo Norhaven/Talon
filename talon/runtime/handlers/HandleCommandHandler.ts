@@ -98,7 +98,7 @@ export class HandleCommandHandler extends OpCodeHandler{
 
         if (!understanding){
             thread.currentMethod.push(Memory.allocateList([]));
-            thread.writeInfo(this.endOfInteraction);
+            thread.logReadable(this.endOfInteraction);
             return super.handle(thread);
         }
 
@@ -112,7 +112,7 @@ export class HandleCommandHandler extends OpCodeHandler{
             
             if (!actualTarget){                
                 this.output.write("I don't know what you're referring to.");
-                thread.writeInfo(this.endOfInteraction);
+                thread.logReadable(this.endOfInteraction);
                 thread.currentMethod.push(Memory.allocateList([]));
 
                 return super.handle(thread);
@@ -151,7 +151,7 @@ export class HandleCommandHandler extends OpCodeHandler{
             delegate
         ];
 
-        thread.writeInfo(`Moving with ${allDelegates.length} events to be raised`);
+        thread.logReadable(`Moving with ${allDelegates.length} events to be raised`);
 
         thread.currentMethod.push(Memory.allocateList(allDelegates));
     }
@@ -159,7 +159,7 @@ export class HandleCommandHandler extends OpCodeHandler{
     private tryTakeItem(thread:Thread, target:RuntimeWorldObject){
         if (!target.isTypeOf(Item.typeName)){
             this.output.write("I can't take that.");
-            thread.writeInfo(`Unable to take '${target.typeName}:${target.parentTypeName}', not an item`);
+            thread.logReadable(`Unable to take '${target.typeName}:${target.parentTypeName}', not an item`);
             thread.currentMethod.push(Memory.allocateList([]));
             return;
         }
@@ -275,7 +275,7 @@ export class HandleCommandHandler extends OpCodeHandler{
                 throw new RuntimeError("Unsupported meaning found");
         }  
 
-        thread.writeInfo(this.endOfInteraction);
+        thread.logReadable(this.endOfInteraction);
 
         return super.handle(thread);
     }
@@ -326,7 +326,7 @@ export class HandleCommandHandler extends OpCodeHandler{
     private inferTargetFrom(thread:Thread, targetName:string|undefined, understanding:Type, meaning:Meaning):RuntimeWorldObject|undefined{
         const lookupSingletonInstance = (name:string) => <RuntimeWorldObject>Memory.findInstanceByName(name);
 
-        thread.writeInfo(`Inferring target '${targetName}' from meaning '${meaning}'`);
+        thread.logReadable(`Inferring target '${targetName}' from meaning '${meaning}'`);
         
         switch(meaning){
             case Meaning.Moving:{
@@ -374,7 +374,7 @@ export class HandleCommandHandler extends OpCodeHandler{
             case Meaning.Opening:
             case Meaning.Closing:{
                 if (!targetName){
-                    thread.writeInfo("No target name was supplied, inferred no target");
+                    thread.logReadable("No target name was supplied, inferred no target");
                     return undefined;
                 }
     
@@ -382,7 +382,7 @@ export class HandleCommandHandler extends OpCodeHandler{
                 const matchingInventoryItems = list.items.filter(x => x.typeName.toLowerCase() === targetName?.toLowerCase());
                 
                 if (matchingInventoryItems.length > 0){
-                    thread.writeInfo("Found target in player's inventory");
+                    thread.logReadable("Found target in player's inventory");
                     return <RuntimeWorldObject>matchingInventoryItems[0];
                 }
     

@@ -4,8 +4,9 @@ import { Understanding } from "../library/Understanding";
 import { RuntimePlace } from "./library/RuntimePlace";
 import { RuntimePlayer } from "./library/RuntimePlayer";
 import { RuntimeEmpty } from "./library/RuntimeEmpty";
-import { ILogOutput } from "./ILogOutput";
 import { Method } from "../common/Method";
+import { IOutput } from "./IOutput";
+import { ILog } from "../ILog";
 
 export class Thread{
     allTypes:Type[] = [];
@@ -15,8 +16,6 @@ export class Thread{
     methods:MethodActivation[] = [];
     currentPlace?:RuntimePlace;
     currentPlayer?:RuntimePlayer;
-    log?:ILogOutput;
-    logInfo?:ILogOutput;
     
     get currentMethod() {
         return this.methods[this.methods.length - 1];
@@ -27,7 +26,7 @@ export class Thread{
         return activation.method?.body[activation.stackFrame.currentInstruction];
     }
 
-    constructor(types:Type[], method:MethodActivation){
+    constructor(types:Type[], method:MethodActivation, public readonly log:ILog){
         this.allTypes = types;
         this.knownTypes = new Map<string, Type>(types.map(type => [type.name, type]));
         this.knownUnderstandings = types.filter(x => x.baseTypeName === Understanding.typeName);
@@ -35,12 +34,16 @@ export class Thread{
         this.methods.push(method);
     }
 
-    writeDebug(message:string){
-        this.log?.debug(message);
+    logFormatted(message:string){
+        this.log.writeFormatted(message);
     }
 
-    writeInfo(message:string){
-        this.logInfo?.debug(message);
+    logReadable(message:string){
+        this.log.writeReadable(message);
+    }
+
+    logStructured(message:string, ...parameters:any[]){
+        this.log.writeStructured(message, ...parameters);
     }
 
     currentInstructionValueAs<T>(){
@@ -51,7 +54,8 @@ export class Thread{
         const activation = new MethodActivation(method);
         const current = this.currentMethod;
 
-        this.writeDebug(`${current.method?.name} => ${method.name}`);
+        this.logFormatted(`${current.method?.name} => ${method.name}`);
+        this.logStructured("Method {name} activated from caller {callerName}: {@method}", method.name, current.method?.name, method);
 
         this.methods.push(activation);
     }
@@ -68,7 +72,8 @@ export class Thread{
         const expectReturnType = this.currentMethod.method!.returnType != "";
         const returnedMethod = this.methods.pop();
 
-        this.writeDebug(`${this.currentMethod.method?.name} <= ${returnedMethod?.method?.name}`);
+        this.logFormatted(`${this.currentMethod.method?.name} <= ${returnedMethod?.method?.name}`);
+        this.logStructured("Method {name}'s activation has completed, returning to {callerName}", returnedMethod?.method?.name, this.currentMethod.method?.name);
 
         if (!expectReturnType){
             return new RuntimeEmpty();

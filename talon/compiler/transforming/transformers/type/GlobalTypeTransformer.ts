@@ -11,6 +11,7 @@ import { Delegate } from "../../../../library/Delegate";
 import { Item } from "../../../../library/Item";
 import { List } from "../../../../library/List";
 import { Menu } from "../../../../library/Menu";
+import { MenuOption } from "../../../../library/MenuOption";
 import { NumberType } from "../../../../library/NumberType";
 import { Place } from "../../../../library/Place";
 import { StringType } from "../../../../library/StringType";
@@ -61,6 +62,15 @@ export class GlobalTypeTransformer implements ITypeTransformer{
 
             EventTransformer.createEvents(expression, context, type);
 
+        } else if (type.baseTypeName === MenuOption.typeName){
+            this.createFieldIfNotExists(WorldObject.visible, BooleanType.typeName, true, type);
+            this.createFieldIfNotExists(WorldObject.observation, StringType.typeName, "", type);
+            this.createFieldIfNotExists(WorldObject.description, StringType.typeName, "", type);
+            this.createFieldIfNotExists(WorldObject.contents, List.typeName, [], type);
+
+            this.createDescribeMethod(type);
+            this.createObserveMethod(type);
+
         } else if (this.inheritsFromType(type, context, WorldObject.typeName)){
             
             const isPlace = this.inheritsFromType(type, context, Place.typeName);
@@ -89,10 +99,13 @@ export class GlobalTypeTransformer implements ITypeTransformer{
             ...Instruction.ifTrueThen(
                 Instruction.loadThis(),
                 Instruction.loadProperty(WorldObject.description),
-
-                // TODO: Automatically print/handle option numbers based on option event handlers.
-
                 Instruction.print(),
+                Instruction.loadThis(),
+                Instruction.loadField(WorldObject.contents),
+                ...Instruction.forEach(
+                    Instruction.instanceCall(MenuOption.describe)
+                    // TODO: Automatically print/handle option numbers based on option event handlers.
+                ),
             ),            
             Instruction.return()
         );

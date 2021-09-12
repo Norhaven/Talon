@@ -15,7 +15,7 @@ export abstract class OpCodeHandler{
             formattedLine += ' ' + parameters.join(' ');
         }
         
-        thread.writeDebug(formattedLine);
+        thread.logFormatted(formattedLine);
     }
 
     protected getMostDerivedFieldFrom(instance:RuntimeAny|null, fieldName:string){

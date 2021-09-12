@@ -31,7 +31,7 @@ export class ComparisonHandler extends OpCodeHandler{
             var value = Memory.allocateBoolean(instance.value === comparand.value);
             thread.currentMethod.push(value);
         } else if (instance instanceof RuntimeList && comparand instanceof RuntimeString){
-            thread.logInfo?.debug(`Checking list for '${comparand.value}'`);
+            thread.logReadable(`Checking list for '${comparand.value}'`);
 
             thread.currentMethod.push(comparand);
             thread.currentMethod.push(instance);

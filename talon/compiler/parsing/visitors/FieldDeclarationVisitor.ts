@@ -156,6 +156,7 @@ export class FieldDeclarationVisitor extends Visitor{
             field.name = WorldObject.contents;
             field.typeName = List.typeName;
             field.initialValue = items; 
+            
         } else if (context.is(Keywords.can)){
 
             context.expect(Keywords.can);
