@@ -8,6 +8,16 @@ This is a programming language, compiler, and runtime for creating text adventur
 
 After you clone the repo, run `npm install` at the root to acquire the necessary packages. Build/Run configurations are already set up for VS Code, so I would recommend using that. Just open the root folder with it to get started.
 
+It's not required, but if you would like to include the ability to view structured logs then you can set up a local Seq server and this will publish some logs there. In order to set that up, I would recommend installing Docker Desktop and then running the following commands:
+
+```
+docker pull datalust/seq
+```
+
+```
+docker run --name seq -d --restart unless-stopped -e ACCEPT_EULA=Y -p 5341:80 datalust/seq:latest
+```
+
 # Running
 
 Using VS Code, use the `Launch Chrome against localhost` run/debug option. This will build the project and open a browser window with the rudimentary IDE that you can use to play around with.
