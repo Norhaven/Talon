@@ -196,6 +196,7 @@ export class GlobalTypeTransformer implements ITypeTransformer{
     private createDescribeMethod(type:Type){
         const describe = new Method();
         describe.name = WorldObject.describe;
+        describe.returnType = BooleanType.typeName;
         describe.body.push(
             Instruction.loadThis(),
             Instruction.loadProperty(WorldObject.visible),
@@ -209,6 +210,7 @@ export class GlobalTypeTransformer implements ITypeTransformer{
                 Instruction.concatenate(),
                 Instruction.print(),
             ),            
+            Instruction.loadBoolean(true),
             Instruction.return()
         );
 
