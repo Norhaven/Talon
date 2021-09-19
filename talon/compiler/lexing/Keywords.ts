@@ -81,6 +81,7 @@ export class Keywords{
     static readonly called = "called";
     static readonly value = "value";
     static readonly this = "this";
+    static readonly quit = "quit";
 
     static getAll():Set<string>{
         type KeywordProperties = keyof Keywords;

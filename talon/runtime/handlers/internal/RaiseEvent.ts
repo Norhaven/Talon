@@ -7,12 +7,30 @@ import { BooleanType } from "../../../library/BooleanType";
 import { WorldObject } from "../../../library/WorldObject";
 import { RuntimeAny } from "../../library/RuntimeAny";
 import { RuntimeDelegate } from "../../library/RuntimeDelegate";
+import { RuntimeMenu } from "../../library/RuntimeMenu";
+import { RuntimeMenuOption } from "../../library/RuntimeMenuOption";
 import { RuntimeString } from "../../library/RuntimeString";
 import { RuntimeWorldObject } from "../../library/RuntimeWorldObject";
 import { Variable } from "../../library/Variable";
 import { Thread } from "../../Thread";
 
 export class RaiseEvent{
+    static menuSelection(thread:Thread, menu:RuntimeMenu, selectedOption:RuntimeMenuOption){
+        const methodIsMatch  = (method:Method) => {
+            const parts = method.name.split('_');
+            const optionValue = parts[parts.length - 1];
+            return optionValue.toLowerCase() === selectedOption.typeName.toLowerCase();
+        };
+
+        const selectionEvent = Array.from(menu.methods.values()!).filter(x => methodIsMatch(x)).shift()!;
+
+        const menuThis = Variable.forThis(menu);
+
+        selectionEvent.actualParameters = [menuThis];
+
+        return [new RuntimeDelegate(selectionEvent)];
+    }
+
     static contextual(thread:Thread, eventType:EventType, actor:RuntimeAny, target:RuntimeAny):RuntimeDelegate[]{
         const methodNameIsMatch = (method:Method, value:string) => {
             const parts = method.name.split('_');

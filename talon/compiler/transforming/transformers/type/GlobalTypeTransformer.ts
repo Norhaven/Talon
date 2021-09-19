@@ -55,6 +55,7 @@ export class GlobalTypeTransformer implements ITypeTransformer{
         if (type.baseTypeName === Menu.typeName){
             this.createFieldIfNotExists(WorldObject.visible, BooleanType.typeName, true, type);
             this.createFieldIfNotExists(WorldObject.description, StringType.typeName, "", type);
+            this.createFieldIfNotExists(WorldObject.contents, List.typeName, [], type);
             this.createDescribeMenuMethod(type);
             this.createShowMethod(type);
             this.createHideMethod(type);
@@ -127,17 +128,9 @@ export class GlobalTypeTransformer implements ITypeTransformer{
                 Instruction.instanceCall(WorldObject.describe),
                 Instruction.readInput(),
                 Instruction.parseCommand(),
-                
-                // TODO: Enforce menu event context so we can't 'look' while in a menu.
-
-                Instruction.handleCommand(),
+                Instruction.loadThis(),
+                Instruction.handleMenuCommand(),
                 Instruction.setLocal(handledCommandLocal),
-                Instruction.loadLocal(handledCommandLocal),
-                Instruction.isTypeOf(Delegate.typeName),
-                ...Instruction.ifTrueThen(
-                    Instruction.invokeDelegate(),
-                    Instruction.goTo(0)
-                ),
                 Instruction.loadLocal(handledCommandLocal),
                 Instruction.isTypeOf(List.typeName),
                 ...Instruction.ifTrueThen(
@@ -149,9 +142,11 @@ export class GlobalTypeTransformer implements ITypeTransformer{
                         Instruction.loadString("That doesn't appear to be one of the options."),
                         Instruction.print(),
                         Instruction.goTo(0)
-                    ),
+                    ),                    
+                    Instruction.loadLocal(handledCommandLocal),
                     ...Instruction.forEach(
-                        Instruction.invokeDelegate()
+                        Instruction.invokeDelegate(),
+                        Instruction.ignore() // We know that all delegates will be invoking events, which return a boolean that we don't care about.
                     )
                 ),
                 Instruction.goTo(0)
@@ -190,7 +185,9 @@ export class GlobalTypeTransformer implements ITypeTransformer{
         hide.body.push(
             Instruction.loadBoolean(false),
             Instruction.loadThis(),
-            Instruction.assign()
+            Instruction.loadField(WorldObject.visible),
+            Instruction.assign(),
+            Instruction.return()
         );
 
         type.methods.push(hide);

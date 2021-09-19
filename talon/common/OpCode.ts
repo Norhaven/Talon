@@ -1,12 +1,14 @@
 export enum OpCode {
     NoOp = '.noop',
     Assign = '.set.var',
+    AssignStaticField = ".set.var.static",
     CompareEqual = ".compare.eq",
     Print = '.print',
     LoadString = '.load.str',
     NewInstance = '.new',
     ParseCommand = '.parse.cmd',
     HandleCommand = '.handle.cmd',
+    HandleMenuCommand = ".handle.cmd.menu",
     ReadInput = '.read.in',
     GoTo = '.br',
     Return = '.ret',
@@ -15,6 +17,7 @@ export enum OpCode {
     Concatenate = '.concat',
     LoadNumber = '.load.num',
     LoadField = '.load.fld',
+    LoadStaticField = ".load.fld.static",
     LoadProperty = '.load.prop',
     LoadInstance = '.load.inst',
     LoadLocal = '.load.loc',
@@ -38,5 +41,5 @@ export enum OpCode {
     RaiseEvent = ".raise.event",
     RaiseContextualEvent = ".raise.event.ctx",
     LoadPlace = ".load.place",
-    ReplaceInstances = ".replace.inst"
-}
+    ReplaceInstances = ".replace.inst",
+    Ignore = ".ignore"}

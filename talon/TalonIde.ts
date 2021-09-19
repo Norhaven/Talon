@@ -343,10 +343,12 @@ export class TalonIde{
 
             "a MainMenu is a kind of menu.\n" +
             "it is described as \"Main Menu\".\n" +
-            "it contains options QuitOption, BackOption.\n" +
+            "it contains options BackOption, QuitOption.\n" +
             "it has a value called numberOfTimesShown that is 0.\n" +
             "when option QuitOption is selected:\n" +
             "    say \"Goodbye.\";\n" +
+            "    hide this;\n" +
+            "    quit;\n" +
             "and then stop.\n" +
             "when option BackOption is selected:\n" +
             "    say \"Back to the game.\";\n" +

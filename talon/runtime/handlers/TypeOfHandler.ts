@@ -15,7 +15,7 @@ export class TypeOfHandler extends OpCodeHandler{
             const value = Memory.allocateBoolean(false);
             thread.currentMethod.push(value);
         } else {
-            const instance = thread.currentMethod.peek();
+            const instance = thread.currentMethod.pop();
 
             const isType = instance?.typeName == typeName;
             const result = Memory.allocateBoolean(isType);

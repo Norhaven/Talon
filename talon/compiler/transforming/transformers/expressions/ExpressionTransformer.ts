@@ -1,5 +1,6 @@
 import { Instruction } from "../../../../common/Instruction";
 import { BooleanType } from "../../../../library/BooleanType";
+import { GlobalFields } from "../../../../library/GlobalFields";
 import { List } from "../../../../library/List";
 import { Menu } from "../../../../library/Menu";
 import { NumberType } from "../../../../library/NumberType";
@@ -16,6 +17,7 @@ import { FieldDeclarationExpression } from "../../../parsing/expressions/FieldDe
 import { IdentifierExpression } from "../../../parsing/expressions/IdentifierExpression";
 import { IfExpression } from "../../../parsing/expressions/IfExpression";
 import { LiteralExpression } from "../../../parsing/expressions/LiteralExpression";
+import { QuitExpression } from "../../../parsing/expressions/QuitExpression";
 import { ReplaceExpression } from "../../../parsing/expressions/ReplaceExpression";
 import { SayExpression } from "../../../parsing/expressions/SayExpression";
 import { SetVariableExpression } from "../../../parsing/expressions/SetVariableExpression";
@@ -173,6 +175,11 @@ export class ExpressionTransformer{
                     Instruction.instanceCall(Menu.hide)
                 );
             }
+        } else if (expression instanceof QuitExpression){
+            instructions.push(
+                Instruction.loadBoolean(false),
+                Instruction.assignStaticField("~globalProgramFields", GlobalFields.canRun)
+            );
         } else {
             throw new CompilationError(`Unable to transform unsupported expression: ${expression}`);
         }

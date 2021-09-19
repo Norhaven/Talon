@@ -14,6 +14,7 @@ import { Delegate } from "../library/Delegate";
 import * as buildInfo from "../../build-info.json";
 import { List } from "../library/List";
 import { WorldObject } from "../library/WorldObject";
+import { GlobalFields } from "../library/GlobalFields";
 
 export class TalonCompiler{
     get languageVersion(){
@@ -83,39 +84,48 @@ export class TalonCompiler{
             Instruction.print(),       
             Instruction.loadPlace(),
             Instruction.instanceCall(WorldObject.describe),  
-            Instruction.loadString(""),
-            Instruction.print(),      
-            Instruction.loadString("What would you like to do?"),
-            Instruction.print(),
-            Instruction.readInput(),
-            Instruction.loadString(""),
-            Instruction.print(),
-            Instruction.parseCommand(),    
-            Instruction.handleCommand(),
-            Instruction.setLocal(handledCommandLocal),
-            Instruction.loadLocal(handledCommandLocal),
-            Instruction.isTypeOf(Delegate.typeName),
+            Instruction.loadBoolean(true),
+            Instruction.assignStaticField("~globalProgramFields", GlobalFields.canRun),
+            Instruction.loadStaticField("~globalProgramFields", GlobalFields.canRun),
             ...Instruction.ifTrueThen(
-                Instruction.invokeDelegate(),
-                Instruction.goTo(11)
-            ),
-            Instruction.loadLocal(handledCommandLocal),
-            Instruction.isTypeOf(List.typeName),
-            ...Instruction.ifTrueThen(
+                Instruction.loadString(""),
+                Instruction.print(),      
+                Instruction.loadString("What would you like to do?"),
+                Instruction.print(),
+                Instruction.readInput(),
+                Instruction.loadString(""),
+                Instruction.print(),
+                Instruction.parseCommand(),    
+                Instruction.handleCommand(),
+                Instruction.setLocal(handledCommandLocal),
                 Instruction.loadLocal(handledCommandLocal),
-                Instruction.instanceCall(List.count),
-                Instruction.loadNumber(0),
-                Instruction.compareEqual(),
-                ...Instruction.ifTrueThen(
-                    Instruction.loadString("I don't know how to do that."),
-                    Instruction.print(),
-                    Instruction.goTo(11)
+                Instruction.isTypeOf(Delegate.typeName),
+                ...Instruction.ifTrueThen(                
+                    Instruction.loadLocal(handledCommandLocal),
+                    Instruction.invokeDelegate(),
+                    Instruction.goTo(13)
                 ),
-                ...Instruction.forEach(
-                    Instruction.invokeDelegate()
-                )
+                Instruction.loadLocal(handledCommandLocal),
+                Instruction.isTypeOf(List.typeName),
+                ...Instruction.ifTrueThen(
+                    Instruction.loadLocal(handledCommandLocal),
+                    Instruction.instanceCall(List.count),
+                    Instruction.loadNumber(0),
+                    Instruction.compareEqual(),
+                    ...Instruction.ifTrueThen(
+                        Instruction.loadString("I don't know how to do that."),
+                        Instruction.print(),
+                        Instruction.goTo(13)
+                    ),                
+                    Instruction.loadLocal(handledCommandLocal),
+                    ...Instruction.forEach(
+                        Instruction.invokeDelegate(),
+                        Instruction.ignore() // All delegates will be events, which return a boolean indicating aborted status, not used at this point.
+                    )
+                ),
+                Instruction.goTo(13)
             ),
-            Instruction.goTo(11)
+            Instruction.return()
         );
 
         type.methods.push(main);

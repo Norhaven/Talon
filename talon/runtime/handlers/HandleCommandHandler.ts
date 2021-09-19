@@ -85,7 +85,7 @@ export class HandleCommandHandler extends OpCodeHandler{
         const command = thread.currentMethod.pop();
 
         if (!(command instanceof RuntimeCommand)){
-            throw new RuntimeError(`Unable to handle a non-command, found '${command}`);
+            throw new RuntimeError(`Unable to handle a non-command, found '${command}'`);
         }
 
         const action = command.action!.value;
@@ -172,7 +172,7 @@ export class HandleCommandHandler extends OpCodeHandler{
         const describeEvent = this.createDescribeDelegate(thread, thread.currentPlace!);                
         const takeEvent = this.prepareRaiseEvent(thread, EventType.ItIsTaken, target);                
 
-        thread.currentMethod.push(Memory.allocateList([...takeEvent, describeEvent]))
+        thread.currentMethod.push(Memory.allocateList([...takeEvent, describeEvent]));
     }
     
     private tryDropItem(thread:Thread, target:RuntimeWorldObject){

@@ -18,6 +18,7 @@ export class ExternalCallHandler extends OpCodeHandler{
         const method = this.locateFunction(instance!, <string>methodName);
 
         this.logInteraction(thread, `${instance?.typeName}::${methodName}(...${method.length})`);
+        thread.logStructured("External method {name} invoked: {@method}", methodName, method);
 
         const args:RuntimeAny[] = [];
 

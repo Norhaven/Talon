@@ -7,6 +7,7 @@ import { RuntimeEmpty } from "./library/RuntimeEmpty";
 import { Method } from "../common/Method";
 import { IOutput } from "./IOutput";
 import { ILog } from "../ILog";
+import { RuntimeMenu } from "./library/RuntimeMenu";
 
 export class Thread{
     allTypes:Type[] = [];
@@ -72,8 +73,8 @@ export class Thread{
         const expectReturnType = this.currentMethod.method!.returnType != "";
         const returnedMethod = this.methods.pop();
 
-        this.logFormatted(`${this.currentMethod.method?.name} <= ${returnedMethod?.method?.name}`);
-        this.logStructured("Method {name}'s activation has completed, returning to {callerName}", returnedMethod?.method?.name, this.currentMethod.method?.name);
+        this.logFormatted(`${this.currentMethod?.method?.name} <= ${returnedMethod?.method?.name}`);
+        this.logStructured("Method {name}'s activation has completed, returning to {callerName}", returnedMethod?.method?.name, this.currentMethod?.method?.name);
 
         if (!expectReturnType){
             return new RuntimeEmpty();

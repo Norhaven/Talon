@@ -50,14 +50,11 @@ export class MenuFieldDeclarationVisitor extends Visitor{
             
             context.expect(Keywords.options);
 
-            let currentOptionNumber = 1;
-
-            const items = [[currentOptionNumber, context.expectIdentifier().value]];
+            const items = [[1, context.expectIdentifier().value]];
 
             while (context.isTypeOf(TokenType.ListSeparator)){
                 context.consumeCurrentToken();
-                currentOptionNumber++;
-                items.push([currentOptionNumber, context.expectIdentifier().value]);
+                items.push([1, context.expectIdentifier().value]);
             }
 
             field.name = WorldObject.contents;

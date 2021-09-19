@@ -18,6 +18,7 @@ import { Convert } from "../../../library/Convert";
 import { AbortEventExpression } from "../expressions/AbortEventExpression";
 import { ReplaceExpressionVisitor } from "./ReplaceExpressionVisitor";
 import { VisibilityExpression } from "../expressions/VisibilityExpression";
+import { QuitExpression } from "../expressions/QuitExpression";
 
 export class ExpressionVisitor extends Visitor{
     visit(context: ParseContext): Expression {
@@ -116,6 +117,10 @@ export class ExpressionVisitor extends Visitor{
             context.expect(Keywords.this);
 
             return new VisibilityExpression(action.value);
+        } else if (context.is(Keywords.quit)){
+            context.consumeCurrentToken();
+
+            return new QuitExpression();
         } else {
             throw new CompilationError(`Unable to parse expression at ${context.currentToken}`);
         }

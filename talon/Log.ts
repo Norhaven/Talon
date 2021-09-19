@@ -17,6 +17,10 @@ export class Log implements ILog{
         this.structuredOutput.write(line, ...parameters);
     }
 
+    writeStructuredError(error:any, line: string, ...parameters: any[]): void {
+        this.structuredOutput.writeError(error, line, ...parameters);
+    }
+
     writeReadable(line: string): void {
         this.readableOutput.write(line);
     }

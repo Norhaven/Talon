@@ -23,7 +23,11 @@ export class ReturnHandler extends OpCodeHandler{
             }
         } else {
             if (size > 0){
-                throw new RuntimeError(`Stack Imbalance! Returning from '${current.method?.name}' found '${size}' instances left but expected zero.`);
+                const error = new RuntimeError(`Stack Imbalance! Returning from '${current.method?.name}' found '${size}' instances left but expected zero.`);
+
+                thread.log.writeStructuredError(error, "Stack Imbalance! {@Stack}", thread.currentMethod.stack);
+
+                throw error;
             }
         }
 
@@ -32,11 +36,11 @@ export class ReturnHandler extends OpCodeHandler{
         if (!(returnValue instanceof RuntimeEmpty)){
             
             this.logInteraction(thread, returnValue);
-            thread?.currentMethod.push(returnValue);
+            thread?.currentMethod?.push(returnValue);
         } else {
             this.logInteraction(thread, 'void');
         }
 
-        return EvaluationResult.Continue;
+        return thread.currentMethod ? EvaluationResult.Continue : EvaluationResult.ShutDown;
     }
 }

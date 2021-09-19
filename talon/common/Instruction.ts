@@ -94,6 +94,10 @@ export class Instruction{
         return new Instruction(OpCode.HandleCommand);
     }
 
+    static handleMenuCommand(){
+        return new Instruction(OpCode.HandleMenuCommand);
+    }
+
     static goTo(lineNumber:number){
         return new Instruction(OpCode.GoTo, lineNumber);
     }
@@ -152,6 +156,18 @@ export class Instruction{
 
     static replaceInstancesWith(typeName:string){
         return new Instruction(OpCode.ReplaceInstances, typeName);
+    }
+
+    static ignore(){
+        return new Instruction(OpCode.Ignore);
+    }
+
+    static loadStaticField(typeName:string, fieldName:string){
+        return new Instruction(OpCode.LoadStaticField, `${typeName}.${fieldName}`);
+    }
+
+    static assignStaticField(typeName:string, fieldName:string){
+        return new Instruction(OpCode.AssignStaticField, `${typeName}.${fieldName}`);
     }
 
     static ifTrueThen(...instructions:Instruction[]){

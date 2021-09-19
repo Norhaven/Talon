@@ -61,6 +61,10 @@ import { RaiseContextualEventHandler } from "./handlers/RaiseContextualEventHand
 import { LoadPlaceHandler } from "./handlers/LoadPlaceHandler";
 import { ReplaceInstancesHandler } from "./handlers/ReplaceInstancesHandler";
 import { ILog } from "../ILog";
+import { HandleMenuCommandHandler } from "./handlers/HandleMenuCommandHandler";
+import { IgnoreHandler } from "./handlers/IgnoreHandler";
+import { LoadStaticFieldHandler } from "./handlers/LoadStaticFieldHandler";
+import { AssignStaticFieldHandler } from "./handlers/AssignStaticFieldHandler";
 
 export class TalonRuntime{
 
@@ -78,6 +82,7 @@ export class TalonRuntime{
             new ReadInputHandler(),
             new ParseCommandHandler(),
             new HandleCommandHandler(this.userOutput),
+            new HandleMenuCommandHandler(this.userOutput),
             new GoToHandler(),
             new ReturnHandler(),
             new StaticCallHandler(),
@@ -110,7 +115,10 @@ export class TalonRuntime{
             new RaiseEventHandler(),
             new RaiseContextualEventHandler(),
             new LoadPlaceHandler(),
-            new ReplaceInstancesHandler()
+            new ReplaceInstancesHandler(),
+            new IgnoreHandler(),
+            new LoadStaticFieldHandler(),
+            new AssignStaticFieldHandler()
         ];
 
         this.handlers = new Map<OpCode, OpCodeHandler>(handlerInstances.map(x => [x.code, x]));
@@ -193,7 +201,7 @@ export class TalonRuntime{
 
         Memory.clear();
 
-        const loadedTypes = Memory.loadTypes(types);
+        const loadedTypes = Memory.loadTypes(types, this.log);
 
         const entryPoint = loadedTypes.find(x => x.attributes.findIndex(attribute => attribute instanceof EntryPointAttribute) > -1);
         const mainMethod = entryPoint?.methods.find(x => x.name == Any.main);        
@@ -234,9 +242,16 @@ export class TalonRuntime{
         }
 
         try{
-            for(let instruction = this.evaluateCurrentInstruction();
-                instruction == EvaluationResult.Continue;
-                instruction = this.evaluateCurrentInstruction()){
+            for(let evaluationResult = this.evaluateCurrentInstruction();
+                evaluationResult === EvaluationResult.Continue || evaluationResult === EvaluationResult.ShutDown;
+                evaluationResult = this.evaluateCurrentInstruction()){
+                
+                if (evaluationResult === EvaluationResult.ShutDown){
+                    this.log.writeReadable("Shutting down runtime");
+                    this.log.writeStructured("Shutting down runtime");
+                    this.stop();
+                    return;
+                }
 
                 this.thread?.moveNext();
             }
@@ -244,8 +259,10 @@ export class TalonRuntime{
             if (ex instanceof RuntimeError){
                 this.log.writeFormatted(`Runtime Error: ${ex.message}`);
                 this.log.writeFormatted(`Stack Trace: ${ex.stack}`);
+                this.log.writeStructuredError(ex, "Error: {message}", ex.message);
             } else {
                 this.log.writeFormatted(`Encountered unhandled error: ${ex}`);
+                this.log.writeStructuredError(ex, "Unhandled error");
             }          
         }
     }

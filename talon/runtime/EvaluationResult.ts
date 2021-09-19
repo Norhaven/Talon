@@ -1,4 +1,5 @@
 export enum EvaluationResult{
     Continue,
-    SuspendForInput
+    SuspendForInput,
+    ShutDown
 }

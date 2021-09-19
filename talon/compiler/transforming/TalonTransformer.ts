@@ -45,6 +45,7 @@ import { Creature } from "../../library/Creature";
 import { Menu } from "../../library/Menu";
 import { MenuOption } from "../../library/MenuOption";
 import { GlobalWhenTypeTransformer } from "./transformers/type/GlobalWhenTypeTransformer";
+import { GlobalFieldsTypeTransformer } from "./transformers/type/GlobalFieldsTypeTransformer";
 
 export class TalonTransformer{
     constructor(private readonly out:IOutput){
@@ -93,6 +94,7 @@ export class TalonTransformer{
         
         context.typesByName = this.createSystemTypes();        
 
+        this.typeTransform(expression, GlobalFieldsTypeTransformer, context);
         this.typeTransform(expression, GlobalSaysTypeTransformer, context);
 
         const globalExpressions = expression.expressions;

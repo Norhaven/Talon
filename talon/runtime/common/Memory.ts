@@ -36,10 +36,12 @@ import { Menu } from "../../library/Menu";
 import { RuntimeMenu } from "../library/RuntimeMenu";
 import { MenuOption } from "../../library/MenuOption";
 import { RuntimeMenuOption } from "../library/RuntimeMenuOption";
+import { ILog } from "../../ILog";
 
 export class Memory{
     private static typesByName = new Map<string, Type>();
     private static heap = new Map<string, RuntimeAny[]>();
+    private static log:ILog;
 
     static clear(){
         Memory.typesByName = new Map<string, Type>();
@@ -94,7 +96,8 @@ export class Memory{
         return instances[0];
     }
 
-    static loadTypes(types:Type[]){
+    static loadTypes(types:Type[], log:ILog){
+        Memory.log = log;
         Memory.typesByName = new Map<string, Type>(types.map(x => [x.name, x]));   
         
         // Override any provided type stubs with the actual runtime type definitions.
@@ -137,8 +140,7 @@ export class Memory{
     }
 
     static allocate(type:Type):RuntimeAny{
-        console.log(`Allocating type '${type.name}'`);
-        console.log(type);
+        Memory.log.writeStructured("Allocating type {@type}", type);
 
         const instance = Memory.constructInstanceFrom(type);
 
@@ -211,7 +213,7 @@ export class Memory{
 
     private static constructInstanceFrom(type:Type){
         
-        console.log(`Constructing type '${type.name}'`);
+        Memory.log.writeStructured("Constructing type {@type}", type);
 
         let seenTypes = new Set<string>();
         let inheritanceChain:Type[] = [];
@@ -266,8 +268,7 @@ export class Memory{
         const instance = allocate();
 
         for(const field of type.fields){
-            console.log(`Initializing field '${field.name}' in type '${type.name}'`);
-            console.log(field);
+            Memory.log.writeStructured("Initializing field {@field} in type {@type}", field, type);
 
             const variable = Memory.initializeVariableWith(field);
             instance.fields.set(field.name, variable);

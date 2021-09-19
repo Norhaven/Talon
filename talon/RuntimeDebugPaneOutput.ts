@@ -9,6 +9,11 @@ export class RuntimeDebugPaneOutput implements IOutput{
         this.pane.innerHTML = "";
     }
 
+    writeError(error: any, line: string, ...parameters: any[]): void {
+        this.pane.innerHTML += line + "<br />";
+        this.pane.scrollTo(0, this.pane.scrollHeight);
+    }
+
     write(line: string): void {
 
         if (line.startsWith('.')){

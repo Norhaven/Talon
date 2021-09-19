@@ -23,6 +23,19 @@ export class LogOutput implements IOutput{
             .create();
     }
 
+    writeError(error: any, line: string, ...parameters: any[]): void {
+        if (!this.canWrite){
+            return;
+        }
+
+        try{        
+            this.logger.error(error, line, ...parameters);
+        } catch (ex){
+            console.error("Unable to log to Seq server, will stop trying now.", ex);
+            this.canWrite = false;
+        }
+    }
+
     write(line: string, ...parameters:any[]): void {
         if (!this.canWrite){
             return;
