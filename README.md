@@ -18,6 +18,8 @@ docker pull datalust/seq
 docker run --name seq -d --restart unless-stopped -e ACCEPT_EULA=Y -p 5341:80 datalust/seq:latest
 ```
 
+After that, you can open `http://localhost:5341/` in your browser to view your local Seq events.
+
 # Running
 
 Using VS Code, use the `Launch Chrome against localhost` run/debug option. This will build the project and open a browser window with the rudimentary IDE that you can use to play around with.
