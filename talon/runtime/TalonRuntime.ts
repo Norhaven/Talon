@@ -65,6 +65,9 @@ import { HandleMenuCommandHandler } from "./handlers/HandleMenuCommandHandler";
 import { IgnoreHandler } from "./handlers/IgnoreHandler";
 import { LoadStaticFieldHandler } from "./handlers/LoadStaticFieldHandler";
 import { AssignStaticFieldHandler } from "./handlers/AssignStaticFieldHandler";
+import { Stopwatch } from "../Stopwatch";
+import { ITimeOutput } from "../ITimeOutput";
+import { IPerformanceRuler } from "../IPerformanceRuler";
 
 export class TalonRuntime{
 
@@ -72,8 +75,10 @@ export class TalonRuntime{
     private thread?:Thread;
     private readonly handlers:Map<OpCode, OpCodeHandler>;
 
-    constructor(private readonly userOutput:IOutput, private readonly log:ILog){
+    constructor(private readonly userOutput:IOutput, private readonly log:ILog, private readonly timeOutput:ITimeOutput, private readonly ruler:IPerformanceRuler){
         
+        Stopwatch.initialize(timeOutput, ruler);
+
         const handlerInstances:OpCodeHandler[] = [
             new NoOpHandler(),
             new LoadStringHandler(),
@@ -161,22 +166,24 @@ export class TalonRuntime{
             return;
         }
 
-        const places = this.thread?.allTypes
-                        .filter(x => x.baseTypeName == Place.typeName)
-                        .map(x => <RuntimePlace>Memory.allocate(x));
+        Stopwatch.measure("start", () => {
+            const places = this.thread?.allTypes
+                            .filter(x => x.baseTypeName == Place.typeName)
+                            .map(x => <RuntimePlace>Memory.allocate(x));
 
-        const getPlayerStart = (place:RuntimePlace) => <RuntimeBoolean>(place.fields.get(Place.isPlayerStart)?.value);
-        const isPlayerStart = (place:RuntimePlace) => getPlayerStart(place)?.value === true;
+            const getPlayerStart = (place:RuntimePlace) => <RuntimeBoolean>(place.fields.get(Place.isPlayerStart)?.value);
+            const isPlayerStart = (place:RuntimePlace) => getPlayerStart(place)?.value === true;
 
-        const currentPlace = places?.find(isPlayerStart);
+            const currentPlace = places?.find(isPlayerStart);
 
-        this.thread!.currentPlace = currentPlace;
+            this.thread!.currentPlace = currentPlace;
 
-        const player = this.thread?.knownTypes.get(Player.typeName)!;
+            const player = this.thread?.knownTypes.get(Player.typeName)!;
 
-        this.thread!.currentPlayer = <RuntimePlayer>Memory.allocate(player);
+            this.thread!.currentPlayer = <RuntimePlayer>Memory.allocate(player);
 
-        this.runWith("");
+            return this.runWith("");
+        });
     }
 
     stop(){
@@ -213,7 +220,11 @@ export class TalonRuntime{
     }
 
     sendCommand(input:string){
-        this.runWith(input);
+        if (!this.state.is(RuntimeState.Started)){
+            return false;
+        }
+
+        return this.runWith(input);
     }
 
     private runWith(command:string){
@@ -242,19 +253,23 @@ export class TalonRuntime{
         }
 
         try{
-            for(let evaluationResult = this.evaluateCurrentInstruction();
-                evaluationResult === EvaluationResult.Continue || evaluationResult === EvaluationResult.ShutDown;
-                evaluationResult = this.evaluateCurrentInstruction()){
-                
-                if (evaluationResult === EvaluationResult.ShutDown){
-                    this.log.writeReadable("Shutting down runtime");
-                    this.log.writeStructured("Shutting down runtime");
-                    this.stop();
-                    return;
+            return Stopwatch.measure(`TalonRuntime.Command: ${command}`, () => {
+                for(let evaluationResult = this.evaluateCurrentInstruction();
+                    evaluationResult === EvaluationResult.Continue || evaluationResult === EvaluationResult.ShutDown;
+                    evaluationResult = this.evaluateCurrentInstruction()){
+                    
+                    if (evaluationResult === EvaluationResult.ShutDown){
+                        this.log.writeReadable("Shutting down runtime");
+                        this.log.writeStructured("Shutting down runtime");
+                        this.stop();
+                        return false;
+                    }
+
+                    this.thread?.moveNext();
                 }
 
-                this.thread?.moveNext();
-            }
+                return true;
+            });
         } catch(ex){
             if (ex instanceof RuntimeError){
                 this.log.writeFormatted(`Runtime Error: ${ex.message}`);
@@ -265,6 +280,8 @@ export class TalonRuntime{
                 this.log.writeStructuredError(ex, "Unhandled error");
             }          
         }
+
+        return true;
     }
 
     private evaluateCurrentInstruction(){
@@ -276,6 +293,8 @@ export class TalonRuntime{
             throw new RuntimeError(`Encountered unsupported OpCode '${instruction?.opCode}'`);
         }
         
-        return handler?.handle(this.thread!);
+        return Stopwatch.measure(`HandleInstruction.${instruction?.opCode}`, () => {
+            return handler?.handle(this.thread!);
+        });
     }
 }

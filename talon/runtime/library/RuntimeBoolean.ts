@@ -7,7 +7,7 @@ export class RuntimeBoolean extends RuntimeAny{
     parentTypeName = Any.typeName;
     typeName = BooleanType.typeName;
 
-    constructor(public value:boolean){
+    constructor(public value:boolean = false){
         super();
     }
 

@@ -83,7 +83,8 @@ export class TalonCompiler{
             Instruction.loadString(""),
             Instruction.print(),       
             Instruction.loadPlace(),
-            Instruction.instanceCall(WorldObject.describe),  
+            Instruction.instanceCall(WorldObject.describe),
+            Instruction.ignore(),  
             Instruction.loadBoolean(true),
             Instruction.assignStaticField("~globalProgramFields", GlobalFields.canRun),
             Instruction.loadStaticField("~globalProgramFields", GlobalFields.canRun),
@@ -100,10 +101,10 @@ export class TalonCompiler{
                 Instruction.setLocal(handledCommandLocal),
                 Instruction.loadLocal(handledCommandLocal),
                 Instruction.isTypeOf(Delegate.typeName),
-                ...Instruction.ifTrueThen(                
+                ...Instruction.ifTrueThen(    
                     Instruction.loadLocal(handledCommandLocal),
                     Instruction.invokeDelegate(),
-                    Instruction.goTo(13)
+                    Instruction.goTo(14)
                 ),
                 Instruction.loadLocal(handledCommandLocal),
                 Instruction.isTypeOf(List.typeName),
@@ -115,7 +116,7 @@ export class TalonCompiler{
                     ...Instruction.ifTrueThen(
                         Instruction.loadString("I don't know how to do that."),
                         Instruction.print(),
-                        Instruction.goTo(13)
+                        Instruction.goTo(14)
                     ),                
                     Instruction.loadLocal(handledCommandLocal),
                     ...Instruction.forEach(
@@ -123,7 +124,7 @@ export class TalonCompiler{
                         Instruction.ignore() // All delegates will be events, which return a boolean indicating aborted status, not used at this point.
                     )
                 ),
-                Instruction.goTo(13)
+                Instruction.goTo(14)
             ),
             Instruction.return()
         );

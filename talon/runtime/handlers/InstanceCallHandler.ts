@@ -9,6 +9,7 @@ import { MethodActivation } from "../MethodActivation";
 import { Type } from "../../common/Type";
 import { OpCode } from "../../common/OpCode";
 import { RuntimeError } from "../errors/RuntimeError";
+import { Stopwatch } from "../../Stopwatch";
 
 export class InstanceCallHandler extends OpCodeHandler{
     public readonly code: OpCode = OpCode.InstanceCall;
@@ -25,34 +26,36 @@ export class InstanceCallHandler extends OpCodeHandler{
             this.methodName = <string>thread.currentInstruction?.value!;
         }
 
-        try{
-            const instance = current.pop();
+        return Stopwatch.measure(`InstanceCall.${this.methodName}`, () => {
+            try{
+                const instance = current.pop();
 
-            const method = this.getMostDerivedMethodFrom(instance!, this.methodName);
+                const method = this.getMostDerivedMethodFrom(instance!, this.methodName!);
 
-            this.logInteraction(thread, `${instance?.typeName}::${this.methodName}(...${method.parameters.length})`);
-            
-            const parameterValues:Variable[] = [];
+                this.logInteraction(thread, `${instance?.typeName}::${this.methodName}(...${method.parameters.length})`);
+                
+                const parameterValues:Variable[] = [];
 
-            for(let i = 0; i < method!.parameters.length; i++){
-                const parameter = method!.parameters[i];
-                const instance = current.pop()!;
-                const variable = new Variable(parameter.name, parameter.type!, instance);
+                for(let i = 0; i < method!.parameters.length; i++){
+                    const parameter = method!.parameters[i];
+                    const instance = current.pop()!;
+                    const variable = new Variable(parameter.name, parameter.type!, instance);
 
-                parameterValues.push(variable);
+                    parameterValues.push(variable);
+                }
+                
+                // HACK: We shouldn't create our own type, we should inherently know what it is.
+
+                parameterValues.unshift(Variable.forThis(instance!));
+
+                method.actualParameters = parameterValues;
+
+                thread.activateMethod(method);
+            } finally {
+                this.methodName = undefined;
             }
-            
-            // HACK: We shouldn't create our own type, we should inherently know what it is.
 
-            parameterValues.unshift(Variable.forThis(instance!));
-
-            method.actualParameters = parameterValues;
-
-            thread.activateMethod(method);
-        } finally {
-            this.methodName = undefined;
-        }
-
-        return super.handle(thread);
+            return super.handle(thread);
+        });
     }
 }

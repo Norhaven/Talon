@@ -13,6 +13,8 @@ import { LogOutput } from "./LogOutput";
 import { ILog } from "./ILog";
 import { Log } from "./Log";
 import { ConsoleOutput } from "./ConsoleOutput";
+import { TimeCollector } from "./TimeCollector";
+import { PerformanceRuler } from "./PerformanceRuler";
 
 export class TalonIde{
 
@@ -95,7 +97,7 @@ export class TalonIde{
             }
         });
 
-        this.userCommandText.value = "look";
+        this.allowUserToSendCommands(false);
 
         this.loadLibrary();
 
@@ -113,16 +115,23 @@ export class TalonIde{
         this.log = new Log(this.runtimeLogOutputPane, this.logOutput, this.runtimeLogReadableOutputPane, new ConsoleOutput());
         
         this.compiler = new TalonCompiler(this.compilationOutputPane);
-        this.runtime = new TalonRuntime(this.runtimeOutputPane, this.log);
+        this.runtime = new TalonRuntime(this.runtimeOutputPane, this.log, new TimeCollector(this.log), new PerformanceRuler());
     }
 
     private sendUserCommand(){
         const command = this.userCommandText.value;
-        this.runtime.sendCommand(command);
+        
+        if (!this.runtime.sendCommand(command)){
+            this.allowUserToSendCommands(false);
+        }
 
         this.userCommandText.value = "";
     }
 
+    private allowUserToSendCommands(allow:boolean){
+        this.userCommandText.disabled = !allow;
+        this.sendUserCommandButton.disabled = !allow;
+    }
 
     private toggleLibraryView(){
         this.codePane.style.display = 'none';
@@ -165,6 +174,10 @@ export class TalonIde{
         if (this.runtime.loadFrom(this.compiledTypes)){
             this.runtime.start();
         }
+
+        this.userCommandText.value = "look";
+
+        this.allowUserToSendCommands(true);
     }
 
     private async openCodeFile(event:Event){

@@ -1,10 +1,11 @@
 var structuredLog = require('structured-log');
 var seqSink = require('structured-log-seq-sink');
 
+import { ISeqLog } from "./ISeqLog";
 import { IOutput } from "./runtime/IOutput";
 
 export class LogOutput implements IOutput{
-    private readonly logger:any;
+    private readonly logger:ISeqLog;
     private canWrite = true;
 
     get enabled(){

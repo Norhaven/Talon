@@ -69,8 +69,7 @@ export class GlobalTypeTransformer implements ITypeTransformer{
             this.createFieldIfNotExists(WorldObject.description, StringType.typeName, "", type);
             this.createFieldIfNotExists(WorldObject.contents, List.typeName, [], type);
 
-            this.createDescribeMethod(type);
-            this.createObserveMethod(type);
+            this.createDescribeMenuOptionMethod(type);
 
         } else if (this.inheritsFromType(type, context, WorldObject.typeName)){
             
@@ -91,6 +90,23 @@ export class GlobalTypeTransformer implements ITypeTransformer{
         } 
     }
         
+    private createDescribeMenuOptionMethod(type:Type){
+        const describe = new Method();
+        describe.name = Menu.describe;
+        describe.body.push(
+            Instruction.loadThis(),
+            Instruction.loadProperty(WorldObject.visible),
+            ...Instruction.ifTrueThen(
+                Instruction.loadThis(),
+                Instruction.loadProperty(WorldObject.description),
+                Instruction.print()
+            ),            
+            Instruction.return()
+        );
+
+        type.methods.push(describe);
+    }
+
     private createDescribeMenuMethod(type:Type){
         const describe = new Method();
         describe.name = Menu.describe;

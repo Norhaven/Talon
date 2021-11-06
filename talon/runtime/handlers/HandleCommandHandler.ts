@@ -37,6 +37,7 @@ import { List } from "../../library/List";
 import { RaiseEvent } from "./internal/RaiseEvent";
 import { Lookup } from "./internal/Lookup";
 import { GlobalEvents } from "../../library/GlobalEvents";
+import { Stopwatch } from "../../Stopwatch";
 
 export class HandleCommandHandler extends OpCodeHandler{
     public readonly code: OpCode = OpCode.HandleCommand;
@@ -82,44 +83,46 @@ export class HandleCommandHandler extends OpCodeHandler{
 
     handle(thread:Thread){
         
-        const command = thread.currentMethod.pop();
+        return Stopwatch.measure("HandleCommand", () => {
+            const command = thread.currentMethod.pop();
 
-        if (!(command instanceof RuntimeCommand)){
-            throw new RuntimeError(`Unable to handle a non-command, found '${command}'`);
-        }
+            if (!(command instanceof RuntimeCommand)){
+                throw new RuntimeError(`Unable to handle a non-command, found '${command}'`);
+            }
 
-        const action = command.action!.value;
-        const actorName = command.actorName?.value;
-        const targetName = command.targetName?.value;
+            const action = command.action!.value;
+            const actorName = command.actorName?.value;
+            const targetName = command.targetName?.value;
 
-        this.logInteraction(thread, `'${action} ${actorName} ${targetName}'`);
+            this.logInteraction(thread, `'${action} ${actorName} ${targetName}'`);
 
-        const understanding = this.tryGetUnderstandingFromAction(thread, action);
+            const understanding = this.tryGetUnderstandingFromAction(thread, action);
 
-        if (!understanding){
-            thread.currentMethod.push(Memory.allocateList([]));
-            thread.logReadable(this.endOfInteraction);
-            return super.handle(thread);
-        }
-
-        const meaning = this.getMeaningFromUnderstanding(understanding);
-
-        if (meaning === Meaning.Pressing){
-            return this.handleKeyPress(thread, understanding);
-        } else {
-            const actualActor = this.inferTargetFrom(thread, actorName, understanding, meaning);
-            const actualTarget = this.inferTargetFrom(thread, targetName, understanding, meaning);
-            
-            if (!actualTarget){                
-                this.output.write("I don't know what you're referring to.");
-                thread.logReadable(this.endOfInteraction);
+            if (!understanding){
                 thread.currentMethod.push(Memory.allocateList([]));
-
+                thread.logReadable(this.endOfInteraction);
                 return super.handle(thread);
             }
 
-            return this.handleCommand(thread, meaning, actualActor, actualTarget);
-        }
+            const meaning = this.getMeaningFromUnderstanding(understanding);
+
+            if (meaning === Meaning.Pressing){
+                return this.handleKeyPress(thread, understanding);
+            } else {
+                const actualActor = this.inferTargetFrom(thread, actorName, understanding, meaning);
+                const actualTarget = this.inferTargetFrom(thread, targetName, understanding, meaning);
+                
+                if (!actualTarget){                
+                    this.output.write("I don't know what you're referring to.");
+                    thread.logReadable(this.endOfInteraction);
+                    thread.currentMethod.push(Memory.allocateList([]));
+
+                    return super.handle(thread);
+                }
+
+                return this.handleCommand(thread, meaning, actualActor, actualTarget);
+            }
+        });
     }
 
     private createDescribeDelegate(thread:Thread, target:RuntimeWorldObject){

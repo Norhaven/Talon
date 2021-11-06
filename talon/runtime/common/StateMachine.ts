@@ -20,6 +20,10 @@ export class StateMachine<T>{
         return current;
     }
 
+    is(state:T){
+        return state === this.currentState.state;
+    }
+
     initializeTo(state:T){        
         this.currentState = this.getState(state);
     }

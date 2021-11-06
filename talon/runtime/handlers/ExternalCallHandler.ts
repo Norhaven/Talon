@@ -2,6 +2,7 @@ import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
 import { RuntimeAny } from "../library/RuntimeAny";
 import { OpCode } from "../../common/OpCode";
+import { Stopwatch } from "../../Stopwatch";
 
 interface IIndexable{
     [name:string]:(...args:RuntimeAny[])=>RuntimeAny;
@@ -13,26 +14,29 @@ export class ExternalCallHandler extends OpCodeHandler{
     handle(thread:Thread){
 
         const methodName = <string>thread.currentInstruction?.value!;
-        const instance = thread.currentMethod.pop();
         
-        const method = this.locateFunction(instance!, <string>methodName);
+        return Stopwatch.measure(`ExternalCall.${methodName}`, () => {
+            const instance = thread.currentMethod.pop();
+            
+            const method = this.locateFunction(instance!, <string>methodName);
 
-        this.logInteraction(thread, `${instance?.typeName}::${methodName}(...${method.length})`);
-        thread.logStructured("External method {name} invoked: {@method}", methodName, method);
+            this.logInteraction(thread, `${instance?.typeName}::${methodName}(...${method.length})`);
+            thread.logStructured("External method {name} invoked: {@method}", methodName, method);
 
-        const args:RuntimeAny[] = [];
+            const args:RuntimeAny[] = [];
 
-        for(let i = 0; i < method.length; i++){
-            args.push(thread.currentMethod.pop()!);
-        }
+            for(let i = 0; i < method.length; i++){
+                args.push(thread.currentMethod.pop()!);
+            }
 
-        const result = method.call(instance, ...args);
+            const result = method.call(instance, ...args);
 
-        if (result){
-            thread.currentMethod.push(result);
-        }
+            if (result){
+                thread.currentMethod.push(result);
+            }
 
-        return super.handle(thread);
+            return super.handle(thread);
+        });
     }
 
     private locateFunction(instance:Object, methodName:string){

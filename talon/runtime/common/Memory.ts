@@ -37,6 +37,7 @@ import { RuntimeMenu } from "../library/RuntimeMenu";
 import { MenuOption } from "../../library/MenuOption";
 import { RuntimeMenuOption } from "../library/RuntimeMenuOption";
 import { ILog } from "../../ILog";
+import { Stopwatch } from "../../Stopwatch";
 
 export class Memory{
     private static typesByName = new Map<string, Type>();
@@ -142,15 +143,18 @@ export class Memory{
     static allocate(type:Type):RuntimeAny{
         Memory.log.writeStructured("Allocating type {@type}", type);
 
-        const instance = Memory.constructInstanceFrom(type);
+        return Stopwatch.measure(`Memory.Allocate.${type.name}`, () => {
 
-        const instancePool = Memory.heap.get(type.name) || [];
+            const instance = Memory.constructInstanceFrom(type);
 
-        instancePool.push(instance);
+            const instancePool = Memory.heap.get(type.name) || [];
 
-        Memory.heap.set(type.name, instancePool);
+            instancePool.push(instance);
 
-        return instance;
+            Memory.heap.set(type.name, instancePool);
+
+            return instance;
+        });
     }
 
     private static initializeVariableWith(field:Field){
@@ -213,72 +217,76 @@ export class Memory{
 
     private static constructInstanceFrom(type:Type){
         
-        Memory.log.writeStructured("Constructing type {@type}", type);
+        return Stopwatch.measure(`Memory.ConstructInstance.${type.name}`, () => {
+            Memory.log.writeStructured("Constructing type {@type}", type);
 
-        let seenTypes = new Set<string>();
-        let inheritanceChain:Type[] = [];
+            let seenTypes = new Set<string>();
+            let inheritanceChain:Type[] = [];
 
-        for(let current:Type|undefined = type; 
-            current; 
-            current = Memory.typesByName.get(current.baseTypeName)){
-                
-            if (seenTypes.has(current.name)){
-                throw new RuntimeError("You can't have cycles in a type hierarchy");
+            for(let current:Type|undefined = type; 
+                current; 
+                current = Memory.typesByName.get(current.baseTypeName)){
+                    
+                if (seenTypes.has(current.name)){
+                    throw new RuntimeError("You can't have cycles in a type hierarchy");
+                }
+
+                seenTypes.add(current.name);
+                inheritanceChain.push(current);
             }
 
-            seenTypes.add(current.name);
-            inheritanceChain.push(current);
-        }
+            const systemTypeRoot = inheritanceChain[inheritanceChain.length - 1];
+            
+            if (!systemTypeRoot.isSystemType){        
+                throw new RuntimeError("Type must ultimately inherit from a system type");
+            }
 
-        const systemTypeRoot = inheritanceChain[inheritanceChain.length - 1];
-        
-        if (!systemTypeRoot.isSystemType){        
-            throw new RuntimeError("Type must ultimately inherit from a system type");
-        }
+            const instanceChain:RuntimeAny[] = [];
 
-        const instanceChain:RuntimeAny[] = [];
+            for(const type of inheritanceChain){
+                const instance = Memory.constructInstanceFromStandaloneType(type);
+                instanceChain.push(instance);
+            }
 
-        for(const type of inheritanceChain){
-            const instance = Memory.constructInstanceFromStandaloneType(type);
-            instanceChain.push(instance);
-        }
+            for(let i = 0; i < instanceChain.length - 1; i++){
+                const currentInstance = instanceChain[i];
+                currentInstance.base = instanceChain[i + 1];
+            }
 
-        for(let i = 0; i < instanceChain.length - 1; i++){
-            const currentInstance = instanceChain[i];
-            currentInstance.base = instanceChain[i + 1];
-        }
-
-        return instanceChain[0];
+            return instanceChain[0];
+        });
     }
 
     private static constructInstanceFromStandaloneType(type:Type){
-        const allocate = () => {
-            if (type.isSystemType){
-                return Memory.allocateSystemTypeByName(type.name);
+        return Stopwatch.measure(`Memory.ConstructStandalone.${type.name}`, () => {
+            const allocate = () => {
+                if (type.isSystemType){
+                    return Memory.allocateSystemTypeByName(type.name);
+                }
+
+                const any = new RuntimeWorldObject();
+
+                any.typeName = type.name;
+                any.parentTypeName = type.baseTypeName;
+
+                return any;
             }
 
-            const any = new RuntimeWorldObject();
+            const instance = allocate();
 
-            any.typeName = type.name;
-            any.parentTypeName = type.baseTypeName;
+            for(const field of type.fields){
+                Memory.log.writeStructured("Initializing field {@field} in type {@type}", field, type);
 
-            return any;
-        }
+                const variable = Memory.initializeVariableWith(field);
+                instance.fields.set(field.name, variable);
+            }
 
-        const instance = allocate();
+            for(const method of type.methods){
+                instance.methods.set(method.name, method);
+            }
 
-        for(const field of type.fields){
-            Memory.log.writeStructured("Initializing field {@field} in type {@type}", field, type);
-
-            const variable = Memory.initializeVariableWith(field);
-            instance.fields.set(field.name, variable);
-        }
-
-        for(const method of type.methods){
-            instance.methods.set(method.name, method);
-        }
-
-        return instance;
+            return instance;
+        });
     }
 
     private static allocateSystemTypeByName(typeName:string){

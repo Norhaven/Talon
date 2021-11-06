@@ -10,19 +10,14 @@ export class TypeOfHandler extends OpCodeHandler{
         const typeName = <string>thread.currentInstruction?.value!;
 
         this.logInteraction(thread, typeName);
+        
+        const instance = thread.currentMethod.pop();
 
-        if (thread.currentMethod.stackSize() == 0){
-            const value = Memory.allocateBoolean(false);
-            thread.currentMethod.push(value);
-        } else {
-            const instance = thread.currentMethod.pop();
+        const isType = instance?.typeName === typeName;
+        const result = Memory.allocateBoolean(isType);
 
-            const isType = instance?.typeName == typeName;
-            const result = Memory.allocateBoolean(isType);
-
-            thread.currentMethod.push(result);
-        }
-
+        thread.currentMethod.push(result);
+        
         return super.handle(thread);
     }
 }
