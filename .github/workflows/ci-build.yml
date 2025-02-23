@@ -28,6 +28,8 @@ jobs:
       - name: Build
         run: |
           npm --version
+          node --version
+          npm install -g npm@latest 
           npm install
           tsc -p tsconfig.json
           npx webpack
