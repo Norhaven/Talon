@@ -29,8 +29,8 @@ jobs:
       - uses: actions/setup-node@v4.2.0
         with: 
           node-version: 22.14.0
-      - run: sudo npm install -g npm@11.1.0
       - run: |
+          sudo npm install -g npm@11.1.0
           npm --version
           node --version
           npm install
