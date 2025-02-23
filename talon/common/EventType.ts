@@ -3,6 +3,7 @@ export enum EventType{
     PlayerEntersPlace = "playerEntersPlace",
     PlayerExitsPlace = "playerExitsPlace",
     ItIsTaken = "itIsTaken",
+    ItIsGiven = "itIsGiven",
     ItIsDropped = "itIsDropped",
     ItIsUsed = "itIsUsed",
     ItIsOpened = "itIsOpened",

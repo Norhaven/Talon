@@ -8,7 +8,7 @@ export class UnderstandingDeclarationVisitor extends Visitor{
     visit(context: ParseContext): Expression {
         context.expect(Keywords.understand);
         
-        const value = context.expectString();
+        const values = context.expectOneOrMoreStrings();
 
         context.expect(Keywords.as);
 
@@ -16,6 +16,7 @@ export class UnderstandingDeclarationVisitor extends Visitor{
                                             Keywords.moving,
                                             Keywords.directions,
                                             Keywords.taking,
+                                            Keywords.giving,
                                             Keywords.inventory,
                                             Keywords.dropping,
                                             Keywords.using,
@@ -27,6 +28,6 @@ export class UnderstandingDeclarationVisitor extends Visitor{
 
         context.expectTerminator();
 
-        return new UnderstandingDeclarationExpression(value.value, meaning.value);        
+        return new UnderstandingDeclarationExpression(values.map(x => x.value), meaning.value);        
     }
 }

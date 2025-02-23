@@ -104,6 +104,19 @@ export class FieldDeclarationVisitor extends Visitor{
                 field.name = WorldObject.aliases;
                 field.typeName = List.typeName;
                 field.initialValue = aliases; 
+            } else if (context.isTypeOf(TokenType.String)) {
+                const states = [context.expectString().value];
+
+                while (context.isTypeOf(TokenType.ListSeparator)){
+                    context.consumeCurrentToken();
+
+                    const state = context.expectString();
+                    states.push(state.value);
+                }
+
+                field.name = WorldObject.state;
+                field.typeName = List.typeName;
+                field.initialValue = states;
             } else {
                 throw new CompilationError("Unable to determine property field");
             }
@@ -138,11 +151,23 @@ export class FieldDeclarationVisitor extends Visitor{
             
             context.expect(Keywords.contains);
 
+            const tryReadUpperBound = () => {
+                if (!context.is(Keywords.to)){
+                    return undefined;
+                }
+
+                context.expect(Keywords.to);
+                const token = context.expectNumber();
+
+                return Number(token.value)
+            };
+
             const expectPair = () => {
                 const count = context.expectNumber();
+                const upperBound = tryReadUpperBound();                
                 const name = context.expectIdentifier();
 
-                return [Number(count.value), name.value];
+                return [Number(count.value), upperBound, name.value];
             };
 
             const items = [expectPair()];
@@ -170,11 +195,11 @@ export class FieldDeclarationVisitor extends Visitor{
                 context.expect(Keywords.by);
                 context.expect(Keywords.going);
 
-                const direction = context.expectString();
+                const directions = context.expectOneOrMoreStrings();
 
-                field.name = `~${direction.value}`;
-                field.typeName = StringType.typeName;
-                field.initialValue = `${placeName.value}`;
+                field.name = WorldObject.directions;
+                field.typeName = List.typeName;
+                field.initialValue = directions.map(x => [x.value, placeName.value]);
             }
         } else {
             throw new CompilationError("Unable to determine field");

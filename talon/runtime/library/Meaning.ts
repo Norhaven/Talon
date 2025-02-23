@@ -2,6 +2,7 @@ export enum Meaning{
     Describing = "describing",
     Observing = "observing",
     Taking = "taking",
+    Giving = "giving",
     Moving = "moving",
     Direction = "direction",
     Inventory = "inventory",

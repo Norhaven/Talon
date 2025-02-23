@@ -1,0 +1,121 @@
+say "This is the start.".
+
+understand "look" as describing. 
+understand "north", "n" as directions. 
+understand "south" as directions.
+understand "go" as moving. 
+understand "take" as taking. 
+understand "give" as giving.
+understand "inv", "i" as inventory. 
+understand "drop" as dropping. 
+understand "use" as using.
+understand "open" as opening.
+understand "close" as closing.
+understand "combine" as combining.
+understand "locked" as stateful.
+understand "Q" as options.
+
+when the player presses "Q":
+    show MainMenu;
+and then stop.
+
+an Inn is a kind of place. 
+it is where the player starts. 
+it is described as "The inn is a cozy place, with a crackling fire on the hearth. An open door to the north leads outside." 
+    and if it contains 1 Key then "There's a key hanging on the wall.";
+    or else "There's an empty spot where a key once hung.";
+and then continue.
+it contains 1 Fireplace, 1 Chest, 1 Key, 1 Crystal, 1 Bartender.
+it can reach the Walkway by going "north", "n". 
+it has a value called hasWaved that is false. 
+when the player exits: 
+    if hasWaved is false then 
+        say "The bartender waves goodbye."; 
+    or else 
+        say "The bartender cleans the bar."; 
+    and then continue;
+    set hasWaved to true; 
+and then stop. 
+
+a Crystal is a kind of decoration.
+it is described as "The crystal glows with a soft inner light. It has a small slot for a coin.".
+it is observed as "A small crystal rests on the bar.".
+when it is combined with a Coin:
+    say "The coin fits neatly into the crystal.";
+    replace it, Coin with CoinCrystal;
+and then stop.
+
+a Fireplace is a kind of decoration. 
+it is described as "The fireplace crackles. It's full of fire.".
+when it is used with a Coin:
+    say "The firelight flickers on the surface of the coin.";
+and then stop.
+
+a Walkway is a kind of place. 
+it is described as "The walkway in front of the inn is empty, just a cobblestone entrance. The inn is to the south.". 
+it can reach the Inn by going "south". 
+when the player enters:
+    say "You walk onto the cobblestones. They're nice, if you like that sort of thing."; 
+    say "There's nobody around. The wind whistles a little bit."; 
+and then stop. 
+
+say "This is the middle.".
+
+a Coin is a kind of item. 
+it is described as "It's a small coin.".
+it is observed as "You see a coin.".
+when it is taken:
+    say "You got a coin!";
+and then stop.
+when it is dropped:
+    say "You put the coin down!";
+and then stop.
+when it is combined:
+    say "You combined the coin!";
+and then stop.
+when it is used:
+    say "You used the coin somehow!";
+and then stop.
+
+a CoinCrystal is a kind of decoration.
+it is described as "It's a crystal with a coin embedded in it.".
+it is observed as "A crystal with a coin in it lays on the bar.".
+
+a Bartender is a kind of creature.
+it is described as "He's smiling and whistling a tune.".
+it is observed as "A portly gentleman is behind the bar. He looks up as you come in.".
+it is also known as a "man", "gentleman".
+when it is given a Coin:
+    say "The bartender takes the coin and thanks you!";
+and then stop.
+
+a MainMenu is a kind of menu.
+it is described as "Main Menu".
+it contains options BackOption, QuitOption.
+it has a value called numberOfTimesShown that is 0.
+when it is described:
+    say "";
+    if numberOfTimesShown is 0 then
+        say "Please select an option by its number.";
+    or else
+        say "Please select an option.";
+    and then continue;
+    add 1 to numberOfTimesShown;
+and then stop.
+when option QuitOption is selected:
+    say "Goodbye.";
+    hide this;
+    quit;
+and then stop.
+when option BackOption is selected:
+    say "Back to the game.";
+    hide this;
+and then stop.
+
+a BackOption is a kind of option.
+it is described as "1) Back".
+
+a QuitOption is a kind of option.
+it is described as "2) Quit".
+
+say "This is the end.".

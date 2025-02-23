@@ -31,18 +31,29 @@
             <div id="test-container">
                 <div class="dev-toolbar">
                     <button id="start-new-game">Start New Game</button>
-                    <button id="toggle-runtime-logs">Change View</button>
                 </div>
                 
                 <div id="runtime-pane">
                     <div id="game-pane"></div>
-                    <div id="log-pane"></div>
-                    <div id="log-pane-readable"></div>
                 </div>
                 <div id="command-pane">
                     <input id="user-command-text" type="text"/>
                     <button id="send-user-command">Send</button>
                 </div>               
+            </div>
+            <div id="test-container">
+                <div class="dev-toolbar">
+                    <button id="toggle-runtime-logs">Change View</button>
+                    <span id="log-settings">
+                        <input id="disable-logs" type="checkbox"/>
+                        <label id="disable-logs-label" for="disable-logs">Disable Logs</label>
+                    </span>
+                </div>
+                
+                <div id="runtime-pane">
+                    <div id="log-pane"></div>
+                    <div id="log-pane-readable"></div>
+                </div>    
             </div>
         </div>
     </body>

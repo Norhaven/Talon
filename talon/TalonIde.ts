@@ -15,6 +15,7 @@ import { Log } from "./Log";
 import { ConsoleOutput } from "./ConsoleOutput";
 import { TimeCollector } from "./TimeCollector";
 import { PerformanceRuler } from "./PerformanceRuler";
+import { getExampleLibraryCode, getExampleStoryCode } from "./TalonExamples";
 
 export class TalonIde{
 
@@ -38,6 +39,7 @@ export class TalonIde{
     private readonly caretPosition:HTMLDivElement;
     private readonly showLibrary:HTMLButtonElement;
     private readonly showCodePane:HTMLButtonElement;
+    private readonly disableLogsOption:HTMLInputElement;
 
     private readonly compilationOutputPane:DefaultPaneOutput;
     private readonly runtimeOutputPane:DefaultPaneOutput;
@@ -81,6 +83,7 @@ export class TalonIde{
         this.caretPosition = TalonIde.getById<HTMLDivElement>("caret-position");
         this.showLibrary = TalonIde.getById<HTMLButtonElement>("show-library");
         this.showCodePane = TalonIde.getById<HTMLButtonElement>("show-code-pane");
+        this.disableLogsOption = TalonIde.getById<HTMLInputElement>("disable-logs");
         
         this.saveButton.addEventListener('click', async e => await this.saveCodeFile(this.codePane.innerText));
         this.openButton.addEventListener('click', async e => await this.openCodeFile(e));
@@ -103,8 +106,8 @@ export class TalonIde{
 
         this.compilationOutputPane = new DefaultPaneOutput(this.compilationOutput);
         this.runtimeOutputPane = new DefaultPaneOutput(this.gamePane);
-        this.runtimeLogOutputPane = new RuntimeDebugPaneOutput(this.gameLogOutput);
-        this.runtimeLogReadableOutputPane = new DefaultPaneOutput(this.gameLogReadableOutput);
+        this.runtimeLogOutputPane = new RuntimeDebugPaneOutput(this.gameLogOutput, this.disableLogsOption);
+        this.runtimeLogReadableOutputPane = new DefaultPaneOutput(this.gameLogReadableOutput, this.disableLogsOption);
 
         this.codePaneAnalyzer = new CodePaneAnalyzer(this.codePane);
         this.analysisCoordinator = new AnalysisCoordinator(this.codePaneAnalyzer, this.caretPosition);
@@ -219,6 +222,8 @@ export class TalonIde{
     }
 
     private loadLibrary(){
+        this.libraryPane.innerText = getExampleLibraryCode();
+        /*
         this.libraryPane.innerText =
             "a Container is a kind of decoration.\n" +
             "it is described as \"It's a container.\".\n" +
@@ -265,18 +270,21 @@ export class TalonIde{
 
             "a Key is a kind of item.\n" +
             "it is described as \"The key is small but sturdy.\".\n\n";
+        */
     }
 
     private loadExample(){
-        this.codePane.innerText = 
+        this.codePane.innerText = getExampleStoryCode();
+        /*
             "say \"This is the start.\".\n\n" +
             
             "understand \"look\" as describing. \n" +
-            "understand \"north\" as directions. \n" +
+            "understand \"north\", \"n\" as directions. \n" +
             "understand \"south\" as directions.\n" +
             "understand \"go\" as moving. \n" +
             "understand \"take\" as taking. \n" +
-            "understand \"inv\" as inventory. \n" +
+            "understand \"give\" as giving.\n" +
+            "understand \"inv\", \"i\" as inventory. \n" +
             "understand \"drop\" as dropping. \n" +
             "understand \"use\" as using.\n" +
             "understand \"open\" as opening.\n" +
@@ -292,9 +300,11 @@ export class TalonIde{
             "an Inn is a kind of place. \n" +
             "it is where the player starts. \n" +
             "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. An open door to the north leads outside.\" \n" +
-            "    and if it contains 1 Key then \"There's a key hanging on the wall.\"; or else \"There's an empy spot where a key once hung.\"; and then continue.\n" +
+            "    and if it contains 1 Key then \"There's a key hanging on the wall.\";\n" +
+            "    or else \"There's an empty spot where a key once hung.\";\n" +
+            "and then continue.\n" +
             "it contains 1 Fireplace, 1 Chest, 1 Key, 1 Crystal, 1 Bartender.\n" + 
-            "it can reach the Walkway by going \"north\". \n" +
+            "it can reach the Walkway by going \"north\", \"n\". \n" +
             "it has a value called hasWaved that is false. \n" +
             "when the player exits: \n" +
             "    if hasWaved is false then \n" +
@@ -352,12 +362,24 @@ export class TalonIde{
             "a Bartender is a kind of creature.\n" +
             "it is described as \"He's smiling and whistling a tune.\".\n" +
             "it is observed as \"A portly gentleman is behind the bar. He looks up as you come in.\".\n" +
-            "it is also known as a \"man\", \"gentleman\".\n\n" +
+            "it is also known as a \"man\", \"gentleman\".\n" +
+            "when it is given a Coin:\n" +
+            "    say \"The bartender takes the coin and thanks you!\";\n" +
+            "and then stop.\n\n" +
 
             "a MainMenu is a kind of menu.\n" +
             "it is described as \"Main Menu\".\n" +
             "it contains options BackOption, QuitOption.\n" +
             "it has a value called numberOfTimesShown that is 0.\n" +
+            "when it is described:\n" +
+            "    say \"\";\n" +
+            "    if numberOfTimesShown is 0 then\n"  +
+            "        say \"Please select an option by its number.\";\n" +
+            "    or else\n" +
+            "        say \"Please select an option.\";\n" +
+            "    and then continue;\n" +
+            "    add 1 to numberOfTimesShown;\n" +
+            "and then stop.\n" +
             "when option QuitOption is selected:\n" +
             "    say \"Goodbye.\";\n" +
             "    hide this;\n" +
@@ -367,13 +389,14 @@ export class TalonIde{
             "    say \"Back to the game.\";\n" +
             "    hide this;\n" +
             "and then stop.\n\n" +
-
-            "a QuitOption is a kind of option.\n" +
-            "it is described as \"Quit\".\n\n" +
                         
             "a BackOption is a kind of option.\n" +
-            "it is described as \"Back\".\n\n" +
+            "it is described as \"1) Back\".\n\n" +
+            
+            "a QuitOption is a kind of option.\n" +
+            "it is described as \"2) Quit\".\n\n" +
 
             "say \"This is the end.\".\n";
+            */
     }
 }

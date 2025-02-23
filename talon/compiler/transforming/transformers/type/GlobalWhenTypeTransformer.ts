@@ -30,7 +30,6 @@ export class GlobalWhenTypeTransformer implements ITypeTransformer{
             const method = EventTransformer.createEventFor(<WhenDeclarationExpression>event, context);
 
             type?.methods.push(method);
-        }
-        
+        }        
     }
 }

@@ -1,27 +1,15 @@
-#ide, .dev-toolbar, .dev-footer, #command-pane, #runtime-pane {
-  display: -webkit-box;
-  display: -ms-flexbox;
+#runtime-pane, #command-pane, .dev-footer, .dev-toolbar, #ide {
   display: flex;
-  -webkit-box-orient: horizontal;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: row;
-          flex-direction: row;
-  -webkit-box-pack: center;
-      -ms-flex-pack: center;
-          justify-content: center;
+  flex-direction: row;
+  justify-content: center;
 }
 
-#dev-views-container, #dev-container, #test-container {
-  display: -webkit-box;
-  display: -ms-flexbox;
+#test-container, #dev-container, #dev-views-container {
   display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
+  flex-direction: column;
 }
 
-#library-pane, .code-pane, #game-pane, #compilation-output, #log-pane, #log-pane-readable {
+#log-pane-readable, #log-pane, #compilation-output, #game-pane, .code-pane, #library-pane {
   border: 2px solid gray;
   padding: 10px;
   background-color: #ffffff;
@@ -35,13 +23,8 @@
 }
 
 .dev-footer {
-  -webkit-box-orient: horizontal;
-  -webkit-box-direction: reverse;
-      -ms-flex-direction: row-reverse;
-          flex-direction: row-reverse;
-  -webkit-box-pack: end;
-      -ms-flex-pack: end;
-          justify-content: end;
+  flex-direction: row-reverse;
+  justify-content: end;
 }
 
 #library-pane {
@@ -54,7 +37,7 @@
 }
 
 #game-pane {
-  background-color: #ebebeb;
+  background-color: rgb(235, 235, 235);
 }
 
 #compilation-output {
@@ -85,4 +68,11 @@ button {
   margin: 15px;
   cursor: pointer;
 }
-/*# sourceMappingURL=main.css.map */
+
+#log-settings {
+  height: 40px;
+  font-size: large;
+  vertical-align: middle;
+  margin: 15px;
+  cursor: pointer;
+}/*# sourceMappingURL=main.css.map */

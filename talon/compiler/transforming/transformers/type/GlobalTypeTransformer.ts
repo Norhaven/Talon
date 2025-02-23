@@ -3,7 +3,7 @@ import { Field } from "../../../../common/Field";
 import { Instruction } from "../../../../common/Instruction";
 import { Method } from "../../../../common/Method";
 import { Parameter } from "../../../../common/Parameter";
-import { States } from "../../../../common/States";
+import { State } from "../../../../common/State";
 import { Type } from "../../../../common/Type";
 import { BooleanType } from "../../../../library/BooleanType";
 import { Convert } from "../../../../library/Convert";
@@ -39,6 +39,16 @@ import { EventTransformer } from "../events/EventTransformer";
 import { ExpressionTransformer } from "../expressions/ExpressionTransformer";
 
 export class GlobalTypeTransformer implements ITypeTransformer{
+    private readonly exclusiveStates = [[State.opened, State.closed]];
+    private readonly knownExclusiveStatesByName:Map<string, string> = new Map<string, string>();
+
+    constructor(){
+        for(const statePair of this.exclusiveStates){
+            this.knownExclusiveStatesByName.set(statePair[0], statePair[1]);
+            this.knownExclusiveStatesByName.set(statePair[1], statePair[0]);
+        }
+    }
+
     transform(expression: Expression, context: TransformerContext): void {
         if (!(expression instanceof TypeDeclarationExpression)){
             return;
@@ -74,9 +84,9 @@ export class GlobalTypeTransformer implements ITypeTransformer{
         } else if (this.inheritsFromType(type, context, WorldObject.typeName)){
             
             const isPlace = this.inheritsFromType(type, context, Place.typeName);
-            const defaultState = isPlace ? States.opened : States.closed;
+            const defaultState = isPlace ? State.opened : State.closed;
 
-            this.createFieldIfNotExists(WorldObject.state, List.typeName, [defaultState], type);
+            this.createFieldIfNotExistsOrAppend(WorldObject.state, List.typeName, [defaultState], type, this.knownExclusiveStatesByName);
             this.createFieldIfNotExists(WorldObject.visible, BooleanType.typeName, true, type);
             this.createFieldIfNotExists(WorldObject.contents, List.typeName, [], type);
             this.createFieldIfNotExists(WorldObject.observation, StringType.typeName, "", type);
@@ -121,7 +131,6 @@ export class GlobalTypeTransformer implements ITypeTransformer{
                 Instruction.loadField(WorldObject.contents),
                 ...Instruction.forEach(
                     Instruction.instanceCall(MenuOption.describe)
-                    // TODO: Automatically print/handle option numbers based on option event handlers.
                 ),
             ),            
             Instruction.return()
@@ -142,6 +151,10 @@ export class GlobalTypeTransformer implements ITypeTransformer{
             ...Instruction.ifTrueThen(
                 Instruction.loadThis(),
                 Instruction.instanceCall(WorldObject.describe),
+                Instruction.loadThis(),
+                Instruction.raiseEvent(EventType.ItIsDescribed),
+                ...Instruction.raiseAllEvents(),
+                Instruction.ignore(),
                 Instruction.readInput(),
                 Instruction.parseCommand(),
                 Instruction.loadThis(),
@@ -180,7 +193,7 @@ export class GlobalTypeTransformer implements ITypeTransformer{
         show.name = Menu.show;        
         show.parameters = [];
         show.body.push(
-            Instruction.newInstance(type.name),
+            Instruction.loadInstance(type.name),
             Instruction.setLocal(menuInstance),
             Instruction.loadBoolean(true),
             Instruction.loadLocal(menuInstance),
@@ -243,7 +256,7 @@ export class GlobalTypeTransformer implements ITypeTransformer{
             Instruction.loadProperty(WorldObject.visible),
             ...Instruction.ifTrueThen(
                                 
-                ...Instruction.containsTextValue(States.opened, WorldObject.state),
+                ...Instruction.containsTextValue(State.opened, WorldObject.state),
                 ...Instruction.ifTrueThen(
                     Instruction.loadThis(),
                     Instruction.loadProperty(WorldObject.observation),
@@ -267,18 +280,63 @@ export class GlobalTypeTransformer implements ITypeTransformer{
         type.methods.push(observe);
     }
 
-    private createFieldIfNotExists(name:string, typeName:string, defaultValue:Object, type:Type){
+    private isFieldPresent(name:string, type:Type){
+        return type.fields.some(x => x.name === name);
+    }
 
-        if (type.fields.some(x => x.name === name)){
+    private createFieldIfNotExistsOrAppend(name:string, typeName:string, defaultValues:Object[], type:Type, exclusiveValuesByName:Map<string, Object>){
+        if (this.createFieldIfNotExists(name, typeName, defaultValues, type)){
             return;
         }
 
-        const state = new Field();
-        state.name = name;
-        state.typeName = typeName;
-        state.defaultValue = defaultValue;
+        const field = type.fields.find(x => x.name == name);
+
+        if (!field){
+            throw new CompilationError(`Failed to find field '${name}' in type '${typeName}' but field should have been created`);
+        }
+
+        const existingValues = new Set<Object>(<Object[]>field?.defaultValue);
+                
+        for(const value of defaultValues){            
+            if (exclusiveValuesByName){
+                const oppositeValue = exclusiveValuesByName.get(value.toString());
+                
+                if (oppositeValue){
+                    if (existingValues.has(oppositeValue)){
+                        continue;
+                    }
+                }
+            }
+
+            existingValues.add(value);            
+        }
+
+        if (exclusiveValuesByName){
+            for(const pair of exclusiveValuesByName){
+                if (existingValues.has(pair[0]) && existingValues.has(pair[1])){
+                    existingValues.delete(pair[1]);
+                    throw new CompilationError(`Unable to assign field value to type '${typeName}' due to mutually exclusive values '${pair}'`);
+                }
+            }
+        }
+
+        field.defaultValue = Array.from(existingValues);
+    }
+
+    private createFieldIfNotExists(name:string, typeName:string, defaultValue:Object, type:Type){
+
+        if (this.isFieldPresent(name, type)){
+            return false;
+        }
+
+        const field = new Field();
+        field.name = name;
+        field.typeName = typeName;
+        field.defaultValue = defaultValue;
         
-        type.fields.push(state);
+        type.fields.push(field);
+
+        return true;
     }
 
     private inheritsFromType(type:Type, context:TransformerContext, typeName:string){

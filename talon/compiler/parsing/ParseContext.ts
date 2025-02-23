@@ -90,6 +90,18 @@ export class ParseContext{
         return new Token(token.line, token.column, token.value.substring(1, token.value.length - 1));
     }
 
+    expectOneOrMoreStrings(){
+        const stringTokens = [this.expectString()];
+
+        while(this.isTypeOf(TokenType.ListSeparator)){
+            this.consumeCurrentToken();
+
+            stringTokens.push(this.expectString());
+        }
+
+        return stringTokens;
+    }
+
     expectNumber(){
         return this.expectAndConsume(TokenType.Number, "Expected number");
     }

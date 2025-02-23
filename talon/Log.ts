@@ -1,5 +1,6 @@
 import { ILog } from "./ILog";
 import { IOutput } from "./runtime/IOutput";
+import { Stopwatch } from "./Stopwatch";
 
 export class Log implements ILog{
     constructor(private readonly formattedOutput:IOutput,
@@ -10,7 +11,7 @@ export class Log implements ILog{
     }
 
     writeFormatted(line: string): void {
-        this.formattedOutput.write(line);
+        Stopwatch.measure("Log.Formatted", () => this.formattedOutput.write(line));
     }
 
     writeStructured(line: string, ...parameters: any[]): void {
@@ -22,10 +23,10 @@ export class Log implements ILog{
     }
 
     writeReadable(line: string): void {
-        this.readableOutput.write(line);
+        Stopwatch.measure("Log.Readable", () => this.readableOutput.write(line));
     }
 
     writeConsole(line: string): void {
-        this.consoleOutput.write(line);
+        Stopwatch.measure("Log.Console", () => this.consoleOutput.write(line));
     }
 }

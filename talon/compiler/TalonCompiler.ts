@@ -22,7 +22,7 @@ export class TalonCompiler{
     }
 
     get version(){
-        return new Version(buildInfo.major, buildInfo.minor, buildInfo.revision);
+        return new Version(buildInfo.major, buildInfo.minor, buildInfo.build);
     }
 
     constructor(private readonly out:IOutput){
@@ -98,32 +98,12 @@ export class TalonCompiler{
                 Instruction.print(),
                 Instruction.parseCommand(),    
                 Instruction.handleCommand(),
-                Instruction.setLocal(handledCommandLocal),
-                Instruction.loadLocal(handledCommandLocal),
-                Instruction.isTypeOf(Delegate.typeName),
-                ...Instruction.ifTrueThen(    
-                    Instruction.loadLocal(handledCommandLocal),
-                    Instruction.invokeDelegate(),
-                    Instruction.goTo(14)
-                ),
-                Instruction.loadLocal(handledCommandLocal),
-                Instruction.isTypeOf(List.typeName),
+                ...Instruction.raiseAllEvents(),
                 ...Instruction.ifTrueThen(
-                    Instruction.loadLocal(handledCommandLocal),
-                    Instruction.instanceCall(List.count),
-                    Instruction.loadNumber(0),
-                    Instruction.compareEqual(),
-                    ...Instruction.ifTrueThen(
-                        Instruction.loadString("I don't know how to do that."),
-                        Instruction.print(),
-                        Instruction.goTo(14)
-                    ),                
-                    Instruction.loadLocal(handledCommandLocal),
-                    ...Instruction.forEach(
-                        Instruction.invokeDelegate(),
-                        Instruction.ignore() // All delegates will be events, which return a boolean indicating aborted status, not used at this point.
-                    )
-                ),
+                    Instruction.goTo(14)
+                ),                
+                Instruction.loadString("I don't know how to do that."),
+                Instruction.print(),
                 Instruction.goTo(14)
             ),
             Instruction.return()

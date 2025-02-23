@@ -65,11 +65,13 @@ export class RuntimeWorldObject extends RuntimeAny{
     private defineDescribeContentsMethod(){
         const describeContents = new Method();
         describeContents.name = WorldObject.describeContents;
+        describeContents.returnType = BooleanType.typeName;
 
         describeContents.body.push(
             Instruction.loadThis(),
             Instruction.externalCall("describeContents"),
             Instruction.print(),
+            Instruction.loadBoolean(true),
             Instruction.return()
         );
 

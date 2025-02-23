@@ -1,7 +1,12 @@
 import { IOutput } from "./runtime/IOutput";
 
 export class RuntimeDebugPaneOutput implements IOutput{
-    constructor(private pane:HTMLDivElement){
+
+    get AreLogsDisabled():boolean {
+        return this.disableLogs.checked;
+    }
+
+    constructor(private pane:HTMLDivElement, private disableLogs:HTMLInputElement){
 
     }
 
@@ -10,11 +15,18 @@ export class RuntimeDebugPaneOutput implements IOutput{
     }
 
     writeError(error: any, line: string, ...parameters: any[]): void {
+        if (this.AreLogsDisabled){
+            return;
+        }
+
         this.pane.innerHTML += line + "<br />";
         this.pane.scrollTo(0, this.pane.scrollHeight);
     }
 
     write(line: string): void {
+        if (this.AreLogsDisabled){
+            return;
+        }
 
         if (line.startsWith('.')){
             const parts = line.split(' ');

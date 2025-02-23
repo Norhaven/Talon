@@ -26,7 +26,7 @@ import { RuntimeItem } from "../library/RuntimeItem";
 import { OpCode } from "../../common/OpCode";
 import { Instruction } from "../../common/Instruction";
 import { RuntimeEmpty } from "../library/RuntimeEmpty";
-import { States } from "../../common/States";
+import { State } from "../../common/State";
 import { RaiseEventHandler } from "./RaiseEventHandler";
 import { Item } from "../../library/Item";
 import { RaiseContextualEventHandler } from "./RaiseContextualEventHandler";
@@ -38,6 +38,8 @@ import { RaiseEvent } from "./internal/RaiseEvent";
 import { Lookup } from "./internal/Lookup";
 import { GlobalEvents } from "../../library/GlobalEvents";
 import { Stopwatch } from "../../Stopwatch";
+import { RuntimeTuple } from "../library/RuntimeTuple";
+import { Action } from "./internal/Action";
 
 export class HandleCommandHandler extends OpCodeHandler{
     public readonly code: OpCode = OpCode.HandleCommand;
@@ -49,13 +51,14 @@ export class HandleCommandHandler extends OpCodeHandler{
     }
 
     tryGetUnderstandingFromAction(thread:Thread, action:string){
-        const findValueForActionField = (type:Type) => type.fields.find(field => field.name === Understanding.action)?.defaultValue!;
-        const getActionUnderstandingPair = (type:Type):readonly [Object, Type] => [findValueForActionField(type), type];
+        const findValueForActionField = (type:Type) => <string[]>type.fields.find(field => field.name === Understanding.action)?.defaultValue!;
+        const getActionUnderstandingPair = (type:Type):readonly [string[], Type] => [findValueForActionField(type), type];
         
         const understandingActionPairs = thread.knownUnderstandings.map(getActionUnderstandingPair);
-        const understandingsByAction = new Map<Object, Type>(understandingActionPairs);
-
-        return understandingsByAction.get(action);
+        
+        const match = understandingActionPairs.find(x => x[0].some(y => y == action));
+        
+        return match ? match[1] : null;
     }
 
     private getMeaningFromUnderstanding(understanding:Type){        
@@ -68,6 +71,7 @@ export class HandleCommandHandler extends OpCodeHandler{
             case Understanding.moving: return Meaning.Moving;
             case Understanding.direction: return Meaning.Direction;
             case Understanding.taking: return Meaning.Taking;
+            case Understanding.giving: return Meaning.Giving;
             case Understanding.inventory: return Meaning.Inventory;
             case Understanding.dropping: return Meaning.Dropping;
             case Understanding.using: return Meaning.Using;
@@ -100,6 +104,7 @@ export class HandleCommandHandler extends OpCodeHandler{
 
             if (!understanding){
                 thread.currentMethod.push(Memory.allocateList([]));
+                thread.logReadable(`Unable to locate understanding for action '${action}'`);
                 thread.logReadable(this.endOfInteraction);
                 return super.handle(thread);
             }
@@ -109,7 +114,6 @@ export class HandleCommandHandler extends OpCodeHandler{
             if (meaning === Meaning.Pressing){
                 return this.handleKeyPress(thread, understanding);
             } else {
-                const actualActor = this.inferTargetFrom(thread, actorName, understanding, meaning);
                 const actualTarget = this.inferTargetFrom(thread, targetName, understanding, meaning);
                 
                 if (!actualTarget){                
@@ -120,158 +124,71 @@ export class HandleCommandHandler extends OpCodeHandler{
                     return super.handle(thread);
                 }
 
+                const actualActor = this.inferActorFrom(thread, actorName, meaning);
+
                 return this.handleCommand(thread, meaning, actualActor, actualTarget);
             }
         });
     }
 
-    private createDescribeDelegate(thread:Thread, target:RuntimeWorldObject){
-        const describe = target.methods.get(WorldObject.describe)!;
-        describe.actualParameters.unshift(Variable.forThis(target));
-
-        return new RuntimeDelegate(describe);
-    }
-
-    private addCallToDescribe(thread:Thread, target:RuntimeWorldObject){
-        const delegate = this.createDescribeDelegate(thread, target);
-
-        thread.currentMethod.push(delegate);
-    }
-
-    private moveToNextPlace(thread:Thread, target:RuntimeWorldObject){
-        const nextPlace = <RuntimePlace>target;
-        const currentPlace = thread.currentPlace;
-
-        thread.currentPlace = nextPlace;
-        
-        const delegate = this.createDescribeDelegate(thread, target);
-        const delegates = this.prepareRaiseEvent(thread, EventType.PlayerEntersPlace, nextPlace);
-        const delegates1 = this.prepareRaiseEvent(thread, EventType.PlayerExitsPlace, currentPlace!);
-             
-        const allDelegates = [
-            ...delegates1,
-            ...delegates,
-            delegate
-        ];
-
-        thread.logReadable(`Moving with ${allDelegates.length} events to be raised`);
-
-        thread.currentMethod.push(Memory.allocateList(allDelegates));
-    }
-
-    private tryTakeItem(thread:Thread, target:RuntimeWorldObject){
-        if (!target.isTypeOf(Item.typeName)){
-            this.output.write("I can't take that.");
-            thread.logReadable(`Unable to take '${target.typeName}:${target.parentTypeName}', not an item`);
-            thread.currentMethod.push(Memory.allocateList([]));
-            return;
-        }
-
-        const [_, item] = Lookup.findTargetByNameIn(thread, thread.currentPlace!, target.typeName, true);
-
-        const inventory = thread.currentPlayer!.getContentsField();
-        inventory.items.push(item!);
-
-        const describeEvent = this.createDescribeDelegate(thread, thread.currentPlace!);                
-        const takeEvent = this.prepareRaiseEvent(thread, EventType.ItIsTaken, target);                
-
-        thread.currentMethod.push(Memory.allocateList([...takeEvent, describeEvent]));
-    }
-    
-    private tryDropItem(thread:Thread, target:RuntimeWorldObject){
-        const [_, item] = Lookup.findTargetByNameIn(thread, thread.currentPlayer!, target.typeName, true);
-
-        if (!item){
-            throw new RuntimeError(`Unable to locate item '${target.typeName}' to drop`);
-        }
-
-        if (!thread.currentPlace){
-            throw new RuntimeError(`Unable to drop an item without a current place`);
-        }
-
-        const contents = thread.currentPlace!.getContentsField();
-
-        console.log(`CONTENTS ARE ${contents}`);
-
-        contents.items.push(item);
-
-        const describeEvent = this.createDescribeDelegate(thread, thread.currentPlace!);                
-        const event = this.prepareRaiseEvent(thread, EventType.ItIsDropped, target);
-
-        thread.currentMethod.push(Memory.allocateList([...event, describeEvent]));
-    }
-
     private handleKeyPress(thread:Thread, understanding:Type){
-        const key = <string>understanding.fields.find(x => x.name === Understanding.action)?.defaultValue;
-        const keyString = Memory.allocateString(key);
-        keyString.typeName = key;
-
-        const event = RaiseEvent.contextual(thread, EventType.KeyIsPressed, thread.currentPlace!, keyString);
+        const key = <string[]>understanding.fields.find(x => x.name === Understanding.action)?.defaultValue;
+        const keyString = Memory.allocateString(key[0]);
+        keyString.typeName = key[0];
 
         const globalWhen = Memory.findOrAddInstance(GlobalEvents.typeName);
-        
-        const event1 = RaiseEvent.contextual(thread, EventType.KeyIsPressed, globalWhen, keyString);
 
-        thread.currentMethod.push(Memory.allocateList([...event, ...event1]));
+        const placeEvent = RaiseEvent.contextual(thread, EventType.KeyIsPressed, thread.currentPlace!, keyString);        
+        const globalEvent = RaiseEvent.contextual(thread, EventType.KeyIsPressed, globalWhen, keyString);
+
+        thread.currentMethod.push(Memory.allocateList([...placeEvent, ...globalEvent]));
         
         return super.handle(thread);
     }
 
     private handleCommand(thread:Thread, meaning:Meaning, actor:RuntimeWorldObject|undefined, target:RuntimeWorldObject){
+        
+        const action = Action.using(thread, actor, target, this.output);
+
         switch(meaning){
             case Meaning.Describing:{
-                this.addCallToDescribe(thread, target);
+                action.tryDescribeTarget();
                 break;
             }
             case Meaning.Moving: {    
-                this.moveToNextPlace(thread, target);
+                action.tryMoveToTarget();
                 break;
             }
             case Meaning.Taking: {
-                this.tryTakeItem(thread, target);
+                action.tryTakeTarget();
+                break;
+            }
+            case Meaning.Giving: {
+                action.tryGiveToTarget();
                 break;
             }
             case Meaning.Inventory:{
-                const event = this.prepareDescribeContents(thread, target);
-                thread.currentMethod.push(Memory.allocateList([event]));           
+                action.tryDescribeTargetContents();       
                 break;
             }
             case Meaning.Dropping:{
-                this.tryDropItem(thread, target);
+                action.tryDropItemTarget();
                 break;
             }
             case Meaning.Using:{
-                if (actor){
-                    const contextual = this.prepareRaiseContextualItemEvents(thread, EventType.ItIsUsed, actor, target);
-                    const event = this.prepareRaiseEvent(thread, EventType.ItIsUsed, actor);
-
-                    thread.currentMethod.push(Memory.allocateList([...event, ...contextual]));
-                } else {
-                    this.raiseEvent(thread, EventType.ItIsUsed, target);
-                }
-
+                action.tryUseTarget();
                 break;
             }
             case Meaning.Opening:{
-                this.raiseEvent(thread, EventType.ItIsOpened, target);
+                action.tryOpenTarget();
                 break;
             }
             case Meaning.Closing:{
-                this.raiseEvent(thread, EventType.ItIsClosed, target);
+                action.tryCloseTarget();
                 break;
             }
-            case Meaning.Combining:{
-                
-                if (actor){
-                    const contextual = this.prepareRaiseContextualItemEvents(thread, EventType.ItIsCombined, actor, target);
-                    const event1 = this.prepareRaiseEvent(thread, EventType.ItIsCombined, actor);
-                    const event2 = this.prepareRaiseEvent(thread, EventType.ItIsCombined, target); 
-
-                    thread.currentMethod.push(Memory.allocateList([...event1, ...event2, ...contextual]));
-                } else {
-                    this.raiseEvent(thread, EventType.ItIsCombined, target);
-                }
-
+            case Meaning.Combining:{                
+                action.tryCombineTarget();
                 break;
             }            
             default:
@@ -283,47 +200,60 @@ export class HandleCommandHandler extends OpCodeHandler{
         return super.handle(thread);
     }
 
-    private prepareDescribeContents(thread:Thread, target:RuntimeAny){
-        if (!(target instanceof RuntimeWorldObject)){
-            throw new RuntimeError(`Attempted to describe contents on a non-world-object instance of type '${target.typeName}'`);
-        }
+    private inferActorFrom(thread:Thread, actorName:string|undefined, meaning:Meaning):RuntimeWorldObject|undefined{
+        const lookupSingletonInstance = (name:string) => <RuntimeWorldObject>Memory.findInstanceByName(name);
 
-        const describeContents = target.methods.get(WorldObject.describeContents);
-
-        if (!describeContents){
-            throw new RuntimeError(`Unable to locate ${WorldObject.describeContents} on world object`);
-        }
-
-        describeContents.actualParameters[0] = Variable.forThis(target);
-
-        return new RuntimeDelegate(describeContents);
-    }
-
-    private prepareRaiseContextualItemEvents(thread:Thread, type:EventType, actor:RuntimeAny, target:RuntimeAny){
-        if (!(actor instanceof RuntimeWorldObject)){
-            throw new RuntimeError(`Attempted to raise a contextual event on a non-world-object actor instance of type '${actor.typeName}'`);
-        }
-
-        if (!(target instanceof RuntimeWorldObject)){
-            throw new RuntimeError(`Attempted to raise an event on a non-world-object instance of type '${target.typeName}'`);
-        }
+        thread.logReadable(`Inferring actor '${actorName}' from meaning '${meaning}'`);
         
-        return RaiseEvent.contextual(thread, type, actor, target);
-    }
+        switch(meaning){
+            case Meaning.Moving:
+            case Meaning.Inventory:
+            case Meaning.Dropping:
+                return lookupSingletonInstance(Player.typeName);
+            case Meaning.Describing:
+            case Meaning.Taking:{
+                if (!actorName){
+                    return thread.currentPlace;
+                }
+    
+                const [_, actor] = Lookup.findTargetByNameIn(thread, thread.currentPlace!, actorName, false);
+    
+                return actor;
+            }
+            case Meaning.Giving:{
+                if (!actorName){
+                    thread.logReadable("No actor name was supplied, inferred nothing");
+                    return undefined;
+                }
 
-    private raiseEvent(thread:Thread, type:EventType, target:RuntimeAny){
-        
-        const eventDelegates = this.prepareRaiseEvent(thread, type, target);
+                const [_, actor] = Lookup.findTargetByNameIn(thread, thread.currentPlayer!, actorName, false);
 
-        thread.currentMethod.push(Memory.allocateList(eventDelegates));
-    }
-
-    private prepareRaiseEvent(thread:Thread, type:EventType, target:RuntimeAny){
-        if (!(target instanceof RuntimeWorldObject)){
-            throw new RuntimeError(`Attempted to raise an event on a non-world-object instance of type '${target.typeName}'`);
+                return actor;
+            }
+            case Meaning.Using:
+            case Meaning.Combining:
+            case Meaning.Opening:
+            case Meaning.Closing:{
+                if (!actorName){
+                    thread.logReadable("No actor name was supplied, inferred no target");
+                    return undefined;
+                }
+    
+                const list = thread.currentPlayer!.getContentsField();
+                const matchingInventoryItems = list.items.filter(x => x.typeName.toLowerCase() === actorName.toLowerCase());
+                
+                if (matchingInventoryItems.length > 0){
+                    thread.logReadable("Found actor in player's inventory");
+                    return <RuntimeWorldObject>matchingInventoryItems[0];
+                }
+    
+                const [_, actor] = Lookup.findTargetByNameIn(thread, thread.currentPlace!, actorName, false);
+    
+                return actor;
+            }
+            default:
+                return undefined;
         }
-
-        return RaiseEvent.nonContextual(thread, type, target);
     }
 
     private inferTargetFrom(thread:Thread, targetName:string|undefined, understanding:Type, meaning:Meaning):RuntimeWorldObject|undefined{
@@ -333,13 +263,15 @@ export class HandleCommandHandler extends OpCodeHandler{
         
         switch(meaning){
             case Meaning.Moving:{
-                const placeName = <RuntimeString>thread.currentPlace?.fields.get(`~${targetName}`)?.value;
+                const knownDirections = thread.currentPlace?.getFieldAsList(WorldObject.directions);
+                const matchingDirection = <RuntimeTuple<string>>knownDirections?.items.find(x => (<RuntimeTuple<string>>x).value1 == targetName);
+                const placeName = matchingDirection?.value2;
 
                 if (!placeName){
                     return undefined;
                 }
 
-                return lookupSingletonInstance(placeName.value); 
+                return lookupSingletonInstance(placeName); 
             }
             case Meaning.Inventory:{
                 return lookupSingletonInstance(Player.typeName);
@@ -353,7 +285,8 @@ export class HandleCommandHandler extends OpCodeHandler{
     
                 return target;
             }
-            case Meaning.Taking:{
+            case Meaning.Taking:
+            case Meaning.Giving:{
                 if (!targetName){
                     return undefined;
                 }
@@ -382,7 +315,7 @@ export class HandleCommandHandler extends OpCodeHandler{
                 }
     
                 const list = thread.currentPlayer!.getContentsField();
-                const matchingInventoryItems = list.items.filter(x => x.typeName.toLowerCase() === targetName?.toLowerCase());
+                const matchingInventoryItems = list.items.filter(x => x.typeName.toLowerCase() === targetName.toLowerCase());
                 
                 if (matchingInventoryItems.length > 0){
                     thread.logReadable("Found target in player's inventory");

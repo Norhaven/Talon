@@ -3,6 +3,7 @@ export enum OpCode {
     Assign = '.set.var',
     AssignStaticField = ".set.var.static",
     CompareEqual = ".compare.eq",
+    CompareGreaterThan = ".compare.gt",
     Print = '.print',
     LoadString = '.load.str',
     NewInstance = '.new',
@@ -42,4 +43,5 @@ export enum OpCode {
     RaiseContextualEvent = ".raise.event.ctx",
     LoadPlace = ".load.place",
     ReplaceInstances = ".replace.inst",
-    Ignore = ".ignore"}
+    Ignore = ".ignore"
+}

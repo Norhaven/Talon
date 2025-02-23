@@ -38,6 +38,7 @@ import { MenuOption } from "../../library/MenuOption";
 import { RuntimeMenuOption } from "../library/RuntimeMenuOption";
 import { ILog } from "../../ILog";
 import { Stopwatch } from "../../Stopwatch";
+import { RuntimeTuple } from "../library/RuntimeTuple";
 
 export class Memory{
     private static typesByName = new Map<string, Type>();
@@ -87,7 +88,11 @@ export class Memory{
                 throw new RuntimeError(`Unable to locate type '${name}' for instantiation`);
             }
 
-            return Memory.constructInstanceFrom(type);
+            const instance = Memory.constructInstanceFrom(type);
+
+            Memory.heap.set(name, [instance]);
+
+            return instance;
         }
 
         if (instances.length > 1){
@@ -138,6 +143,18 @@ export class Memory{
 
     static allocateList(items:RuntimeAny[]){
         return new RuntimeList(items);
+    }
+
+    static allocateTuple(items:Object[]){
+        if (items.length != 2){
+            throw new RuntimeError(`Unable to allocate a tuple for array with item count of '${items.length}', only 2 is supported`);
+        }
+
+        if (!items.every(x => typeof x == "string")){
+            throw new RuntimeError(`Unable to allocate a tuple for array containing non-string elements, only string tuples are currently supported`);
+        }
+
+        return new RuntimeTuple<string>(<string>items[0], <string>items[1]);
     }
 
     static allocate(type:Type):RuntimeAny{
@@ -196,15 +213,34 @@ export class Memory{
 
         for(const item of items){
             if (Array.isArray(item)){
+
+                this.log.writeReadable(`Allocating an array for: '${item}'`);
+
                 const itemList = <Object[]>item;
-                const count = <number>itemList[0];
-                const typeName = <string>itemList[1];
+                const isTuple = itemList.length == 2;
+                const isInitializationTuple = itemList.length == 3;
 
-                const type = Memory.typesByName.get(typeName)!;
+                const isExpandableArray = 
+                    isInitializationTuple && 
+                    typeof itemList[0] == "number" && 
+                    (!itemList[1] || typeof itemList[1] == "number") && 
+                    typeof itemList[2] == "string";
+                
+                if (isExpandableArray) {
+                    const lowerBound = <number>itemList[0];
+                    const upperBound = <number>itemList[1];
+                    const typeName = <string>itemList[2];
 
-                for(let current = 0; current < count; current++){                
-                    const instance = Memory.allocate(type);
-                    runtimeItems.push(instance);
+                    const type = Memory.typesByName.get(typeName)!;
+                    const actualCount = upperBound ? Math.floor(Math.random() * (upperBound - lowerBound + 1) + lowerBound) : lowerBound;
+                    
+                    for(let current = 0; current < actualCount; current++){                
+                        const instance = Memory.allocate(type);
+                        runtimeItems.push(instance);
+                    }
+                } else if (isTuple) {
+                    const tuple = Memory.allocateTuple(itemList);
+                    runtimeItems.push(tuple);
                 }
             } else {
                 const value = Memory.allocateString(<string>item);

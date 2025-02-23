@@ -2,7 +2,7 @@ import { EventType } from "../../../../common/EventType";
 import { Instruction } from "../../../../common/Instruction";
 import { Method } from "../../../../common/Method";
 import { Parameter } from "../../../../common/Parameter";
-import { States } from "../../../../common/States";
+import { State } from "../../../../common/State";
 import { Type } from "../../../../common/Type";
 import { BooleanType } from "../../../../library/BooleanType";
 import { WorldObject } from "../../../../library/WorldObject";
@@ -54,13 +54,13 @@ export class EventTransformer{
 
         if (method.eventType == EventType.ItIsOpened){
             instructions.push(
-                ...Instruction.includeStateInThis(States.opened),
-                ...Instruction.removeStateFromThis(States.closed)
+                ...Instruction.includeStateInThis(State.opened),
+                ...Instruction.removeStateFromThis(State.closed)
             );
         } else if (method.eventType == EventType.ItIsClosed){
             instructions.push(
-                ...Instruction.includeStateInThis(States.closed),
-                ...Instruction.removeStateFromThis(States.opened)
+                ...Instruction.includeStateInThis(State.closed),
+                ...Instruction.removeStateFromThis(State.opened)
             );
         }
 
@@ -86,6 +86,7 @@ export class EventTransformer{
             case Keywords.enters: return EventType.PlayerEntersPlace;
             case Keywords.exits: return EventType.PlayerExitsPlace;
             case Keywords.taken: return EventType.ItIsTaken;
+            case Keywords.given: return EventType.ItIsGiven;
             case Keywords.dropped: return EventType.ItIsDropped;
             case Keywords.used: return EventType.ItIsUsed;
             case Keywords.opened: return EventType.ItIsOpened;

@@ -1,4 +1,4 @@
-import { States } from "../../../common/States";
+import { State } from "../../../common/State";
 import { WorldObject } from "../../../library/WorldObject";
 import { RuntimeError } from "../../errors/RuntimeError";
 import { RuntimeList } from "../../library/RuntimeList";
@@ -54,8 +54,8 @@ export class Lookup{
         
         thread.logReadable(`Verifying state on source '${sourceItem}`);
 
-        const isAvailable = (item:RuntimeWorldObject) => this.isItemVisible(item) && !this.isState(item, States.closed);
-        const isClosed = this.isState(sourceItem, States.closed);
+        const isAvailable = (item:RuntimeWorldObject) => this.isItemVisible(item) && !this.isState(item, State.closed);
+        const isClosed = this.isState(sourceItem, State.closed);
 
         if (!this.isItemVisible(sourceItem) || isClosed){
             thread.logReadable(`Target container not applicable, is invisible or closed`);

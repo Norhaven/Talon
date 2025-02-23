@@ -1,5 +1,7 @@
+import { Delegate } from "../library/Delegate";
 import { Enumerator } from "../library/Enumerator";
 import { List } from "../library/List";
+import { EventType } from "./EventType";
 import { OpCode } from "./OpCode";
 
 export class Instruction{
@@ -114,6 +116,10 @@ export class Instruction{
         return new Instruction(OpCode.CompareLessThan);
     }
 
+    static compareGreaterThan(){
+        return new Instruction(OpCode.CompareGreaterThan);
+    }
+
     static add(){
         return new Instruction(OpCode.Add);
     }
@@ -168,6 +174,14 @@ export class Instruction{
 
     static assignStaticField(typeName:string, fieldName:string){
         return new Instruction(OpCode.AssignStaticField, `${typeName}.${fieldName}`);
+    }
+
+    static raiseEvent(eventType:EventType){
+        return new Instruction(OpCode.RaiseEvent, eventType);
+    }
+
+    static raiseContextualEvent(eventType:EventType){
+        return new Instruction(OpCode.RaiseContextualEvent, eventType);
     }
 
     static ifTrueThen(...instructions:Instruction[]){
@@ -275,6 +289,47 @@ export class Instruction{
             Instruction.loadThis(),
             Instruction.loadString(state),
             Instruction.removeState(),
+        );
+
+        return result;
+    }
+
+    static raiseAllEvents(){
+        const result:Instruction[] = [];
+
+        const availableEventsLocal = "~availableEvents";
+        const eventsRaisedLocal = "~eventsRaised";
+        
+        result.push(    
+            Instruction.loadBoolean(false),
+            Instruction.setLocal(eventsRaisedLocal),       
+            Instruction.setLocal(availableEventsLocal),
+            Instruction.loadLocal(availableEventsLocal),
+            Instruction.isTypeOf(Delegate.typeName),
+            ...Instruction.ifTrueThen(    
+                Instruction.loadLocal(availableEventsLocal),
+                Instruction.invokeDelegate(),
+                Instruction.loadBoolean(true),
+                Instruction.setLocal(eventsRaisedLocal)
+            ),
+            Instruction.loadLocal(availableEventsLocal),
+            Instruction.isTypeOf(List.typeName),
+            ...Instruction.ifTrueThen(
+                Instruction.loadNumber(0),
+                Instruction.loadLocal(availableEventsLocal),
+                Instruction.instanceCall(List.count),
+                Instruction.compareGreaterThan(),
+                ...Instruction.ifTrueThen(                      
+                    Instruction.loadLocal(availableEventsLocal),
+                    ...Instruction.forEach(
+                        Instruction.invokeDelegate(),
+                        Instruction.ignore() // All delegates will be events, which return a boolean indicating aborted status, not used at this point.
+                    ),
+                    Instruction.loadBoolean(true),
+                    Instruction.setLocal(eventsRaisedLocal)
+                )
+            ),
+            Instruction.loadLocal(eventsRaisedLocal)
         );
 
         return result;

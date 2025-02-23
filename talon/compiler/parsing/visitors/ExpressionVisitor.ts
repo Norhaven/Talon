@@ -19,6 +19,7 @@ import { AbortEventExpression } from "../expressions/AbortEventExpression";
 import { ReplaceExpressionVisitor } from "./ReplaceExpressionVisitor";
 import { VisibilityExpression } from "../expressions/VisibilityExpression";
 import { QuitExpression } from "../expressions/QuitExpression";
+import { IncrementDecrementExpression } from "../expressions/IncrementDecrementExpression";
 
 export class ExpressionVisitor extends Visitor{
     visit(context: ParseContext): Expression {
@@ -121,9 +122,24 @@ export class ExpressionVisitor extends Visitor{
             context.consumeCurrentToken();
 
             return new QuitExpression();
+        } else if (context.is(Keywords.add)){
+            context.consumeCurrentToken();
+
+            const incrementValue = context.expectNumber();
+            context.expect(Keywords.to);
+            const variableName = context.expectIdentifier();
+
+            return new IncrementDecrementExpression(Number(incrementValue.value), variableName.value);
+        } else if (context.is(Keywords.subtract)){
+            context.consumeCurrentToken();
+
+            const subtractionValue = context.expectNumber();
+            context.expect(Keywords.from);
+            const variableName = context.expectIdentifier();
+
+            return new IncrementDecrementExpression(-Number(subtractionValue.value), variableName.value);
         } else {
             throw new CompilationError(`Unable to parse expression at ${context.currentToken}`);
         }
     }
-
 }

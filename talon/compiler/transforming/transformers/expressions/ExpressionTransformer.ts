@@ -16,6 +16,7 @@ import { Expression } from "../../../parsing/expressions/Expression";
 import { FieldDeclarationExpression } from "../../../parsing/expressions/FieldDeclarationExpression";
 import { IdentifierExpression } from "../../../parsing/expressions/IdentifierExpression";
 import { IfExpression } from "../../../parsing/expressions/IfExpression";
+import { IncrementDecrementExpression } from "../../../parsing/expressions/IncrementDecrementExpression";
 import { LiteralExpression } from "../../../parsing/expressions/LiteralExpression";
 import { QuitExpression } from "../../../parsing/expressions/QuitExpression";
 import { ReplaceExpression } from "../../../parsing/expressions/ReplaceExpression";
@@ -162,8 +163,7 @@ export class ExpressionTransformer{
             instructions.push(
                 Instruction.loadNumber(expression.replacedEntities.length),
                 Instruction.replaceInstancesWith(expression.newEntity.variableName)
-            );
-            
+            );            
         } else if (expression instanceof VisibilityExpression){
             if (expression.action.toLowerCase() === 'show'){
                 instructions.push(
@@ -179,6 +179,16 @@ export class ExpressionTransformer{
             instructions.push(
                 Instruction.loadBoolean(false),
                 Instruction.assignStaticField("~globalProgramFields", GlobalFields.canRun)
+            );
+        } else if (expression instanceof IncrementDecrementExpression){
+            instructions.push(                
+                Instruction.loadThis(),
+                Instruction.loadField(expression.variableName),
+                Instruction.loadNumber(expression.value),
+                Instruction.add(),                
+                Instruction.loadThis(),
+                Instruction.loadField(expression.variableName),
+                Instruction.assign()
             );
         } else {
             throw new CompilationError(`Unable to transform unsupported expression: ${expression}`);

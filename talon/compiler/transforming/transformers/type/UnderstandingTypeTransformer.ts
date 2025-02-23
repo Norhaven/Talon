@@ -17,7 +17,7 @@ export class UnderstandingTypeTransformer implements ITypeTransformer{
             
         const action = new Field();
         action.name = Understanding.action;
-        action.defaultValue = expression.value;
+        action.defaultValue = expression.values;
 
         const meaning = new Field();
         meaning.name = Understanding.meaning;

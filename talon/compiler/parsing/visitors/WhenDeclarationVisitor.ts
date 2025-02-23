@@ -29,9 +29,17 @@ export class WhenDeclarationVisitor extends Visitor{
 
                     target = context.expectIdentifier();
                 }
+            } else if (context.is(Keywords.given)){
+                eventKind = context.expect(Keywords.given);
+
+                if (context.isAnyOf(Keywords.a, Keywords.an)){
+                    context.expectAnyOf(Keywords.a, Keywords.an);
+
+                    target = context.expectIdentifier();
+                }
             } else {
                 eventKind = context.expectAnyOf(
-                    Keywords.taken, 
+                    Keywords.taken,
                     Keywords.dropped, 
                     Keywords.opened, 
                     Keywords.closed, 

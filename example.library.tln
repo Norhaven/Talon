@@ -1,0 +1,45 @@
+a Container is a kind of decoration.
+it is described as "It's a container.".
+when it is opened:
+    if it is "opened" then
+        say "It's already open.";
+        abort event;
+    and then continue;
+and then stop.
+when it is closed:
+    if it is "closed" then
+        say "It's already closed.";
+        abort event;
+    and then continue;
+and then stop.
+
+a Chest is a kind of Container.
+it is described as "The chest looks very heavy.".
+it is observed as "A large chest sits in the corner.".
+it contains 1 to 10 Coin.
+when it is opened:
+    if it is "locked" then
+        say "The lid won't budge.";
+        abort event;
+    or else
+        say "The lid creaks with the effort.";
+    and then continue;
+and then stop.
+when it is closed:
+    say "The lid slams closed.";
+and then stop.
+when it is used with a Key:
+    if it is "opened" then
+        say "You can't lock it when it's open.";
+        abort event;
+    and then continue;
+    say "The key turns easily in the lock.";
+    if it is "locked" then
+        set it to not "locked";
+    or else
+        set it to "locked";
+    and then continue;
+and then stop.
+
+a Key is a kind of item.
+it is described as "The key is small but sturdy.".

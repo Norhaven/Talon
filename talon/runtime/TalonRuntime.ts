@@ -68,6 +68,7 @@ import { AssignStaticFieldHandler } from "./handlers/AssignStaticFieldHandler";
 import { Stopwatch } from "../Stopwatch";
 import { ITimeOutput } from "../ITimeOutput";
 import { IPerformanceRuler } from "../IPerformanceRuler";
+import { CompareGreaterThanHandler } from "./handlers/CompareGreaterThanHandler";
 
 export class TalonRuntime{
 
@@ -109,6 +110,7 @@ export class TalonRuntime{
             new ComparisonHandler(),
             new CreateDelegateHandler(),
             new CompareLessThanHandler(),
+            new CompareGreaterThanHandler(),
             new AddHandler(),
             new LoadElementHandler(),
             new SetLocalHandler(),
@@ -166,7 +168,7 @@ export class TalonRuntime{
             return;
         }
 
-        Stopwatch.measure("start", () => {
+        Stopwatch.measure("TalonRuntime.Start", () => {
             const places = this.thread?.allTypes
                             .filter(x => x.baseTypeName == Place.typeName)
                             .map(x => <RuntimePlace>Memory.allocate(x));
@@ -293,7 +295,7 @@ export class TalonRuntime{
             throw new RuntimeError(`Encountered unsupported OpCode '${instruction?.opCode}'`);
         }
         
-        return Stopwatch.measure(`HandleInstruction.${instruction?.opCode}`, () => {
+        return Stopwatch.measure(`HandleInstruction: ${instruction?.opCode}`, () => {
             return handler?.handle(this.thread!);
         });
     }

@@ -9,19 +9,32 @@ import { Visitor } from "./Visitor";
 export class MenuWhenDeclarationVisitor extends Visitor{
     visit(context: ParseContext): Expression {
         context.expect(Keywords.when);
-        context.expect(Keywords.option);
 
-        const option = context.expectIdentifier();
+        let eventKind:Token;
+        let target:Token|undefined;
 
-        context.expect(Keywords.is);
+        if (context.is(Keywords.option)){
+            context.expect(Keywords.option);
+
+            const option = context.expectIdentifier();
+
+            context.expect(Keywords.is);
+            
+            eventKind = context.expect(Keywords.selected);
+
+            target = option;
+        } else {
+            context.expect(Keywords.it);
+            context.expect(Keywords.is);
+
+            eventKind = context.expect(Keywords.described);
+        }
         
-        const eventKind = context.expect(Keywords.selected);
-
         context.expectOpenMethodBlock();
 
         const actionsVisitor = new EventExpressionVisitor();
         const actions = actionsVisitor.visit(context);
 
-        return new WhenDeclarationExpression(Keywords.player, eventKind.value, actions,  option.value);
+        return new WhenDeclarationExpression(Keywords.player, eventKind.value, actions,  target?.value);
     }
 }
