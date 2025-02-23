@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "dependencies": {
-    "structured-log": "^0.2.0",
+    "structured-log": "^0.1.0",
     "structured-log-seq-sink": "^0.4.1"
   },
   "devDependencies": {
