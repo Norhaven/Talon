@@ -30,7 +30,6 @@ jobs:
                     
       - name: Build
         run: |
-          sudo npm install -g npm@11.1.0
           npm --version
           node --version
           sudo npm install
