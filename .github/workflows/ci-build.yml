@@ -31,7 +31,7 @@ jobs:
         run: |
           npm --version
           node --version
-          npm install npm@latest 
+          npm install npm@11.1.0 
           npm --version
           npm install
           tsc -p tsconfig.json
