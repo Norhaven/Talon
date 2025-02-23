@@ -41,3 +41,5 @@ const output = `${outputWarning}\n\n${getLibraryFunction}\n\n${getStoryFunction}
 fs.writeFileSync("talon/TalonExamples.ts", output);
 
 console.log("Converted examples!");
+
+fs.copy

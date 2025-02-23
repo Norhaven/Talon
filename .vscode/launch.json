@@ -12,7 +12,8 @@
             "webRoot": "${workspaceFolder}/ide/js", 
             "preLaunchTask": "Run Webpack",
             "smartStep": true,
-            "sourceMaps": true
+            "sourceMaps": true,
+            "trace": true
         },
         {
             "type": "node",
