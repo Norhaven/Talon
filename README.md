@@ -22,7 +22,10 @@ After that, you can open `http://localhost:5341/` in your browser to view your l
 
 # Running
 
-Using VS Code, use the `Launch Chrome against localhost` run/debug option. This will build the project and open a browser window with the rudimentary IDE that you can use to play around with.
+Using VS Code, use the `Launch Chrome against localhost` run/debug option. This will build the project and open a browser window with a rudimentary IDE that you can use to play around with it.
+
+![image](https://github.com/user-attachments/assets/4105467e-2988-4b3d-855a-45501a8cf183)
+
 
 # Contributing
 
