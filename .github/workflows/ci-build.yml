@@ -31,8 +31,7 @@ jobs:
         run: |
           npm --version
           node --version
-          npm i -g npm-upgrade
-          # npm install npm@11.1.0 
+          sudo npm install -g npm@11.1.0
           npm --version
           npm install
           tsc -p tsconfig.json
