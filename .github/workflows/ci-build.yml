@@ -27,12 +27,12 @@ jobs:
       - uses: actions/setup-node@v4.2.0
         with: 
           node-version: 22.14.0
+      - run: sudo npm install -g npm@11.1.0
+        
       - name: Build
         run: |
           npm --version
           node --version
-          sudo npm install -g npm@11.1.0
-          npm --version
           npm install
           tsc -p tsconfig.json
           npx webpack
