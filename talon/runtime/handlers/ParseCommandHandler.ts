@@ -29,17 +29,11 @@ export class ParseCommandHandler extends OpCodeHandler{
 
     private parseCommand(text:string):RuntimeCommand{
         const pieces = text.split(" ");
-        const command = Memory.allocateCommand();
-        
-        command.action = Memory.allocateString(pieces[0]);
 
-        if (pieces.length == 2){
-            command.targetName = Memory.allocateString(pieces[1]);
-        } else if (pieces.length == 4){
-            command.actorName = Memory.allocateString(pieces[1]);
-            command.targetName = Memory.allocateString(pieces[3]);
-        }
+        const action = pieces[0];
+        const actor = pieces[1];
+        const target = pieces.length == 4 ? pieces[3] : undefined;
 
-        return command;
+        return Memory.allocateCommand(action, actor, target);
     }
 }

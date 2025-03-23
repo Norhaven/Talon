@@ -69,6 +69,9 @@ import { Stopwatch } from "../Stopwatch";
 import { ITimeOutput } from "../ITimeOutput";
 import { IPerformanceRuler } from "../IPerformanceRuler";
 import { CompareGreaterThanHandler } from "./handlers/CompareGreaterThanHandler";
+import { InterpolateStringHandler } from "./handlers/InterpolateStringHandler";
+import { LoadPlayerHandler } from "./handlers/LoadPlayerHandler";
+import { GoToLabelHandler } from "./handlers/GoToLabelHandler";
 
 export class TalonRuntime{
 
@@ -90,6 +93,7 @@ export class TalonRuntime{
             new HandleCommandHandler(this.userOutput),
             new HandleMenuCommandHandler(this.userOutput),
             new GoToHandler(),
+            new GoToLabelHandler(),
             new ReturnHandler(),
             new StaticCallHandler(),
             new LoadInstanceHandler(),
@@ -122,10 +126,12 @@ export class TalonRuntime{
             new RaiseEventHandler(),
             new RaiseContextualEventHandler(),
             new LoadPlaceHandler(),
+            new LoadPlayerHandler(),
             new ReplaceInstancesHandler(),
             new IgnoreHandler(),
             new LoadStaticFieldHandler(),
-            new AssignStaticFieldHandler()
+            new AssignStaticFieldHandler(),
+            new InterpolateStringHandler()
         ];
 
         this.handlers = new Map<OpCode, OpCodeHandler>(handlerInstances.map(x => [x.code, x]));
@@ -179,15 +185,19 @@ export class TalonRuntime{
             const currentPlace = places?.find(isPlayerStart);
 
             this.thread!.currentPlace = currentPlace;
+            
+            let player = this.thread?.allTypes.find(x => x.baseTypeName == Player.typeName);
 
-            const player = this.thread?.knownTypes.get(Player.typeName)!;
+            if (!player){
+                player = this.thread?.knownTypes.get(Player.typeName)!;
+            }
 
             this.thread!.currentPlayer = <RuntimePlayer>Memory.allocate(player);
 
             return this.runWith("");
         });
     }
-
+    
     stop(){
         if (!this.state.tryMoveTo(RuntimeState.Stopped)){
             return;

@@ -1,5 +1,7 @@
+import { EventType } from "../../../../common/EventType";
 import { Instruction } from "../../../../common/Instruction";
 import { BooleanType } from "../../../../library/BooleanType";
+import { GlobalEvents } from "../../../../library/GlobalEvents";
 import { GlobalFields } from "../../../../library/GlobalFields";
 import { List } from "../../../../library/List";
 import { Menu } from "../../../../library/Menu";
@@ -8,16 +10,19 @@ import { StringType } from "../../../../library/StringType";
 import { WorldObject } from "../../../../library/WorldObject";
 import { CompilationError } from "../../../exceptions/CompilationError";
 import { AbortEventExpression } from "../../../parsing/expressions/AbortEventExpression";
+import { AcceptExpression } from "../../../parsing/expressions/AcceptExpression";
 import { ActionsExpression } from "../../../parsing/expressions/ActionsExpression";
 import { ComparisonExpression } from "../../../parsing/expressions/ComparisonExpression";
 import { ConcatenationExpression } from "../../../parsing/expressions/ConcatenationExpression";
 import { ContainsExpression } from "../../../parsing/expressions/ContainsExpression";
 import { Expression } from "../../../parsing/expressions/Expression";
 import { FieldDeclarationExpression } from "../../../parsing/expressions/FieldDeclarationExpression";
+import { GameCompletionExpression } from "../../../parsing/expressions/GameCompletionExpression";
 import { IdentifierExpression } from "../../../parsing/expressions/IdentifierExpression";
 import { IfExpression } from "../../../parsing/expressions/IfExpression";
 import { IncrementDecrementExpression } from "../../../parsing/expressions/IncrementDecrementExpression";
 import { LiteralExpression } from "../../../parsing/expressions/LiteralExpression";
+import { PlayerCompletionExpression } from "../../../parsing/expressions/PlayerCompletionExpression";
 import { QuitExpression } from "../../../parsing/expressions/QuitExpression";
 import { ReplaceExpression } from "../../../parsing/expressions/ReplaceExpression";
 import { SayExpression } from "../../../parsing/expressions/SayExpression";
@@ -46,8 +51,12 @@ export class ExpressionTransformer{
             instructions.push(...ifBlock);
             instructions.push(...elseBlock);
         } else if (expression instanceof SayExpression){
-            instructions.push(Instruction.loadString(expression.text));
-            instructions.push(Instruction.print());
+            instructions.push(
+                Instruction.loadString(expression.text),
+                Instruction.loadThis(),
+                Instruction.interpolateString(),
+                Instruction.print()
+            );
 
             if (mode != ExpressionTransformationMode.IgnoreResultsOfSayExpression){
                 instructions.push(Instruction.loadString(expression.text));
@@ -56,7 +65,7 @@ export class ExpressionTransformer{
             instructions.push(
                 Instruction.loadNumber(expression.count),
                 Instruction.loadString(expression.typeName),
-                Instruction.loadInstance(expression.targetName),
+                expression.targetName == "~it" ? Instruction.loadThis() : Instruction.loadInstance(expression.targetName),
                 Instruction.loadField(WorldObject.contents),
                 Instruction.instanceCall(List.containsType)
             );
@@ -135,7 +144,7 @@ export class ExpressionTransformer{
             instructions.push(
                 ...left,
                 ...right,
-                Instruction.compareEqual()
+                Instruction.compareEqual(expression.isNegated)
             );
         } else if (expression instanceof ActionsExpression){
             expression.actions.forEach(x => instructions.push(...this.transformExpression(x, mode)));
@@ -180,6 +189,22 @@ export class ExpressionTransformer{
                 Instruction.loadBoolean(false),
                 Instruction.assignStaticField("~globalProgramFields", GlobalFields.canRun)
             );
+        } else if (expression instanceof PlayerCompletionExpression){
+            instructions.push(
+                Instruction.loadPlayer(),
+                Instruction.loadInstance(GlobalEvents.typeName),
+                Instruction.raiseContextualEvent(expression.action),
+                ...Instruction.raiseAllEvents()          
+            );
+        } else if (expression instanceof GameCompletionExpression){
+            instructions.push(
+                Instruction.loadPlayer(),
+                Instruction.loadInstance(GlobalEvents.typeName),
+                Instruction.raiseContextualEvent(expression.action),
+                ...Instruction.raiseAllEvents(),
+                Instruction.loadBoolean(false),
+                Instruction.assignStaticField("~globalProgramFields", GlobalFields.canRun)
+            );
         } else if (expression instanceof IncrementDecrementExpression){
             instructions.push(                
                 Instruction.loadThis(),
@@ -189,6 +214,10 @@ export class ExpressionTransformer{
                 Instruction.loadThis(),
                 Instruction.loadField(expression.variableName),
                 Instruction.assign()
+            );
+        } else if (expression instanceof AcceptExpression){
+            instructions.push(
+                
             );
         } else {
             throw new CompilationError(`Unable to transform unsupported expression: ${expression}`);

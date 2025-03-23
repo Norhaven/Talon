@@ -1,159 +1,195 @@
 import { EventType } from "../../../common/EventType";
+import { Type } from "../../../common/Type";
+import { Group } from "../../../library/Group";
 import { Item } from "../../../library/Item";
+import { StringType } from "../../../library/StringType";
 import { WorldObject } from "../../../library/WorldObject";
 import { Memory } from "../../common/Memory";
 import { RuntimeError } from "../../errors/RuntimeError";
 import { IOutput } from "../../IOutput";
 import { RuntimeAny } from "../../library/RuntimeAny";
 import { RuntimeDelegate } from "../../library/RuntimeDelegate";
+import { RuntimeGroup } from "../../library/RuntimeGroup";
 import { RuntimePlace } from "../../library/RuntimePlace";
 import { RuntimeWorldObject } from "../../library/RuntimeWorldObject";
 import { Variable } from "../../library/Variable";
 import { Thread } from "../../Thread";
+import { ActionContext } from "./ActionContext";
 import { Lookup } from "./Lookup";
-import { RaiseEvent } from "./RaiseEvent";
+import { Event } from "./Event";
 
 export class Action{
-    static using(thread:Thread, actor:RuntimeWorldObject|undefined, target:RuntimeWorldObject, output:IOutput){
-        return new Action(thread, actor, target, output);
+    static using(thread:Thread, context:ActionContext, output:IOutput){
+        return new Action(thread, context, output);
+    }
+
+    get actorSource(){
+        return this.context.actorSource;
+    }
+
+    get targetSource(){
+        return this.context.targetSource;
+    }
+
+    get actor(){
+        return this.context.actor;
+    }
+
+    get target(){
+        return this.context.target;
     }
 
     private constructor(
         private readonly thread:Thread, 
-        private readonly actor:RuntimeWorldObject|undefined, 
-        private readonly target:RuntimeWorldObject,
+        private readonly context:ActionContext,
         private readonly output:IOutput){
 
     }
 
-    tryDescribeTarget(){
-        const describe = this.target.methods.get(WorldObject.describe)!;
-        describe.actualParameters.unshift(Variable.forThis(this.target));
-
-        this.addDelegates(new RuntimeDelegate(describe));
+    tryDescribe(){
+        this.tryAct("describe", (actorSource, actor) => {
+            const describe = actorSource.methods.get(WorldObject.describe)!;
+            describe.actualParameters = [Variable.forThis(actor)];
+    
+            Event.using(this.thread).raiseAll(new RuntimeDelegate(describe));
+        });        
     }
 
-    tryDescribeTargetContents(){
-        const event = this.prepareDescribeContents(this.target);
+    tryDescribeContents(){
+        this.tryAct("describe contents", (actorSource, actor) => {
+            const event = this.prepareDescribeContents(actor);
 
-        this.addDelegates(event);
+            Event.using(this.thread).raiseAll(event);
+        });        
     }
 
-    tryMoveToTarget(){
-        const nextPlace = <RuntimePlace>this.target;
-        const currentPlace = this.thread.currentPlace;
+    tryMove(){
+        this.tryActWithTarget("move", (actorSource, actor, targetSource, target) => {
+            const nextPlace = <RuntimePlace>target;
+            const currentPlace = targetSource;
+    
+            this.thread.currentPlace = nextPlace;
+            
+            const describeEvent = this.createDescribeDelegate(target);
+            const nextPlaceEvent = this.prepareRaiseEvent(EventType.PlayerEntersPlace, nextPlace);
+            const currentPlaceEvent = this.prepareRaiseEvent(EventType.PlayerExitsPlace, currentPlace!);
+                    
+            const allDelegates = [
+                ...currentPlaceEvent,
+                ...nextPlaceEvent,
+                describeEvent
+            ];
+    
+            this.thread.logReadable(`Moving with ${allDelegates.length} events to be raised`);
+    
+            Event.using(this.thread).raiseAll(...allDelegates);
+        });  
+    }
 
-        this.thread.currentPlace = nextPlace;
-        
-        const describeEvent = this.createDescribeDelegate(this.target);
-        const nextPlaceEvent = this.prepareRaiseEvent(EventType.PlayerEntersPlace, nextPlace);
-        const currentPlaceEvent = this.prepareRaiseEvent(EventType.PlayerExitsPlace, currentPlace!);
+    tryTake(){
+        this.tryActWithTarget("take", (actorSource, actor, targetSource, target) => {
+            if (!actor.isTypeOf(Item.typeName) && !actor.isTypeOf(Group.typeName)){
+                this.output.write("I can't take that.");
+                this.thread.logReadable(`Unable to take '${actor.typeName}:${actor.parentTypeName}', not an item or group of items`);
                 
-        const allDelegates = [
-            ...currentPlaceEvent,
-            ...nextPlaceEvent,
-            describeEvent
+                Event.using(this.thread).raiseEmpty();
+                return;
+            }
+    
+            this.transfer(actorSource, actor, targetSource, target, EventType.ItIsTaken);
+        });
+    }
+
+    tryDropItem(){
+        this.tryActWithTarget("drop", (actorSource, actor, targetSource, target) => {            
+            this.transfer(actorSource, actor, targetSource, target, EventType.ItIsDropped);
+        });             
+    }
+
+    tryUse(){        
+        this.tryAct("use", (actorSource, actor) => {
+            if (this.target){
+                const contextual = this.prepareRaiseContextualItemEvents(EventType.ItIsUsed, actor, this.target);
+                const event = this.prepareRaiseEvent(EventType.ItIsUsed, actor);
+    
+                Event.using(this.thread).raiseAll(...event, ...contextual);
+            } else {
+                Event.using(this.thread).raiseNonContextual(EventType.ItIsUsed, actor);
+            }
+        });
+    }
+
+    tryOpen(){
+        this.tryAct("open", (actorSource, actor) => {
+            Event.using(this.thread).raiseNonContextual(EventType.ItIsOpened, actor);
+        });
+    }
+
+    tryClose(){
+        this.tryAct("close", (actorSource, actor) => {
+            Event.using(this.thread).raiseNonContextual(EventType.ItIsClosed, actor);
+        });
+    }
+
+    tryCombine(){
+        this.tryAct("combine", (actorSource, actor) => {
+            if (this.target){
+                const contextual = this.prepareRaiseContextualItemEvents(EventType.ItIsCombined, actor, this.target);
+                const event1 = this.prepareRaiseEvent(EventType.ItIsCombined, actor);
+                const event2 = this.prepareRaiseEvent(EventType.ItIsCombined, this.target); 
+    
+                Event.using(this.thread).raiseAll(...event1, ...event2, ...contextual);
+            } else {
+                Event.using(this.thread).raiseNonContextual(EventType.ItIsCombined, actor);
+            }
+        });        
+    }
+
+    tryGive(){
+        this.tryActWithTarget("give", (actorSource, actor, targetSource, target) => {
+            this.transfer(actorSource, actor, targetSource, target, EventType.ItIsGiven);
+        });    
+    }
+
+    private tryAct(actionName:string, act:(actorSource:RuntimeWorldObject, actor:RuntimeWorldObject)=>void){
+        if (!this.actor || !this.actorSource){
+            this.output.write("I'm not quite sure how to do that.");
+            this.thread.logReadable(`Unable to '${actionName}', missing an actor source or an actor`);
+            Event.using(this.thread).raiseEmpty();
+            return;
+        }
+
+        act(this.actorSource, this.actor);
+    }
+
+    private tryActWithTarget(actionName:string, act:(actorSource:RuntimeWorldObject, actor:RuntimeWorldObject, targetSource:RuntimeWorldObject, target:RuntimeWorldObject)=>void){
+        if (!this.actor || !this.actorSource || !this.target || !this.targetSource){
+            this.output.write("I'm not quite sure how to do that.");
+            this.thread.logReadable(`Unable to '${actionName}', missing an actor source, actor, target source, or target`);
+            Event.using(this.thread).raiseEmpty();
+            return;
+        }
+
+        act(this.actorSource, this.actor, this.targetSource, this.target);
+    }
+
+    private transfer(actorSource:RuntimeWorldObject, actor:RuntimeWorldObject, targetSource:RuntimeWorldObject, target:RuntimeWorldObject, eventType:EventType){
+        const transferMethod = actorSource.methods.get(WorldObject.transferContents);
+
+        if (!transferMethod){
+            throw new RuntimeError(`Unable to transfer '${actor.typeName}' from '${actorSource.typeName}' to '${target.typeName}', could not find transfer method!`);
+        }
+        
+        transferMethod.actualParameters = [
+            Variable.forThis(actorSource),
+            new Variable(WorldObject.recipientParameter, new Type(target.typeName, target.parentTypeName), this.target),
+            new Variable(WorldObject.contextParameter, new Type(actor.typeName, actor.parentTypeName), this.actor),
+            new Variable(WorldObject.eventTypeParameter, StringType.type(), Memory.allocateString(eventType))
         ];
 
-        this.thread.logReadable(`Moving with ${allDelegates.length} events to be raised`);
+        const delegate = new RuntimeDelegate(transferMethod);
 
-        this.addDelegates(...allDelegates);            
-    }
-
-    tryTakeTarget(){
-        if (!this.target.isTypeOf(Item.typeName)){
-            this.output.write("I can't take that.");
-            this.thread.logReadable(`Unable to take '${this.target.typeName}:${this.target.parentTypeName}', not an item`);
-            
-            this.addDelegates();            
-            return;
-        }
-
-        const [_, item] = Lookup.findTargetByNameIn(this.thread, this.thread.currentPlace!, this.target.typeName, true);
-
-        const inventory = this.thread.currentPlayer!.getContentsField();
-        inventory.items.push(item!);
-
-        const describeEvent = this.createDescribeDelegate(this.thread.currentPlace!);                
-        const takeEvent = this.prepareRaiseEvent(EventType.ItIsTaken, this.target);                
-
-        this.addDelegates(...takeEvent, describeEvent);
-    }
-
-    tryDropItemTarget(){
-        const [_, item] = Lookup.findTargetByNameIn(this.thread, this.thread.currentPlayer!, this.target.typeName, true);
-
-        if (!item){
-            throw new RuntimeError(`Unable to locate item '${this.target.typeName}' to drop`);
-        }
-
-        if (!this.thread.currentPlace){
-            throw new RuntimeError(`Unable to drop an item without a current place`);
-        }
-
-        const contents = this.thread.currentPlace!.getContentsField();
-
-        console.log(`CONTENTS ARE ${contents}`);
-
-        contents.items.push(item);
-
-        const describeEvent = this.createDescribeDelegate(this.thread.currentPlace!);                
-        const event = this.prepareRaiseEvent(EventType.ItIsDropped, this.target);
-
-        this.thread.currentMethod.push(Memory.allocateList([...event, describeEvent]));
-    }
-
-    tryUseTarget(){
-        if (this.actor){
-            const contextual = this.prepareRaiseContextualItemEvents(EventType.ItIsUsed, this.actor, this.target);
-            const event = this.prepareRaiseEvent(EventType.ItIsUsed, this.actor);
-
-            this.addDelegates(...event, ...contextual);
-        } else {
-            this.raiseEvent(EventType.ItIsUsed, this.target);
-        }
-    }
-
-    tryOpenTarget(){
-        this.raiseEvent(EventType.ItIsOpened, this.target);
-    }
-
-    tryCloseTarget(){
-        this.raiseEvent(EventType.ItIsClosed, this.target);
-    }
-
-    tryCombineTarget(){
-        if (this.actor){
-            const contextual = this.prepareRaiseContextualItemEvents(EventType.ItIsCombined, this.actor, this.target);
-            const event1 = this.prepareRaiseEvent(EventType.ItIsCombined, this.actor);
-            const event2 = this.prepareRaiseEvent(EventType.ItIsCombined, this.target); 
-
-            this.addDelegates(...event1, ...event2, ...contextual);
-        } else {
-            this.raiseEvent(EventType.ItIsCombined, this.target);
-        }
-    }
-
-    tryGiveToTarget(){
-        if (!this.actor){
-            this.output.write(`Unable to give an unknown object!`)
-            return;
-        }
-
-        if (!this.target){
-            this.output.write(`Unable to give your ${this.actor.typeName} to nothing!`);
-            return;
-        }
-
-        const playerContents = this.thread.currentPlayer?.getContentsField();
-        const contents = this.target.getContentsField();
-
-        playerContents?.removeInstance(this.actor);
-        contents.items.push(this.actor);
-            
-        const events = this.prepareRaiseContextualItemEvents(EventType.ItIsGiven, this.actor, this.target);
-
-        this.addDelegates(...events);            
+        Event.using(this.thread).raiseAll(delegate);    
     }
 
     private prepareRaiseContextualItemEvents(type:EventType, actor:RuntimeAny, target:RuntimeAny){
@@ -165,13 +201,7 @@ export class Action{
             throw new RuntimeError(`Attempted to raise an event on a non-world-object instance of type '${target.typeName}'`);
         }
         
-        return RaiseEvent.contextual(this.thread, type, actor, target);
-    }
-
-    private raiseEvent(type:EventType, target:RuntimeAny){                
-        const eventDelegates = this.prepareRaiseEvent(type, target);
-
-        this.addDelegates(...eventDelegates);
+        return Event.using(this.thread).prepareContextual(type, actor, target);
     }
 
     private prepareDescribeContents(describableContainer:RuntimeAny){
@@ -179,10 +209,10 @@ export class Action{
             throw new RuntimeError(`Attempted to describe contents on a non-world-object instance of type '${describableContainer.typeName}'`);
         }
 
-        const describeContents = describableContainer.methods.get(WorldObject.describeContents);
+        const describeContents = describableContainer.methods.get(WorldObject.listContents);
 
         if (!describeContents){
-            throw new RuntimeError(`Unable to locate ${WorldObject.describeContents} on world object`);
+            throw new RuntimeError(`Unable to locate ${WorldObject.listContents} on world object`);
         }
 
         describeContents.actualParameters[0] = Variable.forThis(describableContainer);
@@ -195,22 +225,12 @@ export class Action{
             throw new RuntimeError(`Attempted to raise an event on a non-world-object instance of type '${target.typeName}'`);
         }
 
-        return RaiseEvent.nonContextual(this.thread, type, target);
-    }
-
-    private addDelegates(...delegates:RuntimeDelegate[]){
-        if (delegates?.length == 1){
-            this.thread.currentMethod.push(delegates[0]);
-        } else if (delegates?.length > 1){      
-            this.thread.currentMethod.push(Memory.allocateList(delegates));
-        } else {
-            this.thread.currentMethod.push(Memory.allocateList([]));
-        }
+        return Event.using(this.thread).prepareNonContextual(type, target);
     }
 
     private createDescribeDelegate(describableObject:RuntimeWorldObject){
         const describe = describableObject.methods.get(WorldObject.describe)!;
-        describe.actualParameters.unshift(Variable.forThis(this.target));
+        describe.actualParameters.unshift(Variable.forThis(describableObject));
 
         return new RuntimeDelegate(describe);
     }

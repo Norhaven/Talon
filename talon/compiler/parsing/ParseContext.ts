@@ -114,6 +114,33 @@ export class ParseContext{
         return this.expectAndConsume(TokenType.Identifier, "Expected identifier");
     }
 
+    expectOneOrMoreIdentifiers(){
+        const identifierTokens = [this.expectIdentifier()];
+
+        while(this.isTypeOf(TokenType.ListSeparator)){
+            this.consumeCurrentToken();
+
+            identifierTokens.push(this.expectIdentifier());
+        }
+
+        return identifierTokens;
+    }
+
+    expectOneOrMoreKeywords(keyword:string, ...keywords:string[]){
+
+        const allKeywords = !keywords ? [keyword] : [keyword, ...keywords];
+
+        const identifierTokens = [this.expectAnyOf(...allKeywords)];
+
+        while(this.isTypeOf(TokenType.ListSeparator)){
+            this.consumeCurrentToken();
+
+            identifierTokens.push(this.expectAnyOf(...allKeywords));
+        }
+
+        return identifierTokens;
+    }
+
     expectTerminator(){
         this.expectAndConsume(TokenType.Terminator, "Expected expression terminator");
     }

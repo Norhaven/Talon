@@ -12,6 +12,7 @@ export enum OpCode {
     HandleMenuCommand = ".handle.cmd.menu",
     ReadInput = '.read.in',
     GoTo = '.br',
+    GoToLabel = '.br.label',
     Return = '.ret',
     BranchRelative = '.br.rel',
     BranchRelativeIfFalse = '.br.rel.false',
@@ -42,6 +43,10 @@ export enum OpCode {
     RaiseEvent = ".raise.event",
     RaiseContextualEvent = ".raise.event.ctx",
     LoadPlace = ".load.place",
+    LoadPlayer = ".load.player",
     ReplaceInstances = ".replace.inst",
-    Ignore = ".ignore"
+    Ignore = ".ignore",
+    Transfer = ".transfer.inst",
+    FindMethod = ".find.method",
+    InterpolateString = ".interpolate.str"
 }

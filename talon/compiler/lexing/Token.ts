@@ -11,6 +11,7 @@ import { Creature } from "../../library/Creature";
 import { Menu } from "../../library/Menu";
 import { MenuOption } from "../../library/MenuOption";
 import { Player } from "../../library/Player";
+import { Group } from "../../library/Group";
 
 export class Token{
     static get empty():Token{
@@ -63,6 +64,10 @@ export class Token{
 
     static get forList():Token{
         return Token.getTokenWithTypeOf(List.typeName, TokenType.Keyword);
+    }
+
+    static get forGroup():Token{
+        return Token.getTokenWithTypeOf(Group.typeName, TokenType.Keyword);
     }
 
     private static getTokenWithTypeOf(name:string, type:TokenType){

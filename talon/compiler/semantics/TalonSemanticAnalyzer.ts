@@ -18,6 +18,7 @@ export class TalonSemanticAnalyzer{
     private readonly menu = new TypeDeclarationExpression(Token.forMenu, Token.forAny);
     private readonly option = new TypeDeclarationExpression(Token.forOption, Token.forAny);
     private readonly player = new TypeDeclarationExpression(Token.forPlayer, Token.forWorldObject);
+    private readonly group = new TypeDeclarationExpression(Token.forGroup, Token.forWorldObject);
 
     constructor(private readonly out:IOutput){
 
@@ -34,7 +35,8 @@ export class TalonSemanticAnalyzer{
             this.creature, 
             this.menu, 
             this.option,
-            this.player
+            this.player,
+            this.group
         ];
 
         if (expression instanceof ProgramExpression){

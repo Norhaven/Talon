@@ -14,6 +14,8 @@ import { ExpressionVisitor } from "./ExpressionVisitor";
 import { ConcatenationExpression } from "../expressions/ConcatenationExpression";
 import { TokenType } from "../../lexing/TokenType";
 import { NumberType } from "../../../library/NumberType";
+import { Group } from "../../../library/Group";
+import { Any } from "../../../library/Any";
 
 export class FieldDeclarationVisitor extends Visitor{
     visit(context: ParseContext): Expression {
@@ -49,6 +51,16 @@ export class FieldDeclarationVisitor extends Visitor{
                 field.typeName = StringType.typeName;
                 field.initialValue = observation.value;
 
+            } else if (context.is(Keywords.listed)){
+                context.expect(Keywords.listed);
+                context.expect(Keywords.as);
+
+                const listText = context.expectString();
+
+                field.name = WorldObject.list;
+                field.typeName = StringType.typeName;
+                field.initialValue = listText.value;
+                
             } else if (context.is(Keywords.described)){
                 context.expect(Keywords.described);
                 context.expect(Keywords.as);
@@ -200,6 +212,25 @@ export class FieldDeclarationVisitor extends Visitor{
                 field.name = WorldObject.directions;
                 field.typeName = List.typeName;
                 field.initialValue = directions.map(x => [x.value, placeName.value]);
+            } else if (context.is(Keywords.be)){
+                context.expect(Keywords.be);
+                context.expect(Keywords.grouped);
+                context.expect(Keywords.as);
+
+                const typeName = context.expectIdentifier();
+
+                field.name = WorldObject.groupableAsType;
+                field.typeName = StringType.typeName;
+                field.initialValue = typeName.value;
+            } else if (context.is(Keywords.contain)){
+                context.expect(Keywords.contain);
+                context.expect(Keywords.any);
+                
+                const typeName = context.expectIdentifier();
+
+                field.name = Group.contentType;
+                field.typeName = StringType.typeName;
+                field.initialValue = typeName;
             }
         } else {
             throw new CompilationError("Unable to determine field");

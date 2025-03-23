@@ -14,10 +14,17 @@ export class ComparisonExpressionVisitor extends Visitor{
 
         context.expect(Keywords.is);
 
+        let isNegated = false;
+
+        if (context.is(Keywords.not)){
+            context.expect(Keywords.not);
+            isNegated = true;
+        }
+
         var visitor = new ExpressionVisitor();
         var comparedTo = visitor.visit(context);
 
-        return new ComparisonExpression(identifierExpression, comparedTo);
+        return new ComparisonExpression(identifierExpression, comparedTo, isNegated);
     }
 
     private parseIdentifier(context:ParseContext){

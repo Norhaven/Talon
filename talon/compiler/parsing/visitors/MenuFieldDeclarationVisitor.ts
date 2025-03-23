@@ -46,15 +46,14 @@ export class MenuFieldDeclarationVisitor extends Visitor{
                 field.associatedExpressions.push(concat);
             }
         } else if (context.is(Keywords.contains)){
-            context.expect(Keywords.contains);
-            
+            context.expect(Keywords.contains);            
             context.expect(Keywords.options);
 
-            const items = [[1, context.expectIdentifier().value]];
+            const items = [[1, null, context.expectIdentifier().value]];
 
             while (context.isTypeOf(TokenType.ListSeparator)){
                 context.consumeCurrentToken();
-                items.push([1, context.expectIdentifier().value]);
+                items.push([1, null, context.expectIdentifier().value]);
             }
 
             field.name = WorldObject.contents;

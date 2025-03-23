@@ -2,10 +2,15 @@ import { Any } from "../../library/Any";
 import { Variable } from "./Variable";
 import { Method } from "../../common/Method";
 import { RuntimeError } from "../errors/RuntimeError";
+import { Type } from "../../common/Type";
+import { StringType } from "../../library/StringType";
+import { NumberType } from "../../library/NumberType";
+import { BooleanType } from "../../library/BooleanType";
+import { List } from "../../library/List";
 import { RuntimeList } from "./RuntimeList";
 import { RuntimeString } from "./RuntimeString";
 import { RuntimeBoolean } from "./RuntimeBoolean";
-import { Type } from "../../common/Type";
+import { RuntimeInteger } from "./RuntimeInteger";
 
 export class RuntimeAny{
     parentTypeName:string = "";
@@ -37,6 +42,26 @@ export class RuntimeAny{
         return instance;
     }
 
+    isString(): this is RuntimeString{
+        return this.isTypeOf(StringType.typeName);
+    }
+
+    isInteger(): this is RuntimeInteger{
+        return this.isTypeOf(NumberType.typeName);
+    }
+
+    isBoolean(): this is RuntimeBoolean{
+        return this.isTypeOf(BooleanType.typeName);
+    }
+
+    isList(): this is RuntimeList{
+        return this.isTypeOf(List.typeName);
+    }
+
+    isSameTypeAs(instance:RuntimeAny){
+        return this.typeName == instance.typeName;
+    }
+
     isTypeOf(typeName:string):boolean{
 
         if (this.typeName === typeName){
@@ -60,6 +85,10 @@ export class RuntimeAny{
 
     getFieldAsBoolean(name:string):RuntimeBoolean{
         return <RuntimeBoolean>this.getFieldValueByName(name);
+    }
+
+    getFieldAsNumber(name:string):RuntimeInteger{
+        return <RuntimeInteger>this.getFieldValueByName(name);
     }
 
     getType(){

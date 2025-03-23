@@ -46,6 +46,7 @@ import { Menu } from "../../library/Menu";
 import { MenuOption } from "../../library/MenuOption";
 import { GlobalWhenTypeTransformer } from "./transformers/type/GlobalWhenTypeTransformer";
 import { GlobalFieldsTypeTransformer } from "./transformers/type/GlobalFieldsTypeTransformer";
+import { Group } from "../../library/Group";
 
 export class TalonTransformer{
     constructor(private readonly out:IOutput){
@@ -71,6 +72,7 @@ export class TalonTransformer{
         types.push(new Type(Creature.typeName, Creature.parentTypeName));
         types.push(new Type(Menu.typeName, Menu.parentTypeName));
         types.push(new Type(MenuOption.typeName, MenuOption.parentTypeName));
+        types.push(new Type(Group.typeName, Group.parentTypeName));
 
         return new Map<string, Type>(types.map(x => [x.name, x]));
     }

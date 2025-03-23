@@ -12,7 +12,7 @@ import { RuntimeWorldObject } from "../library/RuntimeWorldObject";
 import { Variable } from "../library/Variable";
 import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
-import { RaiseEvent } from "./internal/RaiseEvent";
+import { Event } from "./internal/Event";
 
 export class RaiseEventHandler extends OpCodeHandler{
     public code: OpCode = OpCode.RaiseEvent;
@@ -29,9 +29,7 @@ export class RaiseEventHandler extends OpCodeHandler{
         
         this.logInteraction(thread, target.typeName, eventType);
 
-        const eventDelegates = RaiseEvent.nonContextual(thread, eventType, target);
-        
-        thread.currentMethod.push(new RuntimeList(eventDelegates));
+        Event.using(thread).raiseNonContextual(eventType, target);
         
         return super.handle(thread);
     }

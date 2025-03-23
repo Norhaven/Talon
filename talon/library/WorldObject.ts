@@ -10,12 +10,17 @@ export class WorldObject {
     static state = "~state";
     static aliases = "~aliases";
     static directions = "~directions";
+    static groupableAsType = "~groupableAsType";
 
     static describe = "~describe";
     static observe = "~observe";
-    static describeContents = "~describeContents";
+    static list = "~list";
+    static listContents = "~listContents";
+    static transferContents = "~transferContents";
     
     static visible = "~visible";
 
     static contextParameter = "~context";
+    static recipientParameter = "~recipient";
+    static eventTypeParameter = "~eventType";
 }

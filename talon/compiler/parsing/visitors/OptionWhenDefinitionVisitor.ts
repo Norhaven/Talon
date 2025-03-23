@@ -19,6 +19,6 @@ export class OptionWhenDeclarationVisitor extends Visitor{
         const actionsVisitor = new EventExpressionVisitor();
         const actions = actionsVisitor.visit(context);
 
-        return new WhenDeclarationExpression(Keywords.player, eventKind.value, actions,  "~it");
+        return new WhenDeclarationExpression(Keywords.player, [eventKind.value], actions,  ["~it"]);
     }
 }

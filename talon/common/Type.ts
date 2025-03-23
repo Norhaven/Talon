@@ -15,7 +15,20 @@ export class Type{
         return this.name.startsWith("<~>");
     }
 
+    inheritsFromType(types:Map<string, Type>, typeName:string){
+        
+        for(let current = <Type>this;
+            current;
+            current = types.get(current.baseTypeName)!){
+                if (current.name == typeName){
+                    return true;
+                } 
+        }
+        
+        return false;
+    }
+
     constructor(public name:string, public baseTypeName:string){
 
-    }    
+    }
 }

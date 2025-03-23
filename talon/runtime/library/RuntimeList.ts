@@ -15,6 +15,10 @@ import { Variable } from "./Variable";
 import { Type } from "../../common/Type";
 import { RuntimeError } from "../errors/RuntimeError";
 import { RuntimeWorldObject } from "./RuntimeWorldObject";
+import { RuntimeBoolean } from "./RuntimeBoolean";
+import { WorldObject } from "../../library/WorldObject";
+import { RuntimeGroup } from "./RuntimeGroup";
+import { Group } from "../../library/Group";
 
 export class RuntimeList extends RuntimeAny{
     typeName = List.typeName;
@@ -25,13 +29,13 @@ export class RuntimeList extends RuntimeAny{
 
         this.defineContainsMethod()
         this.defineContainsTypeMethod();
-        this.defineMapMethod();
         this.defineAddMethod();
         this.defineCountMethod();
         this.defineJoinMethod();
         this.defineRemoveMethod();
         this.defineEnsureOneMethod();
         this.defineGetEnumeratorMethod();
+        this.defineGroupMethod();
     }
 
     private defineJoinMethod(){
@@ -84,43 +88,21 @@ export class RuntimeList extends RuntimeAny{
         this.methods.set(List.add, add);
     }
 
-    private defineMapMethod(){
-        const map = new Method();
-        map.name = List.map;
-        map.parameters.push(
-            new Parameter(List.delegateParameter, RuntimeDelegate.name)
-        );
-        map.returnType = this.typeName;
-                
-        map.body.push(
-            Instruction.loadNumber(0),
-            Instruction.setLocal("~localCount"),  
-            Instruction.newInstance(this.typeName),
-            Instruction.setLocal("~results"),      
+    private defineGroupMethod(){
+        const resultsLocal = "~results";
 
-            Instruction.loadLocal("~localCount"),
+        const group = new Method();
+        group.name = List.group;
+        group.parameters = [];
+        group.returnType = this.typeName;
+
+        group.body.push(
             Instruction.loadThis(),
-            Instruction.instanceCall(List.count),
-            Instruction.compareEqual(),
-            Instruction.branchRelativeIfFalse(2),
-            Instruction.loadLocal("~results"),
-            Instruction.return(),  
-            
-            Instruction.loadThis(),
-            Instruction.loadLocal("~localCount"),
-            Instruction.loadElement(),
-            Instruction.loadLocal(List.delegateParameter),
-            Instruction.invokeDelegateOnInstance(),
-            Instruction.loadLocal("~results"),
-            Instruction.instanceCall(List.add),
-            Instruction.loadLocal("~localCount"),
-            Instruction.loadNumber(1),
-            Instruction.add(),
-            Instruction.setLocal("~localCount"),
-            Instruction.goTo(4)
+            Instruction.externalCall("groupIfPossible"),
+            Instruction.return()
         );
 
-        this.methods.set(List.map, map);
+        this.methods.set(List.group, group);
     }
 
     private defineContainsMethod(){
@@ -211,10 +193,6 @@ export class RuntimeList extends RuntimeAny{
         this.methods.set(List.getEnumerator, getEnumeratorMethod);
     }
 
-    private replace(instance:RuntimeWorldObject){
-
-    }
-
     private getEnumerator(){
         return Memory.allocateEnumerator(this.items);
     }
@@ -233,10 +211,21 @@ export class RuntimeList extends RuntimeAny{
     }
 
     removeInstance(instance:RuntimeAny){
+        const setToRemove = new Set<RuntimeAny>();
+
+        if (instance instanceof RuntimeGroup){
+            for(const item of (<RuntimeGroup>instance).getContentsField().items){
+                setToRemove.add(item);
+            }
+        } else {
+            setToRemove.add(instance);
+        }
 
         this.items = this.items.filter(x => {
             if (instance instanceof RuntimeString){
                 return (<RuntimeString>x).value != instance.value;
+            } else if (instance instanceof RuntimeGroup){
+                return !setToRemove.has(x);
             } else if (instance instanceof RuntimeWorldObject){
                 const result = Object.is(x, instance);
 
@@ -249,10 +238,62 @@ export class RuntimeList extends RuntimeAny{
         });
     }
 
+    removeAllInstances(instances:RuntimeList){
+        for(const item of instances.items){
+            this.removeInstance(item);
+        }
+    }
+
     addInstance(instance:RuntimeAny){
+        if (instance.isTypeOf(Group.typeName)){
+            const groupContents = (<RuntimeGroup>instance).getContentsField();
+
+            for(const item of groupContents.items){
+                this.items.push(item);
+            }
+
+            return;
+        }
+
         console.log("Adding an instance...");
         console.log(instance);
         this.items.push(instance);
+    }
+
+    groupIfPossible(){
+        const groupings = new Map<string, [RuntimeAny]>();
+
+        for(const item of this.items){
+            const items = groupings.get(item.typeName);
+
+            if (!items){
+                groupings.set(item.typeName, [item]);
+            } else {
+                items.push(item);
+            }
+        }
+
+        const results:RuntimeAny[] = [];
+
+        for(const pair of groupings){
+            if (pair[1].length > 1){
+                const groupingType = pair[1][0].getFieldAsString(WorldObject.groupableAsType);
+
+                if (groupingType){
+                    const group = Memory.allocateGroup(groupingType.value);
+
+                    group.addAllInstances(Memory.allocateList(pair[1]));
+
+                    results.push(group);
+                } else {
+                    results.push(...pair[1]);
+                }
+            } else {
+                results.push(pair[1][0]);
+            }
+        }
+
+        return Memory.allocateList(results);
     }
 
     private countItems(){
@@ -270,7 +311,7 @@ export class RuntimeList extends RuntimeAny{
         return Memory.allocateBoolean(false);
     }
 
-    private containsValue(value:RuntimeString){
+    containsValue(value:RuntimeString){
         console.log(`Contains ${this.items.length} items, checking for '${value.value}'...`);
         console.log(this.items.map(x => (<RuntimeString>x).value));
         const foundItems = this.items.some(x => x.typeName === StringType.typeName && (<RuntimeString>x).value === value.value);

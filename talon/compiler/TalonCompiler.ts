@@ -15,6 +15,8 @@ import * as buildInfo from "../../build-info.json";
 import { List } from "../library/List";
 import { WorldObject } from "../library/WorldObject";
 import { GlobalFields } from "../library/GlobalFields";
+import { GlobalEvents } from "../library/GlobalEvents";
+import { EventType } from "../common/EventType";
 
 export class TalonCompiler{
     get languageVersion(){
@@ -68,8 +70,6 @@ export class TalonCompiler{
 
         type.attributes.push(new EntryPointAttribute());
 
-        const handledCommandLocal = "~handledCommand";
-
         const main = new Method();
         main.name = Any.main;
         main.body.push(
@@ -79,16 +79,27 @@ export class TalonCompiler{
             Instruction.print(),
             Instruction.loadString(""),
             Instruction.print(),
-            Instruction.staticCall("~globalSays", "~say"),        
+            Instruction.staticCall("~globalSays", "~say"),
             Instruction.loadString(""),
-            Instruction.print(),       
+            Instruction.print(),            
+            Instruction.loadInstance(GlobalEvents.typeName),
+            Instruction.raiseEvent(EventType.GameIsStarted),
+            ...Instruction.raiseAllEvents(),
+            Instruction.loadString(""),
+            Instruction.print(),
+            Instruction.loadInstance(GlobalEvents.typeName),
+            Instruction.raiseEvent(EventType.PlayerIsStarted),
+            ...Instruction.raiseAllEvents(),
+            Instruction.loadString(""),
+            Instruction.print(),            
             Instruction.loadPlace(),
             Instruction.instanceCall(WorldObject.describe),
             Instruction.ignore(),  
             Instruction.loadBoolean(true),
             Instruction.assignStaticField("~globalProgramFields", GlobalFields.canRun),
-            Instruction.loadStaticField("~globalProgramFields", GlobalFields.canRun),
-            ...Instruction.ifTrueThen(
+            ...Instruction.while(
+                Instruction.loadStaticField("~globalProgramFields", GlobalFields.canRun),
+
                 Instruction.loadString(""),
                 Instruction.print(),      
                 Instruction.loadString("What would you like to do?"),
@@ -98,14 +109,13 @@ export class TalonCompiler{
                 Instruction.print(),
                 Instruction.parseCommand(),    
                 Instruction.handleCommand(),
-                ...Instruction.raiseAllEvents(),
-                ...Instruction.ifTrueThen(
-                    Instruction.goTo(14)
-                ),                
-                Instruction.loadString("I don't know how to do that."),
-                Instruction.print(),
-                Instruction.goTo(14)
+                ...Instruction.raiseAllEvents()
             ),
+            Instruction.loadString(""),
+            Instruction.print(),            
+            Instruction.loadInstance(GlobalEvents.typeName),
+            Instruction.raiseEvent(EventType.GameIsEnded),
+            ...Instruction.raiseAllEvents(),
             Instruction.return()
         );
 

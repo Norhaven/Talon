@@ -8,12 +8,14 @@ import { Type } from "../../../../common/Type";
 import { BooleanType } from "../../../../library/BooleanType";
 import { Convert } from "../../../../library/Convert";
 import { Delegate } from "../../../../library/Delegate";
+import { Group } from "../../../../library/Group";
 import { Item } from "../../../../library/Item";
 import { List } from "../../../../library/List";
 import { Menu } from "../../../../library/Menu";
 import { MenuOption } from "../../../../library/MenuOption";
 import { NumberType } from "../../../../library/NumberType";
 import { Place } from "../../../../library/Place";
+import { Player } from "../../../../library/Player";
 import { StringType } from "../../../../library/StringType";
 import { WorldObject } from "../../../../library/WorldObject";
 import { CompilationError } from "../../../exceptions/CompilationError";
@@ -81,10 +83,13 @@ export class GlobalTypeTransformer implements ITypeTransformer{
 
             this.createDescribeMenuOptionMethod(type);
 
-        } else if (this.inheritsFromType(type, context, WorldObject.typeName)){
+        } else if (type.inheritsFromType(context.typesByName, WorldObject.typeName)){
             
-            const isPlace = this.inheritsFromType(type, context, Place.typeName);
-            const defaultState = isPlace ? State.opened : State.closed;
+            const isPlace = type.inheritsFromType(context.typesByName, Place.typeName);
+            const isPlayer = type.inheritsFromType(context.typesByName, Player.typeName);
+            const isGroup = type.inheritsFromType(context.typesByName, Group.typeName);
+
+            const defaultState = isPlace || isPlayer ? State.opened : State.closed;
 
             this.createFieldIfNotExistsOrAppend(WorldObject.state, List.typeName, [defaultState], type, this.knownExclusiveStatesByName);
             this.createFieldIfNotExists(WorldObject.visible, BooleanType.typeName, true, type);
@@ -92,9 +97,18 @@ export class GlobalTypeTransformer implements ITypeTransformer{
             this.createFieldIfNotExists(WorldObject.observation, StringType.typeName, "", type);
             this.createFieldIfNotExists(WorldObject.description, StringType.typeName, "", type);
             this.createFieldIfNotExists(WorldObject.aliases, List.typeName, [], type);
+            this.createFieldIfNotExists(WorldObject.groupableAsType, StringType.typeName, "", type);
+            this.createFieldIfNotExists(WorldObject.list, StringType.typeName, "", type);
+            this.createFieldIfNotExists(WorldObject.name, StringType.typeName, type.name, type);
+
+            if (isGroup){
+                this.createFieldIfNotExists(Group.contentType, StringType.typeName, WorldObject.typeName, type);
+                this.createFieldIfNotExists(Group.count, NumberType.typeName, 0, type);
+            }
 
             this.createDescribeMethod(type);
             this.createObserveMethod(type);
+            this.createTransferMethod(type);
 
             EventTransformer.createEvents(expression, context, type);            
         } 
@@ -109,6 +123,8 @@ export class GlobalTypeTransformer implements ITypeTransformer{
             ...Instruction.ifTrueThen(
                 Instruction.loadThis(),
                 Instruction.loadProperty(WorldObject.description),
+                Instruction.loadThis(),
+                Instruction.interpolateString(),
                 Instruction.print()
             ),            
             Instruction.return()
@@ -126,6 +142,8 @@ export class GlobalTypeTransformer implements ITypeTransformer{
             ...Instruction.ifTrueThen(
                 Instruction.loadThis(),
                 Instruction.loadProperty(WorldObject.description),
+                Instruction.loadThis(),
+                Instruction.interpolateString(),
                 Instruction.print(),
                 Instruction.loadThis(),
                 Instruction.loadField(WorldObject.contents),
@@ -154,7 +172,6 @@ export class GlobalTypeTransformer implements ITypeTransformer{
                 Instruction.loadThis(),
                 Instruction.raiseEvent(EventType.ItIsDescribed),
                 ...Instruction.raiseAllEvents(),
-                Instruction.ignore(),
                 Instruction.readInput(),
                 Instruction.parseCommand(),
                 Instruction.loadThis(),
@@ -222,21 +239,75 @@ export class GlobalTypeTransformer implements ITypeTransformer{
         type.methods.push(hide);
     }
 
+    private createTransferMethod(type:Type){
+        const transfer = new Method();
+        transfer.name = WorldObject.transferContents;
+        transfer.returnType = BooleanType.typeName;
+        transfer.parameters = [
+            new Parameter(WorldObject.recipientParameter, WorldObject.typeName),
+            new Parameter(WorldObject.contextParameter, WorldObject.typeName),
+            new Parameter(WorldObject.eventTypeParameter, StringType.typeName)
+        ];
+
+        transfer.body.push(
+
+            // Invoke matching events, if they're present, on the content and recipient.
+      
+            Instruction.loadLocal(WorldObject.contextParameter),
+            Instruction.loadLocal(WorldObject.recipientParameter),
+            Instruction.loadLocal(WorldObject.eventTypeParameter),
+            Instruction.raiseContextualEvent(EventType.RuntimeDetermined),
+            ...Instruction.raiseAllEvents(false),
+
+            // Early out if we declined any of the events, otherwise go ahead and transfer the content.
+
+            ...Instruction.ifTrueThen(
+                Instruction.loadLocal(WorldObject.contextParameter),
+                Instruction.loadThis(),
+                Instruction.loadProperty(WorldObject.contents),
+                Instruction.instanceCall(List.remove),
+                Instruction.loadLocal(WorldObject.contextParameter),
+                Instruction.loadLocal(WorldObject.recipientParameter),
+                Instruction.loadField(WorldObject.contents),
+                Instruction.instanceCall(List.add),
+                Instruction.loadBoolean(true),
+                Instruction.return()
+            ),
+            Instruction.loadBoolean(false),
+            Instruction.return()
+        );
+
+        type.methods.push(transfer);
+    }
+
     private createDescribeMethod(type:Type){
+        const contentsLocal = "~contents";
+        const contentsObservationsLocal = "~contentsObservations";
+
         const describe = new Method();
         describe.name = WorldObject.describe;
         describe.returnType = BooleanType.typeName;
+
         describe.body.push(
             Instruction.loadThis(),
             Instruction.loadProperty(WorldObject.visible),
             ...Instruction.ifTrueThen(
                 Instruction.loadThis(),
                 Instruction.loadProperty(WorldObject.description),
-    
-                ...Instruction.joinList(' ',
-                    ...Instruction.mapList(WorldObject.observe, WorldObject.contents)
+                Instruction.loadThis(),
+                Instruction.interpolateString(),
+                ...Instruction.containsTextValue(State.opened, WorldObject.state),
+                ...Instruction.ifTrueThen(
+                    ...Instruction.joinList(' ',
+                        Instruction.loadThis(),
+                        Instruction.loadProperty(WorldObject.contents),
+                        Instruction.setLocal(contentsLocal),
+                        ...Instruction.groupList(contentsLocal),
+                        ...Instruction.mapList(WorldObject.observe, contentsLocal, contentsObservationsLocal),
+                        Instruction.loadLocal(contentsObservationsLocal)
+                    ),
+                    Instruction.concatenate()
                 ),
-                Instruction.concatenate(),
                 Instruction.print(),
             ),            
             Instruction.loadBoolean(true),
@@ -247,6 +318,9 @@ export class GlobalTypeTransformer implements ITypeTransformer{
     }
 
     private createObserveMethod(type:Type){
+        const contentsLocal = "~contents";
+        const contentsObservationsLocal = "~contentsObservations";
+
         const observe = new Method();
         observe.name = WorldObject.observe;
         observe.returnType = StringType.typeName;
@@ -254,23 +328,28 @@ export class GlobalTypeTransformer implements ITypeTransformer{
         observe.body.push(
             Instruction.loadThis(),
             Instruction.loadProperty(WorldObject.visible),
-            ...Instruction.ifTrueThen(
-                                
+            ...Instruction.ifTrueThen(                                
                 ...Instruction.containsTextValue(State.opened, WorldObject.state),
                 ...Instruction.ifTrueThen(
                     Instruction.loadThis(),
                     Instruction.loadProperty(WorldObject.observation),
-                    
+                    Instruction.loadThis(),
+                    Instruction.interpolateString(),
                     ...Instruction.joinList(' ',
-                        ...Instruction.mapList(WorldObject.observe, WorldObject.contents)
-                    ),
-                    
+                        Instruction.loadThis(),
+                        Instruction.loadProperty(WorldObject.contents),
+                        Instruction.setLocal(contentsLocal),
+                        ...Instruction.groupList(contentsLocal),
+                        ...Instruction.mapList(WorldObject.observe, contentsLocal, contentsObservationsLocal),
+                        Instruction.loadLocal(contentsObservationsLocal)
+                    ),                    
                     Instruction.concatenate(),
                     Instruction.return(),
-                ),
-                
+                ),                
                 Instruction.loadThis(),
                 Instruction.loadProperty(WorldObject.observation),
+                Instruction.loadThis(),
+                Instruction.interpolateString(),
                 Instruction.return(),
             ),
             Instruction.loadString(""),
@@ -282,6 +361,10 @@ export class GlobalTypeTransformer implements ITypeTransformer{
 
     private isFieldPresent(name:string, type:Type){
         return type.fields.some(x => x.name === name);
+    }
+
+    private isMethodPresent(name:string, type:Type){
+        return type.methods.some(x => x.name === name);
     }
 
     private createFieldIfNotExistsOrAppend(name:string, typeName:string, defaultValues:Object[], type:Type, exclusiveValuesByName:Map<string, Object>){
@@ -323,6 +406,24 @@ export class GlobalTypeTransformer implements ITypeTransformer{
         field.defaultValue = Array.from(existingValues);
     }
 
+    private createPropertyIfNotExists(name:string, typeName:string, type:Type, ...body:Instruction[]){
+        const getFieldName = `~get_${name}`;
+
+        if (this.isMethodPresent(getFieldName, type)){
+            return false;
+        }
+
+        const getField = new Method();
+        getField.name = getFieldName;
+        getField.returnType = typeName;
+        
+        getField.body.push(...body);
+
+        type?.methods.push(getField);
+
+        return true;
+    }
+
     private createFieldIfNotExists(name:string, typeName:string, defaultValue:Object, type:Type){
 
         if (this.isFieldPresent(name, type)){
@@ -337,18 +438,6 @@ export class GlobalTypeTransformer implements ITypeTransformer{
         type.fields.push(field);
 
         return true;
-    }
-
-    private inheritsFromType(type:Type, context:TransformerContext, typeName:string){
-        for(let current = type;
-            current;
-            current = context.typesByName.get(current.baseTypeName)!){
-                if (current.name == typeName){
-                    return true;
-                } 
-        }
-
-        return false;
     }
 
     private transformCustomFields(expression:TypeDeclarationExpression, context:TransformerContext, type:Type){

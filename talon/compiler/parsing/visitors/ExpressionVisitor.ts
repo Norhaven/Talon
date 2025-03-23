@@ -20,16 +20,21 @@ import { ReplaceExpressionVisitor } from "./ReplaceExpressionVisitor";
 import { VisibilityExpression } from "../expressions/VisibilityExpression";
 import { QuitExpression } from "../expressions/QuitExpression";
 import { IncrementDecrementExpression } from "../expressions/IncrementDecrementExpression";
+import { AcceptExpression } from "../expressions/AcceptExpression";
+import { IdentifierExpression } from "../expressions/IdentifierExpression";
+import { PlayerCompletionExpression } from "../expressions/PlayerCompletionExpression";
+import { GameCompletionExpression } from "../expressions/GameCompletionExpression";
+import { EventType } from "../../../common/EventType";
 
 export class ExpressionVisitor extends Visitor{
     visit(context: ParseContext): Expression {
         if (context.is(Keywords.if)){
             const visitor = new IfExpressionVisitor();
             return visitor.visit(context);
-        } else if (context.is(Keywords.it)){
-        
+        } else if (context.is(Keywords.it)){ 
+
             if (context.isFollowedBy(Keywords.contains))
-            {
+            {       
                 context.expect(Keywords.it);
                 context.expect(Keywords.contains);
 
@@ -37,6 +42,21 @@ export class ExpressionVisitor extends Visitor{
                 const typeName = context.expectIdentifier();
 
                 return new ContainsExpression("~it", Number(count.value), typeName.value);
+            } else if (context.isFollowedBy(Keywords.accepts)){
+                context.expect(Keywords.it);
+                context.expect(Keywords.accepts);
+
+                const items:IdentifierExpression[] = [];
+
+                while(context.isTypeOf(TokenType.ListSeparator)){
+                    context.consumeCurrentToken();
+                    
+                    const item = context.expectIdentifier();
+
+                    items.push(new IdentifierExpression(undefined, item.value));
+                }
+
+                return new AcceptExpression(items);
             } else {
                 const visitor = new ComparisonExpressionVisitor();
                 return visitor.visit(context);
@@ -122,6 +142,32 @@ export class ExpressionVisitor extends Visitor{
             context.consumeCurrentToken();
 
             return new QuitExpression();
+        } else if (context.is(Keywords.the)){
+            context.consumeCurrentToken();
+
+            if (context.is(Keywords.player)){
+                context.consumeCurrentToken();
+
+                if (context.isAnyOf(Keywords.fails, Keywords.wins)){
+                    const action = context.consumeCurrentToken();
+                    const eventType = action.value == Keywords.fails ? EventType.PlayerFails : EventType.PlayerWins;
+
+                    return new PlayerCompletionExpression(eventType);
+                } else {
+                    throw new CompilationError(`Unable to determine a valid action for the player with token '${context.consumeCurrentToken()}`);
+                }
+            } else if (context.is(Keywords.game)) {
+                context.consumeCurrentToken();
+
+                if (context.is(Keywords.completes)){
+                    context.consumeCurrentToken();
+                    return new GameCompletionExpression(EventType.GameIsCompleted);
+                } else {
+                    throw new CompilationError(`Unable to determine a valid action for the game with token '${context.consumeCurrentToken()}'`);
+                }
+            } else {
+                throw new CompilationError(`Unable to determine an actor with token '${context.consumeCurrentToken()}'`);
+            }
         } else if (context.is(Keywords.add)){
             context.consumeCurrentToken();
 

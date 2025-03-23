@@ -9,5 +9,5 @@ export class Method{
     actualParameters:Variable[] = [];
     body:Instruction[] = [];
     returnType:string = "";
-    eventType:EventType = EventType.None;
+    eventType:EventType[] = [EventType.None];
 }

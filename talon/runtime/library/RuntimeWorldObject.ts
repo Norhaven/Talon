@@ -59,29 +59,52 @@ export class RuntimeWorldObject extends RuntimeAny{
     constructor(){
         super();
 
-        this.defineDescribeContentsMethod();
+        this.defineListContentsMethod();
     }
 
-    private defineDescribeContentsMethod(){
-        const describeContents = new Method();
-        describeContents.name = WorldObject.describeContents;
-        describeContents.returnType = BooleanType.typeName;
+    private defineListContentsMethod(){
+        const current = "~current";
+        const listText = "~listText";
 
-        describeContents.body.push(
+        const listContents = new Method();
+        listContents.name = WorldObject.listContents;
+        listContents.returnType = BooleanType.typeName;
+
+        listContents.body.push(
             Instruction.loadThis(),
-            Instruction.externalCall("describeContents"),
-            Instruction.print(),
+            Instruction.loadField(WorldObject.contents),
+            Instruction.instanceCall(List.group),
+            ...Instruction.forEach(
+                Instruction.setLocal(current),
+                Instruction.loadLocal(current),
+                Instruction.loadProperty(WorldObject.list),
+                Instruction.setLocal(listText),
+                Instruction.loadLocal(listText),
+                Instruction.loadString(""),
+                Instruction.compareEqual(),
+                ...Instruction.ifTrueThen(
+                    Instruction.loadString("1"),
+                    Instruction.loadLocal(current),
+                    Instruction.loadField(WorldObject.name),
+                    Instruction.concatenate(),
+                    Instruction.setLocal(listText)
+                ),
+                Instruction.loadLocal(listText),
+                Instruction.loadLocal(current),
+                Instruction.interpolateString(),
+                Instruction.print()
+            ),
             Instruction.loadBoolean(true),
             Instruction.return()
         );
 
-        this.methods.set(WorldObject.describeContents, describeContents);
+        this.methods.set(WorldObject.listContents, listContents);
     }
 
-    describeContents(){
-        const inventory = this.getContentsField();
+    listContents(){
+        const contents = this.getContentsField().groupIfPossible();
 
-        const names = inventory.items.map(x => x.typeName);
+        const names = contents.items.map(x => x.typeName);
 
         const namesWithCount = new Map<string, number>();
 

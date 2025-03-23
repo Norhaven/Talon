@@ -35,6 +35,6 @@ export class MenuWhenDeclarationVisitor extends Visitor{
         const actionsVisitor = new EventExpressionVisitor();
         const actions = actionsVisitor.visit(context);
 
-        return new WhenDeclarationExpression(Keywords.player, eventKind.value, actions,  target?.value);
+        return new WhenDeclarationExpression(Keywords.player, [eventKind.value], actions,  !target ? undefined : [target.value]);
     }
 }

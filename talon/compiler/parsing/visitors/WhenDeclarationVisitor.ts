@@ -13,51 +13,59 @@ export class WhenDeclarationVisitor extends Visitor{
     visit(context: ParseContext): Expression {
         context.expect(Keywords.when);
 
-        let eventKind:Token;
-        let target:Token|undefined = undefined;
+        let actor:Token|undefined = undefined;
+        let eventKind:Token[];
+        let target:Token[]|undefined = undefined;
 
         if (context.is(Keywords.it)){
             context.expect(Keywords.it);
             context.expect(Keywords.is);
 
             if (context.isAnyOf(Keywords.used, Keywords.combined)){
-                eventKind = context.expectAnyOf(Keywords.used, Keywords.combined);
+                eventKind = context.expectOneOrMoreKeywords(Keywords.used, Keywords.combined);
 
                 if (context.is(Keywords.with)){
                     context.expect(Keywords.with);
                     context.expectAnyOf(Keywords.a, Keywords.an);
 
-                    target = context.expectIdentifier();
+                    target = context.expectOneOrMoreIdentifiers();
                 }
             } else if (context.is(Keywords.given)){
-                eventKind = context.expect(Keywords.given);
+                eventKind = [context.expect(Keywords.given)];
 
                 if (context.isAnyOf(Keywords.a, Keywords.an)){
                     context.expectAnyOf(Keywords.a, Keywords.an);
 
-                    target = context.expectIdentifier();
+                    target = context.expectOneOrMoreIdentifiers();
                 }
             } else {
-                eventKind = context.expectAnyOf(
+                eventKind = [context.expectAnyOf(
                     Keywords.taken,
                     Keywords.dropped, 
                     Keywords.opened, 
                     Keywords.closed, 
-                    Keywords.dropped, 
                     Keywords.described, 
                     Keywords.observed
-                );
+                )];
             }
-        } else {            
+        } else if (context.is(Keywords.the)){
             context.expect(Keywords.the);
-            context.expect(Keywords.player);
 
-            if (context.is(Keywords.presses)){
-                eventKind = context.expect(Keywords.presses);
-                target = context.expectString();
+            if (context.is(Keywords.player)){               
+                actor = context.expect(Keywords.player);
+
+                if (context.is(Keywords.presses)){
+                    eventKind = [context.expect(Keywords.presses)];
+                    target = [context.expectString()];
+                } else {
+                    eventKind = [context.expectAnyOf(Keywords.enters, Keywords.exits, Keywords.starts, Keywords.fails, Keywords.wins)];
+                }
             } else {
-                eventKind = context.expectAnyOf(Keywords.enters, Keywords.exits);
+                actor = context.expect(Keywords.game);
+                eventKind = [context.expectAnyOf(Keywords.starts, Keywords.ends, Keywords.completes)];
             }
+        } else {
+            throw new CompilationError(`Unable to determine the kind of event for context '${context.currentToken}'`);
         }
 
         context.expectOpenMethodBlock();
@@ -65,7 +73,6 @@ export class WhenDeclarationVisitor extends Visitor{
         const actionsVisitor = new EventExpressionVisitor();
         const actions = actionsVisitor.visit(context);
 
-        return new WhenDeclarationExpression(Keywords.player, eventKind.value, actions,  target?.value);
+        return new WhenDeclarationExpression(actor?.value || Keywords.player, eventKind.map(x => x.value), actions,  target?.map(x => x.value));
     }
-
 }

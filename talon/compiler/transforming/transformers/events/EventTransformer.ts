@@ -27,17 +27,20 @@ export class EventTransformer{
 
     static createEventFor(event:WhenDeclarationExpression, context:TransformerContext){
         
+        const typeDelimiter = "|";
+        const possibleEventKinds = Array.from(new Set<string>(event.eventKind));
+
         const method = new Method();
 
-        method.name = `~event_${event.actor}_${event.eventKind}`;
-        method.eventType = this.transformEventKind(event.eventKind);
+        method.name = `~event_${event.actor}_${possibleEventKinds.join(typeDelimiter)}`;
+        method.eventType = possibleEventKinds.map(x => this.transformEventKind(x, event.actor));
         method.returnType = BooleanType.typeName;
 
         if (event.target){
-            method.name = `${method.name}_${event.target}`;
+            method.name = `${method.name}_${event.target.join(typeDelimiter)}`;
             
             method.parameters.push(
-                new Parameter(WorldObject.contextParameter, event.target)
+                new Parameter(WorldObject.contextParameter, event.target.join(typeDelimiter))
             );
         }
 
@@ -52,36 +55,33 @@ export class EventTransformer{
             );
         }
 
-        if (method.eventType == EventType.ItIsOpened){
+        if (method.eventType.some(x => x == EventType.ItIsOpened)){
             instructions.push(
                 ...Instruction.includeStateInThis(State.opened),
                 ...Instruction.removeStateFromThis(State.closed)
             );
-        } else if (method.eventType == EventType.ItIsClosed){
+        } else if (method.eventType.some(x => x == EventType.ItIsClosed)){
             instructions.push(
                 ...Instruction.includeStateInThis(State.closed),
                 ...Instruction.removeStateFromThis(State.opened)
             );
         }
 
-        instructions.push(
-            Instruction.loadBoolean(true),
-            Instruction.return()
-        );
+        // Event methods should be executed as overrides to existing methods because they
+        // may want to pre-emptively abort the event chain with more specific conditions
+        // than the base knows about, so we're calling base afterwards if they actually
+        // made it to that point.
 
         method.body.push(
+            ...instructions,            
             Instruction.baseTypeInstanceCall(),
-            ...Instruction.ifTrueThen(
-                ...instructions
-            ),
-            Instruction.loadBoolean(false),
             Instruction.return()
         );
 
         return method;
     }
 
-    private static transformEventKind(kind:string){
+    private static transformEventKind(kind:string, actor:string){
         switch(kind){
             case Keywords.enters: return EventType.PlayerEntersPlace;
             case Keywords.exits: return EventType.PlayerExitsPlace;
@@ -96,6 +96,11 @@ export class EventTransformer{
             case Keywords.combined: return EventType.ItIsCombined;
             case Keywords.presses: return EventType.KeyIsPressed;
             case Keywords.selected: return EventType.OptionIsSelected;
+            case Keywords.starts: return actor == Keywords.game ? EventType.GameIsStarted : EventType.PlayerIsStarted;
+            case Keywords.ends: return actor == Keywords.game ? EventType.GameIsEnded : EventType.PlayerIsEnded;
+            case Keywords.wins: return EventType.PlayerWins;
+            case Keywords.fails: return EventType.PlayerFails;
+            case Keywords.completes: return EventType.GameIsCompleted;
             default:{
                 throw new CompilationError(`Unable to transform unsupported event kind '${kind}'`);
             }

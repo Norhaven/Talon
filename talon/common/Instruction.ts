@@ -7,13 +7,14 @@ import { OpCode } from "./OpCode";
 export class Instruction{
     private static generatedForeachLocals = 0;
     private static generatedEnumerationLocals = 0;
+    private static generatedLabels = 0;
 
     static assign(){
         return new Instruction(OpCode.Assign);
     }
 
-    static compareEqual(){
-        return new Instruction(OpCode.CompareEqual);
+    static compareEqual(isNegated:boolean = false){
+        return new Instruction(OpCode.CompareEqual, isNegated);
     }
 
     static invokeDelegate(){
@@ -58,6 +59,10 @@ export class Instruction{
 
     static loadPlace(typeName?:string){
         return new Instruction(OpCode.LoadPlace, typeName);
+    }
+
+    static loadPlayer(typeName?:string){
+        return new Instruction(OpCode.LoadPlayer, typeName);
     }
 
     static instanceCall(methodName:string){
@@ -110,6 +115,10 @@ export class Instruction{
 
     static branchRelativeIfFalse(count:number){
         return new Instruction(OpCode.BranchRelativeIfFalse, count);
+    }
+    
+    static goToLabel(label:string){
+        return new Instruction(OpCode.GoToLabel, label);
     }
 
     static compareLessThan(){
@@ -184,10 +193,31 @@ export class Instruction{
         return new Instruction(OpCode.RaiseContextualEvent, eventType);
     }
 
+    static interpolateString(){
+        return new Instruction(OpCode.InterpolateString);
+    }
+
+    static markAsLabel(label:string){
+        return new Instruction(OpCode.NoOp, undefined, label);
+    }
+
     static ifTrueThen(...instructions:Instruction[]){
         const result:Instruction[] = [];
 
         result.push(
+            Instruction.branchRelativeIfFalse(instructions.length),
+            ...instructions
+        );
+
+        return result;
+    }
+
+    static ifFalseThen(...instructions:Instruction[]){
+        const result:Instruction[] = [];
+
+        result.push(
+            Instruction.loadBoolean(false),
+            Instruction.compareEqual(),
             Instruction.branchRelativeIfFalse(instructions.length),
             ...instructions
         );
@@ -205,6 +235,19 @@ export class Instruction{
             Instruction.instanceCall(List.getEnumerator),
             Instruction.setLocal(enumeratorLocal),
             ...Instruction.enumerate(enumeratorLocal, ...instructions)
+        );
+
+        return result;
+    }
+
+    static while(loadConditionValue:Instruction, ...instructions:Instruction[]){
+        const result:Instruction[] = [];
+
+        result.push(
+            loadConditionValue,
+            Instruction.branchRelativeIfFalse(instructions.length + 1),
+            ...instructions,
+            Instruction.branchRelative(-(instructions.length + 3))
         );
 
         return result;
@@ -255,16 +298,30 @@ export class Instruction{
         return result;
     }
 
-    static mapList(mappedFunctionName:string, listPropertyName:string){
+    static groupList(contentsLocalName:string){
         const result:Instruction[] = [];
 
         result.push(
-            Instruction.loadThis(),
-            Instruction.createDelegate(mappedFunctionName),
+            Instruction.loadLocal(contentsLocalName),
+            Instruction.instanceCall(List.group),
+            Instruction.setLocal(contentsLocalName)
+        );
 
-            Instruction.loadThis(),
-            Instruction.loadProperty(listPropertyName),
-            Instruction.instanceCall(List.map)
+        return result;
+    }
+
+    static mapList(mappedFunctionName:string, contentsLocalName:string, resultsLocalName:string){
+        const result:Instruction[] = [];
+
+        result.push(
+            Instruction.newInstance(List.typeName),
+            Instruction.setLocal(resultsLocalName),
+            Instruction.loadLocal(contentsLocalName),
+            ...Instruction.forEach(
+                Instruction.instanceCall(mappedFunctionName),
+                Instruction.loadLocal(resultsLocalName),
+                Instruction.instanceCall(List.add)
+            )
         );
 
         return result;
@@ -294,11 +351,14 @@ export class Instruction{
         return result;
     }
 
-    static raiseAllEvents(){
+    static raiseAllEvents(ignoreResults:boolean = true){
         const result:Instruction[] = [];
 
         const availableEventsLocal = "~availableEvents";
         const eventsRaisedLocal = "~eventsRaised";
+        const endLabel = `~endLabel.${this.generatedLabels}`;
+
+        this.generatedLabels++;
         
         result.push(    
             Instruction.loadBoolean(false),
@@ -319,17 +379,24 @@ export class Instruction{
                 Instruction.loadLocal(availableEventsLocal),
                 Instruction.instanceCall(List.count),
                 Instruction.compareGreaterThan(),
-                ...Instruction.ifTrueThen(                      
-                    Instruction.loadLocal(availableEventsLocal),
-                    ...Instruction.forEach(
-                        Instruction.invokeDelegate(),
-                        Instruction.ignore() // All delegates will be events, which return a boolean indicating aborted status, not used at this point.
-                    ),
+                ...Instruction.ifFalseThen(      
                     Instruction.loadBoolean(true),
-                    Instruction.setLocal(eventsRaisedLocal)
+                    Instruction.setLocal(eventsRaisedLocal),
+                    Instruction.goToLabel(endLabel)
+                ),     
+                Instruction.loadLocal(availableEventsLocal),
+                ...Instruction.forEach(
+                    Instruction.invokeDelegate(),
+                    ...Instruction.ifFalseThen(
+                        Instruction.loadBoolean(false),
+                        Instruction.setLocal(eventsRaisedLocal),
+                        Instruction.goToLabel(endLabel)
+                    )
                 )
             ),
-            Instruction.loadLocal(eventsRaisedLocal)
+            Instruction.markAsLabel(endLabel),
+            Instruction.loadLocal(eventsRaisedLocal),
+            ignoreResults ? Instruction.ignore() : new Instruction(OpCode.NoOp)
         );
 
         return result;
@@ -337,9 +404,11 @@ export class Instruction{
 
     opCode:OpCode = OpCode.NoOp;
     value?:Object;
+    label?:string;
 
-    constructor(opCode:OpCode, value?:Object){
+    constructor(opCode:OpCode, value?:Object, label?:string){
         this.opCode = opCode;
         this.value = value;
+        this.label = label;
     }
 }

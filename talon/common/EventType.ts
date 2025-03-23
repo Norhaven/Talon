@@ -12,5 +12,13 @@ export enum EventType{
     ItIsObserved = "itIsObserved",
     ItIsCombined = "itIsCombined",
     KeyIsPressed = "keyIsPressed",
-    OptionIsSelected = "optionIsSelected"
+    OptionIsSelected = "optionIsSelected",
+    GameIsStarted = "gameIsStarted",
+    GameIsEnded = "gameIsEnded",
+    GameIsCompleted = "gameIsCompleted",
+    PlayerIsStarted = "playerIsStarted",
+    PlayerIsEnded = "playerIsEnded",
+    PlayerFails = "playerFails",
+    PlayerWins = "playerWins",
+    RuntimeDetermined = "runtimeDetermined"
 }

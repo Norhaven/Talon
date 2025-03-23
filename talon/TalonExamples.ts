@@ -29,14 +29,16 @@ export function getExampleLibraryCode(){
 "    and then continue;\n" + 
 "and then stop.\n" + 
 "when it is closed:\n" + 
-"    say \"The lid slams closed.\";\n" + 
+"    if it is not \"closed\" then\n" + 
+"        say \"The lid slams closed.\";\n" + 
+"    and then continue;\n" + 
 "and then stop.\n" + 
-"when it is used with a Key:\n" + 
+"when it is used, combined with a Key, Lockpick:\n" + 
 "    if it is \"opened\" then\n" + 
 "        say \"You can't lock it when it's open.\";\n" + 
 "        abort event;\n" + 
 "    and then continue;\n" + 
-"    say \"The key turns easily in the lock.\";\n" + 
+"    say \"The lock turns easily with a small click.\";\n" + 
 "    if it is \"locked\" then\n" + 
 "        set it to not \"locked\";\n" + 
 "    or else\n" + 
@@ -46,7 +48,12 @@ export function getExampleLibraryCode(){
 "\n" + 
 "a Key is a kind of item.\n" + 
 "it is described as \"The key is small but sturdy.\".\n" + 
-"\n";
+"\n" + 
+"a Lockpick is a kind of item.\n" + 
+"it is described as \"It's a small set of lockpicks, well used but not broken.\".\n" + 
+"it is observed as \"You see a set of lockpicks on the ground.\".\n" + 
+"it is listed as \"1 Set of lockpicks\".\n" + 
+"it is also known as a \"lockpicks\".\n";
 }
 
 export function getExampleStoryCode(){
@@ -67,9 +74,36 @@ export function getExampleStoryCode(){
 "understand \"locked\" as stateful.\n" + 
 "understand \"Q\" as options.\n" + 
 "\n" + 
+"when the player starts:\n" + 
+"    say \"The player has started!\";\n" + 
+"and then stop.\n" + 
+"\n" + 
+"when the player fails:\n" + 
+"    say \"Sorry, you failed to complete the game!\";\n" + 
+"and then stop.\n" + 
+"\n" + 
+"when the player wins:\n" + 
+"    say \"You win!\";\n" + 
+"and then stop.\n" + 
+"\n" + 
+"when the game starts:\n" + 
+"    say \"The game has started!\";\n" + 
+"and then stop.\n" + 
+"\n" + 
+"when the game ends:\n" + 
+"    say \"The game has ended!\";\n" + 
+"and then stop.\n" + 
+"\n" + 
+"when the game completes:\n" + 
+"    say \"You completed the game!\";\n" + 
+"and then stop.\n" + 
+"\n" + 
 "when the player presses \"Q\":\n" + 
 "    show MainMenu;\n" + 
 "and then stop.\n" + 
+"\n" + 
+"a Warrior is a kind of player.\n" + 
+"it contains 1 Coin.\n" + 
 "\n" + 
 "an Inn is a kind of place. \n" + 
 "it is where the player starts. \n" + 
@@ -77,7 +111,7 @@ export function getExampleStoryCode(){
 "    and if it contains 1 Key then \"There's a key hanging on the wall.\";\n" + 
 "    or else \"There's an empty spot where a key once hung.\";\n" + 
 "and then continue.\n" + 
-"it contains 1 Fireplace, 1 Chest, 1 Key, 1 Crystal, 1 Bartender.\n" + 
+"it contains 1 Fireplace, 1 Chest, 1 Key, 1 Crystal, 1 Bartender, 1 InnSafe.\n" + 
 "it can reach the Walkway by going \"north\", \"n\". \n" + 
 "it has a value called hasWaved that is false. \n" + 
 "when the player exits: \n" + 
@@ -87,7 +121,47 @@ export function getExampleStoryCode(){
 "        say \"The bartender cleans the bar.\"; \n" + 
 "    and then continue;\n" + 
 "    set hasWaved to true; \n" + 
-"and then stop. \n" + 
+"and then stop.\n" + 
+"\n" + 
+"an InnSafe is a kind of Container.\n" + 
+"it is described as \"It's a small metal safe, firmly embedded into the wall of the inn.\".\n" + 
+"it is observed as \"A small metal safe sits against the wall.\".\n" + 
+"it contains 1 Jewel.\n" + 
+"it is \"locked\".\n" + 
+"it is also known as a \"safe\".\n" + 
+"when it is used, combined with a Key:\n" + 
+"    say \"This key seems to go to something else.\";\n" + 
+"    abort event;\n" + 
+"and then stop.\n" + 
+"when it is used, combined with a Lockpick:\n" + 
+"    say \"You jiggle the lockpicks around inside the safe's lock and finally hear a small click.\";\n" + 
+"    set it to not \"locked\";\n" + 
+"and then stop.\n" + 
+"when it is opened:\n" + 
+"    if it is \"locked\" then\n" + 
+"        say \"It appears to be locked, maybe unlock it first?\";\n" + 
+"        abort event;\n" + 
+"    or else \n" + 
+"        if it is not \"opened\" then\n" + 
+"            if it contains 1 Jewel then\n" + 
+"                say \"The door of the safe swings open, revealing a sparkling jewel. It looks expensive.\";\n" + 
+"            or else\n" + 
+"                say \"The door of the safe swings open, revealing emptiness inside. Whatever was in here is already gone.\";\n" + 
+"            and then continue;\n" + 
+"        or else\n" + 
+"            say \"It appears to already be open.\";\n" + 
+"            abort event;\n" + 
+"        and then continue;\n" + 
+"    and then continue;\n" + 
+"and then stop.\n" + 
+"\n" + 
+"a Jewel is a kind of item.\n" + 
+"it is described as \"The jewel appears to be cut flawlessly and sparkles in the light.\".\n" + 
+"when it is taken:\n" + 
+"    say \"You reach out and take the jewel.\";\n" + 
+"    the player wins;\n" + 
+"    the game completes;\n" + 
+"and then stop.\n" + 
 "\n" + 
 "a Crystal is a kind of decoration.\n" + 
 "it is described as \"The crystal glows with a soft inner light. It has a small slot for a coin.\".\n" + 
@@ -105,7 +179,8 @@ export function getExampleStoryCode(){
 "\n" + 
 "a Walkway is a kind of place. \n" + 
 "it is described as \"The walkway in front of the inn is empty, just a cobblestone entrance. The inn is to the south.\". \n" + 
-"it can reach the Inn by going \"south\". \n" + 
+"it can reach the Inn by going \"south\".\n" + 
+"it contains 1 Lockpick.\n" + 
 "when the player enters:\n" + 
 "    say \"You walk onto the cobblestones. They're nice, if you like that sort of thing.\"; \n" + 
 "    say \"There's nobody around. The wind whistles a little bit.\"; \n" + 
@@ -116,6 +191,7 @@ export function getExampleStoryCode(){
 "a Coin is a kind of item. \n" + 
 "it is described as \"It's a small coin.\".\n" + 
 "it is observed as \"You see a coin.\".\n" + 
+"it can be grouped as CoinGroup.\n" + 
 "when it is taken:\n" + 
 "    say \"You got a coin!\";\n" + 
 "and then stop.\n" + 
@@ -129,9 +205,18 @@ export function getExampleStoryCode(){
 "    say \"You used the coin somehow!\";\n" + 
 "and then stop.\n" + 
 "\n" + 
+"a CoinGroup is a kind of group.\n" + 
+"it is observed as \"You see {{count}} coins!\".\n" + 
+"it is listed as \"{{count}} coins\".\n" + 
+"it can contain any Coin.\n" + 
+"it is also known as a \"coins\".\n" + 
+"\n" + 
 "a CoinCrystal is a kind of decoration.\n" + 
 "it is described as \"It's a crystal with a coin embedded in it.\".\n" + 
 "it is observed as \"A crystal with a coin in it lays on the bar.\".\n" + 
+"when it is used, combined with a Lockpick:\n" + 
+"    say \"You try to pry the coin out with your lockpick but it won't budge.\";\n" + 
+"and then stop.\n" + 
 "\n" + 
 "a Bartender is a kind of creature.\n" + 
 "it is described as \"He's smiling and whistling a tune.\".\n" + 
@@ -151,6 +236,7 @@ export function getExampleStoryCode(){
 "        say \"Please select an option by its number.\";\n" + 
 "    or else\n" + 
 "        say \"Please select an option.\";\n" + 
+"        say \"You have seen this menu {{numberOfTimesShown}} times!\";\n" + 
 "    and then continue;\n" + 
 "    add 1 to numberOfTimesShown;\n" + 
 "and then stop.\n" + 

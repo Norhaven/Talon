@@ -9,7 +9,7 @@ import { RuntimeMenu } from "../library/RuntimeMenu";
 import { RuntimeMenuOption } from "../library/RuntimeMenuOption";
 import { OpCodeHandler } from "../OpCodeHandler";
 import { Thread } from "../Thread";
-import { RaiseEvent } from "./internal/RaiseEvent";
+import { Event } from "./internal/Event";
 
 export class HandleMenuCommandHandler extends OpCodeHandler{
     public code: OpCode = OpCode.HandleMenuCommand;
@@ -45,8 +45,6 @@ export class HandleMenuCommandHandler extends OpCodeHandler{
             return;
         }
 
-        const events = RaiseEvent.menuSelection(thread, menu, option);
-
-        thread.currentMethod.push(Memory.allocateList(events));
+        Event.using(thread).raiseMenuSelection(menu, option);
     }
 }

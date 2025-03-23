@@ -39,6 +39,9 @@ import { RuntimeMenuOption } from "../library/RuntimeMenuOption";
 import { ILog } from "../../ILog";
 import { Stopwatch } from "../../Stopwatch";
 import { RuntimeTuple } from "../library/RuntimeTuple";
+import { RuntimeGroup } from "../library/RuntimeGroup";
+import { Group } from "../../library/Group";
+import { RuntimeDelegate } from "../library/RuntimeDelegate";
 
 export class Memory{
     private static typesByName = new Map<string, Type>();
@@ -121,8 +124,13 @@ export class Memory{
         return Array.from(Memory.typesByName.values());
     }
 
-    static allocateCommand():RuntimeCommand{
-        return new RuntimeCommand();
+    static allocateCommand(action:string, actorName:string, targetName?:string, ):RuntimeCommand{
+
+        const actionString = Memory.allocateString(action);
+        const actorString = Memory.allocateString(actorName);
+        const targetString = Memory.allocateString(targetName || "");
+
+        return new RuntimeCommand(actionString, actorString, targetString);
     }
 
     static allocateBoolean(value:boolean):RuntimeBoolean{
@@ -143,6 +151,20 @@ export class Memory{
 
     static allocateList(items:RuntimeAny[]){
         return new RuntimeList(items);
+    }
+
+    static allocateDelegate(method:Method){
+        return new RuntimeDelegate(method);
+    }
+
+    static allocateGroup(typeName:string){
+        const groupType = this.findTypeByName(typeName);
+
+        if (!groupType){
+            throw new RuntimeError(`Unable to locate group type '${typeName}' to allocate`);
+        }
+
+        return <RuntimeGroup>Memory.allocate(groupType);
     }
 
     static allocateTuple(items:Object[]){
@@ -295,18 +317,33 @@ export class Memory{
 
     private static constructInstanceFromStandaloneType(type:Type){
         return Stopwatch.measure(`Memory.ConstructStandalone.${type.name}`, () => {
+            const getMostDerivedSystemType = () => {
+                let current:Type|undefined = type;
+
+                for(current; 
+                    current && !current.isSystemType; 
+                    current = Memory.findTypeByName(current.baseTypeName)){
+                }
+
+                if (!current){
+                    throw new RuntimeError(`Unable to locate the most derived system type to create type '${type.name}'`);
+                }
+
+                return Memory.allocateSystemTypeByName(current.name);
+            };
+
             const allocate = () => {
                 if (type.isSystemType){
                     return Memory.allocateSystemTypeByName(type.name);
                 }
 
-                const any = new RuntimeWorldObject();
+                const mostDerivedSystemType = getMostDerivedSystemType();
 
-                any.typeName = type.name;
-                any.parentTypeName = type.baseTypeName;
+                mostDerivedSystemType.typeName = type.name;
+                mostDerivedSystemType.parentTypeName = type.baseTypeName;
 
-                return any;
-            }
+                return mostDerivedSystemType;
+            };
 
             const instance = allocate();
 
@@ -338,6 +375,7 @@ export class Memory{
             case MenuOption.typeName: return new RuntimeMenuOption();
             case GlobalEvents.typeName: return new RuntimeGlobalEvents();
             case WorldObject.typeName: return new RuntimeWorldObject();
+            case Group.typeName: return new RuntimeGroup();
             case Any.typeName: return new RuntimeAny();
             default:{
                 throw new RuntimeError(`Unable to instantiate type '${typeName}'`);

@@ -26,14 +26,16 @@ when it is opened:
     and then continue;
 and then stop.
 when it is closed:
-    say "The lid slams closed.";
+    if it is not "closed" then
+        say "The lid slams closed.";
+    and then continue;
 and then stop.
-when it is used with a Key:
+when it is used, combined with a Key, Lockpick:
     if it is "opened" then
         say "You can't lock it when it's open.";
         abort event;
     and then continue;
-    say "The key turns easily in the lock.";
+    say "The lock turns easily with a small click.";
     if it is "locked" then
         set it to not "locked";
     or else
@@ -43,3 +45,9 @@ and then stop.
 
 a Key is a kind of item.
 it is described as "The key is small but sturdy.".
+
+a Lockpick is a kind of item.
+it is described as "It's a small set of lockpicks, well used but not broken.".
+it is observed as "You see a set of lockpicks on the ground.".
+it is listed as "1 Set of lockpicks".
+it is also known as a "lockpicks".

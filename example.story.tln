@@ -15,9 +15,36 @@ understand "combine" as combining.
 understand "locked" as stateful.
 understand "Q" as options.
 
+when the player starts:
+    say "The player has started!";
+and then stop.
+
+when the player fails:
+    say "Sorry, you failed to complete the game!";
+and then stop.
+
+when the player wins:
+    say "You win!";
+and then stop.
+
+when the game starts:
+    say "The game has started!";
+and then stop.
+
+when the game ends:
+    say "The game has ended!";
+and then stop.
+
+when the game completes:
+    say "You completed the game!";
+and then stop.
+
 when the player presses "Q":
     show MainMenu;
 and then stop.
+
+a Warrior is a kind of player.
+it contains 1 Coin.
 
 an Inn is a kind of place. 
 it is where the player starts. 
@@ -25,7 +52,7 @@ it is described as "The inn is a cozy place, with a crackling fire on the hearth
     and if it contains 1 Key then "There's a key hanging on the wall.";
     or else "There's an empty spot where a key once hung.";
 and then continue.
-it contains 1 Fireplace, 1 Chest, 1 Key, 1 Crystal, 1 Bartender.
+it contains 1 Fireplace, 1 Chest, 1 Key, 1 Crystal, 1 Bartender, 1 InnSafe.
 it can reach the Walkway by going "north", "n". 
 it has a value called hasWaved that is false. 
 when the player exits: 
@@ -35,7 +62,47 @@ when the player exits:
         say "The bartender cleans the bar."; 
     and then continue;
     set hasWaved to true; 
-and then stop. 
+and then stop.
+
+an InnSafe is a kind of Container.
+it is described as "It's a small metal safe, firmly embedded into the wall of the inn.".
+it is observed as "A small metal safe sits against the wall.".
+it contains 1 Jewel.
+it is "locked".
+it is also known as a "safe".
+when it is used, combined with a Key:
+    say "This key seems to go to something else.";
+    abort event;
+and then stop.
+when it is used, combined with a Lockpick:
+    say "You jiggle the lockpicks around inside the safe's lock and finally hear a small click.";
+    set it to not "locked";
+and then stop.
+when it is opened:
+    if it is "locked" then
+        say "It appears to be locked, maybe unlock it first?";
+        abort event;
+    or else 
+        if it is not "opened" then
+            if it contains 1 Jewel then
+                say "The door of the safe swings open, revealing a sparkling jewel. It looks expensive.";
+            or else
+                say "The door of the safe swings open, revealing emptiness inside. Whatever was in here is already gone.";
+            and then continue;
+        or else
+            say "It appears to already be open.";
+            abort event;
+        and then continue;
+    and then continue;
+and then stop.
+
+a Jewel is a kind of item.
+it is described as "The jewel appears to be cut flawlessly and sparkles in the light.".
+when it is taken:
+    say "You reach out and take the jewel.";
+    the player wins;
+    the game completes;
+and then stop.
 
 a Crystal is a kind of decoration.
 it is described as "The crystal glows with a soft inner light. It has a small slot for a coin.".
@@ -53,7 +120,8 @@ and then stop.
 
 a Walkway is a kind of place. 
 it is described as "The walkway in front of the inn is empty, just a cobblestone entrance. The inn is to the south.". 
-it can reach the Inn by going "south". 
+it can reach the Inn by going "south".
+it contains 1 Lockpick.
 when the player enters:
     say "You walk onto the cobblestones. They're nice, if you like that sort of thing."; 
     say "There's nobody around. The wind whistles a little bit."; 
@@ -64,6 +132,7 @@ say "This is the middle.".
 a Coin is a kind of item. 
 it is described as "It's a small coin.".
 it is observed as "You see a coin.".
+it can be grouped as CoinGroup.
 when it is taken:
     say "You got a coin!";
 and then stop.
@@ -77,9 +146,18 @@ when it is used:
     say "You used the coin somehow!";
 and then stop.
 
+a CoinGroup is a kind of group.
+it is observed as "You see {{count}} coins!".
+it is listed as "{{count}} coins".
+it can contain any Coin.
+it is also known as a "coins".
+
 a CoinCrystal is a kind of decoration.
 it is described as "It's a crystal with a coin embedded in it.".
 it is observed as "A crystal with a coin in it lays on the bar.".
+when it is used, combined with a Lockpick:
+    say "You try to pry the coin out with your lockpick but it won't budge.";
+and then stop.
 
 a Bartender is a kind of creature.
 it is described as "He's smiling and whistling a tune.".
@@ -99,6 +177,7 @@ when it is described:
         say "Please select an option by its number.";
     or else
         say "Please select an option.";
+        say "You have seen this menu {{numberOfTimesShown}} times!";
     and then continue;
     add 1 to numberOfTimesShown;
 and then stop.
