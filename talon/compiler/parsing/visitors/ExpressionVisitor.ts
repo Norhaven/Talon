@@ -25,6 +25,10 @@ import { IdentifierExpression } from "../expressions/IdentifierExpression";
 import { PlayerCompletionExpression } from "../expressions/PlayerCompletionExpression";
 import { GameCompletionExpression } from "../expressions/GameCompletionExpression";
 import { EventType } from "../../../common/EventType";
+import { SetPlayerExpression } from "../expressions/SetPlayerExpression";
+import { GiveExpression } from "../expressions/GiveExpression";
+import { Player } from "../../../library/Player";
+import { TypeCountExpression } from "../expressions/TypeCountExpression";
 
 export class ExpressionVisitor extends Visitor{
     visit(context: ParseContext): Expression {
@@ -71,6 +75,14 @@ export class ExpressionVisitor extends Visitor{
             } else if (context.is(Keywords.it)){
                 context.expect(Keywords.it);
                 variableName = "~it";
+            } else if (context.is(Keywords.the)){
+                context.expect(Keywords.the);
+                context.expect(Keywords.player);
+                context.expect(Keywords.to);
+
+                const playerType = context.expectIdentifier();
+
+                return new SetPlayerExpression(playerType.value);
             } else {
                 // TODO: Support dereferencing arbitrary instances.
                 throw new CompilationError("Currently unable to dereference a field, planned for a future release");
@@ -184,6 +196,42 @@ export class ExpressionVisitor extends Visitor{
             const variableName = context.expectIdentifier();
 
             return new IncrementDecrementExpression(-Number(subtractionValue.value), variableName.value);
+        } else if (context.is(Keywords.give)){
+            context.consumeCurrentToken();
+
+            const count = context.expectNumber();
+            const typeName = context.expectIdentifier();
+
+            const items:TypeCountExpression[] = [new TypeCountExpression(Number(count.value), typeName.value)];
+
+            while(context.isTypeOf(TokenType.ListSeparator)){
+                context.consumeCurrentToken();
+
+                const count = context.expectNumber();
+                const typeName = context.expectIdentifier();
+
+                const item = new TypeCountExpression(Number(count.value), typeName.value);
+
+                items.push(item);
+            }
+
+            context.expect(Keywords.to);
+
+            if (context.is(Keywords.the)){
+                context.consumeCurrentToken();
+
+                context.expect(Keywords.player);
+
+                return new GiveExpression(Player.typeName, items);
+            } else if (context.is(Keywords.it)){
+                context.consumeCurrentToken();
+
+                return new GiveExpression("~it", items);
+            } else {
+                const identifier = context.expectIdentifier();
+
+                return new GiveExpression(identifier.value, items);
+            }
         } else {
             throw new CompilationError(`Unable to parse expression at ${context.currentToken}`);
         }

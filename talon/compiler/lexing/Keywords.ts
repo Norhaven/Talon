@@ -92,6 +92,7 @@ export class Keywords{
     static readonly from = "from";
     static readonly giving = "giving";
     static readonly given = "given";
+    static readonly give = "give";
     static readonly anything = "anything";
     static readonly accepts = "accepts";
     static readonly everything = "everything";

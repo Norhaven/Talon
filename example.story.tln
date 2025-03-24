@@ -27,8 +27,14 @@ when the player wins:
     say "You win!";
 and then stop.
 
+when the player is set:
+    say "You selected a new player!";
+and then stop.
+
 when the game starts:
     say "The game has started!";
+
+    show PlayerMenu;
 and then stop.
 
 when the game ends:
@@ -46,13 +52,16 @@ and then stop.
 a Warrior is a kind of player.
 it contains 1 Coin.
 
+a Mage is a kind of player.
+it contains 10 Coin.
+
 an Inn is a kind of place. 
 it is where the player starts. 
 it is described as "The inn is a cozy place, with a crackling fire on the hearth. An open door to the north leads outside." 
     and if it contains 1 Key then "There's a key hanging on the wall.";
     or else "There's an empty spot where a key once hung.";
 and then continue.
-it contains 1 Fireplace, 1 Chest, 1 Key, 1 Crystal, 1 Bartender, 1 InnSafe.
+it contains 1 Fireplace, 1 Chest, 1 Key, 1 Crystal, 1 Bartender, 1 InnSafe, 1 CoinButton.
 it can reach the Walkway by going "north", "n". 
 it has a value called hasWaved that is false. 
 when the player exits: 
@@ -129,6 +138,14 @@ and then stop.
 
 say "This is the middle.".
 
+a CoinButton is a kind of decoration.
+it is described as "You see a small red button.".
+it is observed as "There's a little red button on the bar.".
+when it is used:
+    say "You press the button.";
+    give 1 Coin to the player;
+and then stop.
+
 a Coin is a kind of item. 
 it is described as "It's a small coin.".
 it is observed as "You see a coin.".
@@ -166,6 +183,30 @@ it is also known as a "man", "gentleman".
 when it is given a Coin:
     say "The bartender takes the coin and thanks you!";
 and then stop.
+when it is given a Lockpick:
+    say "The bartender confiscates the lockpicks and mutters words under his breath.";
+    the player fails;
+and then stop.
+
+a PlayerMenu is a kind of menu.
+it is described as "What player do you want to use?".
+it contains options WarriorOption, MageOption.
+when option WarriorOption is selected:
+    say "Your character is a warrior, very strong and tough but weak to magic.";
+    set the player to Warrior;
+    hide this;
+and then stop.
+when option MageOption is selected:
+    say "Your character is a mage, very good with magic but not very strong or tough.";
+    set the player to Mage;
+    hide this;
+and then stop.
+
+a WarriorOption is a kind of option.
+it is described as "1) Warrior".
+
+a MageOption is a kind of option.
+it is described as "2) Mage".
 
 a MainMenu is a kind of menu.
 it is described as "Main Menu".

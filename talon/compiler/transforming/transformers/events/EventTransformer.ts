@@ -101,6 +101,7 @@ export class EventTransformer{
             case Keywords.wins: return EventType.PlayerWins;
             case Keywords.fails: return EventType.PlayerFails;
             case Keywords.completes: return EventType.GameIsCompleted;
+            case Keywords.set: return EventType.PlayerIsSet;
             default:{
                 throw new CompilationError(`Unable to transform unsupported event kind '${kind}'`);
             }

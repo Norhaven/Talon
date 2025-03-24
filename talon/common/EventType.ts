@@ -20,5 +20,6 @@ export enum EventType{
     PlayerIsEnded = "playerIsEnded",
     PlayerFails = "playerFails",
     PlayerWins = "playerWins",
+    PlayerIsSet = "playerIsSet",
     RuntimeDetermined = "runtimeDetermined"
 }

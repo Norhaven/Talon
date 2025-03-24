@@ -44,9 +44,11 @@ export enum OpCode {
     RaiseContextualEvent = ".raise.event.ctx",
     LoadPlace = ".load.place",
     LoadPlayer = ".load.player",
+    SetPlayer = ".set.player",
     ReplaceInstances = ".replace.inst",
     Ignore = ".ignore",
     Transfer = ".transfer.inst",
     FindMethod = ".find.method",
-    InterpolateString = ".interpolate.str"
+    InterpolateString = ".interpolate.str",
+    Give = ".give"
 }

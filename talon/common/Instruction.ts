@@ -177,6 +177,14 @@ export class Instruction{
         return new Instruction(OpCode.Ignore);
     }
 
+    static noOp(){
+        return new Instruction(OpCode.NoOp);
+    }
+
+    static setPlayer(playerTypeName:string){
+        return new Instruction(OpCode.SetPlayer, playerTypeName);
+    }
+
     static loadStaticField(typeName:string, fieldName:string){
         return new Instruction(OpCode.LoadStaticField, `${typeName}.${fieldName}`);
     }
@@ -195,6 +203,10 @@ export class Instruction{
 
     static interpolateString(){
         return new Instruction(OpCode.InterpolateString);
+    }
+
+    static give(){
+        return new Instruction(OpCode.Give);
     }
 
     static markAsLabel(label:string){
@@ -396,7 +408,7 @@ export class Instruction{
             ),
             Instruction.markAsLabel(endLabel),
             Instruction.loadLocal(eventsRaisedLocal),
-            ignoreResults ? Instruction.ignore() : new Instruction(OpCode.NoOp)
+            ignoreResults ? Instruction.ignore() : Instruction.noOp()
         );
 
         return result;

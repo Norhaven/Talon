@@ -149,7 +149,7 @@ export class Lookup{
             } else {
                 const locatedItem = this.findTargetIn(thread, item, isMatch, removeWhenFound);
 
-                if (locatedItem){
+                if (locatedItem && locatedItem[0] && locatedItem[1]){
                     return locatedItem;
                 }
             }

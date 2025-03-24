@@ -86,8 +86,14 @@ export function getExampleStoryCode(){
 "    say \"You win!\";\n" + 
 "and then stop.\n" + 
 "\n" + 
+"when the player is set:\n" + 
+"    say \"You selected a new player!\";\n" + 
+"and then stop.\n" + 
+"\n" + 
 "when the game starts:\n" + 
 "    say \"The game has started!\";\n" + 
+"\n" + 
+"    show PlayerMenu;\n" + 
 "and then stop.\n" + 
 "\n" + 
 "when the game ends:\n" + 
@@ -105,13 +111,16 @@ export function getExampleStoryCode(){
 "a Warrior is a kind of player.\n" + 
 "it contains 1 Coin.\n" + 
 "\n" + 
+"a Mage is a kind of player.\n" + 
+"it contains 10 Coin.\n" + 
+"\n" + 
 "an Inn is a kind of place. \n" + 
 "it is where the player starts. \n" + 
 "it is described as \"The inn is a cozy place, with a crackling fire on the hearth. An open door to the north leads outside.\" \n" + 
 "    and if it contains 1 Key then \"There's a key hanging on the wall.\";\n" + 
 "    or else \"There's an empty spot where a key once hung.\";\n" + 
 "and then continue.\n" + 
-"it contains 1 Fireplace, 1 Chest, 1 Key, 1 Crystal, 1 Bartender, 1 InnSafe.\n" + 
+"it contains 1 Fireplace, 1 Chest, 1 Key, 1 Crystal, 1 Bartender, 1 InnSafe, 1 CoinButton.\n" + 
 "it can reach the Walkway by going \"north\", \"n\". \n" + 
 "it has a value called hasWaved that is false. \n" + 
 "when the player exits: \n" + 
@@ -188,6 +197,14 @@ export function getExampleStoryCode(){
 "\n" + 
 "say \"This is the middle.\".\n" + 
 "\n" + 
+"a CoinButton is a kind of decoration.\n" + 
+"it is described as \"You see a small red button.\".\n" + 
+"it is observed as \"There's a little red button on the bar.\".\n" + 
+"when it is used:\n" + 
+"    say \"You press the button.\";\n" + 
+"    give 1 Coin to the player;\n" + 
+"and then stop.\n" + 
+"\n" + 
 "a Coin is a kind of item. \n" + 
 "it is described as \"It's a small coin.\".\n" + 
 "it is observed as \"You see a coin.\".\n" + 
@@ -225,6 +242,30 @@ export function getExampleStoryCode(){
 "when it is given a Coin:\n" + 
 "    say \"The bartender takes the coin and thanks you!\";\n" + 
 "and then stop.\n" + 
+"when it is given a Lockpick:\n" + 
+"    say \"The bartender confiscates the lockpicks and mutters words under his breath.\";\n" + 
+"    the player fails;\n" + 
+"and then stop.\n" + 
+"\n" + 
+"a PlayerMenu is a kind of menu.\n" + 
+"it is described as \"What player do you want to use?\".\n" + 
+"it contains options WarriorOption, MageOption.\n" + 
+"when option WarriorOption is selected:\n" + 
+"    say \"Your character is a warrior, very strong and tough but weak to magic.\";\n" + 
+"    set the player to Warrior;\n" + 
+"    hide this;\n" + 
+"and then stop.\n" + 
+"when option MageOption is selected:\n" + 
+"    say \"Your character is a mage, very good with magic but not very strong or tough.\";\n" + 
+"    set the player to Mage;\n" + 
+"    hide this;\n" + 
+"and then stop.\n" + 
+"\n" + 
+"a WarriorOption is a kind of option.\n" + 
+"it is described as \"1) Warrior\".\n" + 
+"\n" + 
+"a MageOption is a kind of option.\n" + 
+"it is described as \"2) Mage\".\n" + 
 "\n" + 
 "a MainMenu is a kind of menu.\n" + 
 "it is described as \"Main Menu\".\n" + 

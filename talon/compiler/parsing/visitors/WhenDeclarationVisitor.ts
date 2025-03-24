@@ -57,6 +57,14 @@ export class WhenDeclarationVisitor extends Visitor{
                 if (context.is(Keywords.presses)){
                     eventKind = [context.expect(Keywords.presses)];
                     target = [context.expectString()];
+                } else if (context.is(Keywords.is)){
+                    context.expect(Keywords.is);
+
+                    if (context.is(Keywords.set)){
+                        eventKind = [context.expect(Keywords.set)];
+                    } else {
+                        throw new CompilationError(`Unable to identify the kind of player-focused event for context '${context.currentToken}'`);
+                    }
                 } else {
                     eventKind = [context.expectAnyOf(Keywords.enters, Keywords.exits, Keywords.starts, Keywords.fails, Keywords.wins)];
                 }

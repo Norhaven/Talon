@@ -6,6 +6,7 @@ import { GlobalFields } from "../../../../library/GlobalFields";
 import { List } from "../../../../library/List";
 import { Menu } from "../../../../library/Menu";
 import { NumberType } from "../../../../library/NumberType";
+import { Player } from "../../../../library/Player";
 import { StringType } from "../../../../library/StringType";
 import { WorldObject } from "../../../../library/WorldObject";
 import { CompilationError } from "../../../exceptions/CompilationError";
@@ -18,6 +19,7 @@ import { ContainsExpression } from "../../../parsing/expressions/ContainsExpress
 import { Expression } from "../../../parsing/expressions/Expression";
 import { FieldDeclarationExpression } from "../../../parsing/expressions/FieldDeclarationExpression";
 import { GameCompletionExpression } from "../../../parsing/expressions/GameCompletionExpression";
+import { GiveExpression } from "../../../parsing/expressions/GiveExpression";
 import { IdentifierExpression } from "../../../parsing/expressions/IdentifierExpression";
 import { IfExpression } from "../../../parsing/expressions/IfExpression";
 import { IncrementDecrementExpression } from "../../../parsing/expressions/IncrementDecrementExpression";
@@ -26,6 +28,7 @@ import { PlayerCompletionExpression } from "../../../parsing/expressions/PlayerC
 import { QuitExpression } from "../../../parsing/expressions/QuitExpression";
 import { ReplaceExpression } from "../../../parsing/expressions/ReplaceExpression";
 import { SayExpression } from "../../../parsing/expressions/SayExpression";
+import { SetPlayerExpression } from "../../../parsing/expressions/SetPlayerExpression";
 import { SetVariableExpression } from "../../../parsing/expressions/SetVariableExpression";
 import { VisibilityExpression } from "../../../parsing/expressions/VisibilityExpression";
 import { ExpressionTransformationMode } from "../../ExpressionTransformationMode";
@@ -219,6 +222,38 @@ export class ExpressionTransformer{
             instructions.push(
                 
             );
+        } else if (expression instanceof SetPlayerExpression){
+            instructions.push(
+                Instruction.setPlayer(expression.playerType),
+                Instruction.loadInstance(GlobalEvents.typeName),
+                Instruction.raiseEvent(EventType.PlayerIsSet),
+                ...Instruction.raiseAllEvents()
+            );
+        } else if (expression instanceof GiveExpression){
+
+            const targetIsSelf = expression.targetName == "~it";
+            const targetIsPlayer = expression.targetName == Player.typeName;
+
+            let targetInstruction:Instruction;
+
+            if (targetIsSelf){
+                targetInstruction = Instruction.loadThis();
+            } else if (targetIsPlayer){
+                targetInstruction = Instruction.loadPlayer();
+            } else {
+                targetInstruction = Instruction.loadInstance(expression.targetName);
+            }
+
+            for(const item of expression.items){
+                for(let i = 0; i < item.count; i++){
+                    instructions.push(
+                        Instruction.newInstance(item.typeName),
+                        targetInstruction,
+                        Instruction.give()
+                    );
+                }
+            }
+        
         } else {
             throw new CompilationError(`Unable to transform unsupported expression: ${expression}`);
         }

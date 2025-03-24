@@ -72,6 +72,8 @@ import { CompareGreaterThanHandler } from "./handlers/CompareGreaterThanHandler"
 import { InterpolateStringHandler } from "./handlers/InterpolateStringHandler";
 import { LoadPlayerHandler } from "./handlers/LoadPlayerHandler";
 import { GoToLabelHandler } from "./handlers/GoToLabelHandler";
+import { SetPlayerHandler } from "./handlers/SetPlayerHandler";
+import { GiveHandler } from "./handlers/GiveHandler";
 
 export class TalonRuntime{
 
@@ -131,7 +133,9 @@ export class TalonRuntime{
             new IgnoreHandler(),
             new LoadStaticFieldHandler(),
             new AssignStaticFieldHandler(),
-            new InterpolateStringHandler()
+            new InterpolateStringHandler(),
+            new SetPlayerHandler(),
+            new GiveHandler()
         ];
 
         this.handlers = new Map<OpCode, OpCodeHandler>(handlerInstances.map(x => [x.code, x]));
@@ -175,24 +179,36 @@ export class TalonRuntime{
         }
 
         Stopwatch.measure("TalonRuntime.Start", () => {
-            const places = this.thread?.allTypes
+            
+            if (!this.thread){
+                throw new RuntimeError("Unable to start Talon runtime, no active thread was present");
+            }
+
+            const places = this.thread.allTypes
                             .filter(x => x.baseTypeName == Place.typeName)
                             .map(x => <RuntimePlace>Memory.allocate(x));
 
             const getPlayerStart = (place:RuntimePlace) => <RuntimeBoolean>(place.fields.get(Place.isPlayerStart)?.value);
             const isPlayerStart = (place:RuntimePlace) => getPlayerStart(place)?.value === true;
+            const getDefaultPlayer = () => this.thread?.knownTypes.get(Player.typeName);
 
             const currentPlace = places?.find(isPlayerStart);
 
-            this.thread!.currentPlace = currentPlace;
+            this.thread.currentPlace = currentPlace;
             
-            let player = this.thread?.allTypes.find(x => x.baseTypeName == Player.typeName);
+            const types = new Map<string, Type>(this.thread.allTypes.map(x => [x.name, x]));
+        
+            const knownCustomPlayers = this.thread.allTypes.filter(x => x.name != Player.typeName && x.inheritsFromType(types, Player.typeName)) || [];
+
+            const useDefaultPlayer = !knownCustomPlayers || knownCustomPlayers.length != 1;
+
+            const player = useDefaultPlayer ? getDefaultPlayer() : knownCustomPlayers[0];
 
             if (!player){
-                player = this.thread?.knownTypes.get(Player.typeName)!;
+                throw new RuntimeError("Unable to locate either the default player type or a single custom type");
             }
 
-            this.thread!.currentPlayer = <RuntimePlayer>Memory.allocate(player);
+            this.thread.currentPlayer = <RuntimePlayer>Memory.allocate(player);
 
             return this.runWith("");
         });
