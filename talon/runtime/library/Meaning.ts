@@ -12,6 +12,7 @@ export enum Meaning{
     Closing = "closing",
     Pressing = "pressing",
     Quitting = "quitting",
+    Combining = "combining",
+    Holding = "holding",
     Custom = "custom",
-    Combining = "combining"
 }

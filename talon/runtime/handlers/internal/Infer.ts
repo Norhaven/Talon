@@ -24,7 +24,7 @@ export class Infer{
         const targetSources = Infer.targetSourcesFrom(thread, meaning, actualTargetName);
         const [actualTargetSource, target] = Infer.targetFrom(thread, meaning, targetSources, actualTargetName);
 
-        return new ActionContext(actualActorSource, actor, actualTargetSource, target);
+        return new ActionContext(actualActorSource, actor, actualTargetSource, target, actualTargetName);
     }
 
     static actorSourcesFrom(thread:Thread, meaning:Meaning, actorName?:string){
@@ -53,6 +53,14 @@ export class Infer{
                 }
     
                 return [thread.currentPlayer, thread.currentPlace];
+            }
+            case Meaning.Holding:{
+                if (!actorName){
+                    thread.logReadable("No actor name was supplied, inferred no target");
+                    return [];
+                }
+
+                return [thread.currentPlayer];
             }
             default:
                 return [];
@@ -84,6 +92,9 @@ export class Infer{
     
                 return [thread.currentPlayer, thread.currentPlace];
             }
+            case Meaning.Holding:{
+                return [thread.currentPlayer];
+            }
             default:
                 return [undefined];
         }
@@ -102,7 +113,8 @@ export class Infer{
             case Meaning.Combining:
             case Meaning.Opening:
             case Meaning.Closing:
-            case Meaning.Taking:{
+            case Meaning.Taking:
+            case Meaning.Holding:{
                 if (!actorName){
                     return [undefined, undefined];
                 }
@@ -187,6 +199,9 @@ export class Infer{
                 }
     
                 return Lookup.findByNameIn(thread, sources, targetName, false);
+            }
+            case Meaning.Holding:{
+                return [thread.currentPlayer, thread.currentPlayer];
             }
             default:{
                 return [undefined, undefined];

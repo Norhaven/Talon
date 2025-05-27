@@ -30,6 +30,16 @@ export class ParseContext{
         return token;
     }
 
+    consumeIf(tokenValue:string){
+        if (!this.is(tokenValue)){
+            return false;
+        }
+
+        this.consumeCurrentToken();
+
+        return true;
+    }
+
     is(tokenValue:string){
         return this.currentToken?.value == tokenValue;
     }

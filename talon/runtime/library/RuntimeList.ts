@@ -27,7 +27,8 @@ export class RuntimeList extends RuntimeAny{
     constructor(public items:RuntimeAny[]){
         super();
 
-        this.defineContainsMethod()
+        this.defineContainsMethod();
+        this.defineContainsInstanceMethod();
         this.defineContainsTypeMethod();
         this.defineAddMethod();
         this.defineCountMethod();
@@ -36,6 +37,7 @@ export class RuntimeList extends RuntimeAny{
         this.defineEnsureOneMethod();
         this.defineGetEnumeratorMethod();
         this.defineGroupMethod();
+        this.defineUnionMethod();
     }
 
     private defineJoinMethod(){
@@ -77,15 +79,36 @@ export class RuntimeList extends RuntimeAny{
         add.parameters.push(
             new Parameter(List.instanceParameter, RuntimeAny.name)
         );
+        add.returnType = List.typeName;
 
         add.body.push(
             Instruction.loadLocal(List.instanceParameter),
             Instruction.loadThis(),
             Instruction.externalCall("addInstance"),
+            Instruction.loadThis(),
             Instruction.return()
         );
 
         this.methods.set(List.add, add);
+    }
+
+    private defineUnionMethod(){
+        const union = new Method();
+        union.name = List.add;        
+        union.parameters.push(
+            new Parameter(List.instanceParameter, RuntimeAny.name)
+        );
+        union.returnType = List.typeName;
+
+        union.body.push(
+            Instruction.loadLocal(List.instanceParameter),
+            Instruction.loadThis(),
+            Instruction.externalCall("union"),
+            Instruction.loadThis(),
+            Instruction.return()
+        );
+
+        this.methods.set(List.union, union);
     }
 
     private defineGroupMethod(){
@@ -122,6 +145,25 @@ export class RuntimeList extends RuntimeAny{
         );
 
         this.methods.set(List.contains, contains);
+    }
+
+    private defineContainsInstanceMethod(){
+        const contains = new Method();
+        contains.name = List.containsInstance;
+        contains.parameters.push(
+            new Parameter(List.valueParameter, WorldObject.typeName)
+        );
+
+        contains.returnType = BooleanType.typeName;
+
+        contains.body.push(
+            Instruction.loadLocal(List.valueParameter),  
+            Instruction.loadThis(),
+            Instruction.externalCall("containsInstance"),
+            Instruction.return()
+        );
+
+        this.methods.set(List.containsInstance, contains);
     }
 
     private defineContainsTypeMethod(){
@@ -257,7 +299,26 @@ export class RuntimeList extends RuntimeAny{
 
         console.log("Adding an instance...");
         console.log(instance);
-        this.items.push(instance);
+
+        if (instance){
+            this.items.push(instance);
+        }
+    }
+
+    union(instanceOrList:RuntimeAny){
+        if (!instanceOrList.isTypeOf(List.typeName)){
+            instanceOrList = Memory.allocateList([instanceOrList]);
+        }
+
+        const incomingList = <RuntimeList>instanceOrList;
+
+        for(const item of incomingList.items){
+            if (this.items.some(x => x === item)){
+                continue;
+            }
+
+            this.items.push(item);
+        }
     }
 
     groupIfPossible(){
@@ -301,7 +362,7 @@ export class RuntimeList extends RuntimeAny{
         return Memory.allocateNumber(this.items.length);
     }
 
-    contains(instance:RuntimeWorldObject){
+    containsInstance(instance:RuntimeWorldObject){
         const item = this.items.find(x => x === instance);
 
         if (item){

@@ -26,6 +26,8 @@ export class SetPlayerHandler extends OpCodeHandler{
 
         thread.currentPlayer = <RuntimePlayer>player;
 
+        thread.currentPlayer.resolveContainers();
+
         return super.handle(thread);
     }
 }

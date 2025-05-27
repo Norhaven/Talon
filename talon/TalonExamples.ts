@@ -299,3 +299,314 @@ export function getExampleStoryCode(){
 "\n" + 
 "say \"This is the end.\".\n";
 }
+
+export function getExampleAdventureCode(){
+    return "understand \"look\" as describing. \n" + 
+"understand \"north\", \"south\", \"east\", \"west\", \"up\", \"down\" as directions. \n" + 
+"understand \"go\" as moving. \n" + 
+"understand \"take\" as taking. \n" + 
+"understand \"give\" as giving.\n" + 
+"understand \"inv\", \"i\", \"inventory\" as inventory. \n" + 
+"understand \"drop\" as dropping. \n" + 
+"understand \"use\" as using.\n" + 
+"understand \"open\" as opening.\n" + 
+"understand \"close\" as closing.\n" + 
+"understand \"combine\" as combining.\n" + 
+"understand \"locked\" as stateful.\n" + 
+"understand \"hold\", \"equip\" as holding.\n" + 
+"understand \"Q\" as options.\n" + 
+"\n" + 
+"when the player starts:\n" + 
+"    say \"The player has started!\";\n" + 
+"and then stop.\n" + 
+"\n" + 
+"when the player fails:\n" + 
+"    say \"Sorry, you failed to complete the game!\";\n" + 
+"and then stop.\n" + 
+"\n" + 
+"when the player wins:\n" + 
+"    say \"You win!\";\n" + 
+"and then stop.\n" + 
+"\n" + 
+"when the player is set:\n" + 
+"    say \"You selected a new player!\";\n" + 
+"and then stop.\n" + 
+"\n" + 
+"when the game starts:\n" + 
+"    say \"Welcome to an example Talon adventure!\";\n" + 
+"    say \"\";\n" + 
+"    show PlayerMenu;\n" + 
+"and then stop.\n" + 
+"\n" + 
+"when the game ends:\n" + 
+"    say \"The game has ended!\";\n" + 
+"and then stop.\n" + 
+"\n" + 
+"when the game completes:\n" + 
+"    say \"You completed the game!\";\n" + 
+"and then stop.\n" + 
+"\n" + 
+"when the player presses \"Q\":\n" + 
+"    show MainMenu;\n" + 
+"and then stop.\n" + 
+"\n" + 
+"a Character is a kind of player.\n" + 
+"it contains 10 Coin.\n" + 
+"it has a value called currentHitpoints that is 20.\n" + 
+"it has a value called maxHitpoints that is 20.\n" + 
+"it has a value called score that is 0.\n" + 
+"it has a value called leftHand that is empty and can hold a Weapon.\n" + 
+"it has a value called rightHand that is empty and can hold a Weapon.\n" + 
+"it has a value called body that is empty and can hold Armor.\n" + 
+"when it holds a Weapon:\n" + 
+"    show menu \"Which hand should hold this?\" with options:\n" + 
+"        \"1) Left Hand\" will set the player's leftHand to Weapon;\n" + 
+"        \"2) Right Hand\" will set the player's rightHand to Weapon;\n" + 
+"        \"3) Cancel\" will cancel;\n" + 
+"    and then hide;\n" + 
+"    say \"You hold the weapon!\";\n" + 
+"and then stop.\n" + 
+"when it holds an Armor:\n" + 
+"    set body to Armor;\n" + 
+"    say \"You put the armor on!\";\n" + 
+"and then stop.\n" + 
+"when its body is set to LeatherArmor:\n" + 
+"    say \"The leather armor seems to fit you nicely!\";\n" + 
+"and then stop.\n" + 
+"when its currentHitpoints is set to less than 1:\n" + 
+"    say \"Oh no, you took too much damage and died!\";\n" + 
+"    the player fails;\n" + 
+"    the game ends;\n" + 
+"and then stop.\n" + 
+"\n" + 
+"a Warrior is a kind of Character.\n" + 
+"it has a value called currentHitpoints that is 30.\n" + 
+"it has a value called maxHitpoints that is 30.\n" + 
+"\n" + 
+"a Mage is a kind of Character.\n" + 
+"it has a value called currentHitpoints that is 15.\n" + 
+"it has a value called maxHitpoints that is 15.\n" + 
+"\n" + 
+"a Thief is a kind of Character.\n" + 
+"\n" + 
+"a Relic is a kind of item.\n" + 
+"it has a value called worthAmount that is 10.\n" + 
+"\n" + 
+"a StatueRelic is a kind of Relic.\n" + 
+"it is described as \"It's a small jade figurine, beautifully cut and sparkles slightly in the light. It looks old and expensive.\".\n" + 
+"it is observed as \"You see a small jade statue on the ground.\".\n" + 
+"\n" + 
+"an AmuletRelic is a kind of Relic.\n" + 
+"it is described as \"It's an amulet on a thin golden chain with a brilliant emerald embedded in the middle.\".\n" + 
+"it is observed as \"You see what appears to be an amulet laying on a pedestal at the center of the clearing.\".\n" + 
+"\n" + 
+"a RelicPouch is a kind of item.\n" + 
+"it is described as \"It's a small leather pouch with a drawstring at the top. Nothing special.\".\n" + 
+"it is observed as \"You see a small leather pouch on the ground.\".\n" + 
+"it contains 1 StatueRelic.\n" + 
+"\n" + 
+"an Armor is a kind of item.\n" + 
+"it is observed as \"There is a piece of armor on the ground.\".\n" + 
+"it has a value called protectionAmount that is 1.\n" + 
+"it is also known as an \"armor\".\n" + 
+"\n" + 
+"a LeatherArmor is a kind of Armor.\n" + 
+"it is observed as \"There is a set of leather armor on the ground.\".\n" + 
+"it has a value called protectionAmount that is 3.\n" + 
+"\n" + 
+"a Weapon is a kind of item.\n" + 
+"it has a value called damageAmount that is 1.\n" + 
+"\n" + 
+"a Sword is a kind of Weapon.\n" + 
+"it is observed as \"There is a sword laying on the ground.\".\n" + 
+"it has a value called damageAmount that is 3.\n" + 
+"it is also known as a \"sword\".\n" + 
+"\n" + 
+"a Staff is a kind of Weapon.\n" + 
+"\n" + 
+"a Dagger is a kind of Weapon.\n" + 
+"it has a value called damageAmount that is 2.\n" + 
+"\n" + 
+"a WindingRoad is a kind of place.\n" + 
+"it is where the player starts.\n" + 
+"it contains 1 Sword, 1 Armor.\n" + 
+"it is described as \"You're on a winding dirt road, each side full of grass and weeds. The road to the north climbs higher and higher.\".\n" + 
+"it can reach the ScenicCliff by going \"north\".\n" + 
+"\n" + 
+"a ScenicCliff is a kind of place.\n" + 
+"it is described as \"The road curves along to the east, running next to the edge of a cliff on the west. The road winds further to the south as well.\".\n" + 
+"it can reach the CliffBottom by going \"west\".\n" + 
+"it can reach the WindingRoad by going \"south\".\n" + 
+"it can reach the SecludedTemple by going \"east\".\n" + 
+"when the player goes \"west\":\n" + 
+"    say \"Whoops, you got too close to the edge and fell off the cliff! You took 10 damage from the fall.\";\n" + 
+"    say \"\";\n" + 
+"    subtract 10 from the player's currentHitpoints;\n" + 
+"    say \"You have {{the player's currentHitpoints}} HP left!\";\n" + 
+"    say \"\";\n" + 
+"and then stop.\n" + 
+"\n" + 
+"a CliffBottom is a kind of place.\n" + 
+"it is described as \"The bottom of the cliff is a small rocky beach, small waves crashing against it. To the north there appears to be a staircase cut into the rock.\".\n" + 
+"it contains 1 RelicPouch, 1 Sword, 1 LeatherArmor.\n" + 
+"it can reach the SecludedTempleStaircaseBottom by going \"north\".\n" + 
+"\n" + 
+"a SecludedTemple is a kind of place.\n" + 
+"it is described as \"You arrive at a small temple nearly hidden by some trees. A path runs around the temple to the north, whereas to the east looks to be a grassy hill. To the west you can see that the path curves away.\".\n" + 
+"it contains 1 TempleDonationBox, 1 Monk.\n" + 
+"it can reach the ScenicCliff by going \"west\".\n" + 
+"it can reach the SecludedTempleGarden by going \"north\".\n" + 
+"it can reach the GrassyHill by going \"east\".\n" + 
+"\n" + 
+"a SecludedTempleGarden is a kind of place.\n" + 
+"it is described as \"You are behind the temple in a small garden area with various flowers and plants blooming around the edges. A path runs around the temple to the south, and there seems to be an entrance to a staircase going down over a cliff to the west.\".\n" + 
+"it contains 1 Monk.\n" + 
+"it can reach the SecludedTemple by going \"south\".\n" + 
+"it can reach the SecludedTempleStaircaseTop by going \"west\".\n" + 
+"when the player goes \"west\":\n" + 
+"    if it contains 1 Monk then\n" + 
+"        say \"The monk shakes his head sternly at you, warning you away from going any further. It looks like you can't go down the stairs at the moment.\";\n" + 
+"        abort event;\n" + 
+"    and then continue;\n" + 
+"and then stop.\n" + 
+"\n" + 
+"a SecludedTempleStaircaseBottom is a kind of place.\n" + 
+"it is described as \"You are at the bottom of a very tall staircase heading upwards cut into the side of the cliff. To the south there seems to be a small beach nestled between the water and the cliff.\".\n" + 
+"it can reach the SecludedTempleStaircaseTop by going \"up\".\n" + 
+"it can reach the CliffBottom by going \"south\".\n" + 
+"\n" + 
+"a SecludedTempleStaircaseTop is a kind of place.\n" + 
+"it is described as \"You reach the top of a dizzyingly long staircase downwards that's cut into the side of the cliff. To the east there are some gardens and what looks like the back of a building. The wind blows and makes you wobble slightly.\".\n" + 
+"it can reach the SecludedTempleStaircaseBottom by going \"down\".\n" + 
+"it can reach the SecludedTempleGarden by going \"east\".\n" + 
+"\n" + 
+"a GrassyHill is a kind of place.\n" + 
+"it can reach the SecludedTemple by going \"west\".\n" + 
+"it can reach the ForestEntrance by going \"east\".\n" + 
+"\n" + 
+"a ForestEntrance is a kind of place.\n" + 
+"it can reach the GrassyHill by going \"west\".\n" + 
+"it can reach the ForestEndlessPathway1 by going \"south\".\n" + 
+"\n" + 
+"a ForestEndlessPathway1 is a kind of place.\n" + 
+"it can reach the ForestEndlessPathway2 by going \"north\".\n" + 
+"it can reach the ForestEndlessPathway3 by going \"east\".\n" + 
+"\n" + 
+"a ForestEndlessPathway2 is a kind of place.\n" + 
+"it can reach the ForestEndlessPathway3 by going \"west\".\n" + 
+"it can reach the ForestEndlessPathway1 by going \"east\".\n" + 
+"it can reach the ForestEndlessPathway2 by going \"south\".\n" + 
+"\n" + 
+"a ForestEndlessPathway3 is a kind of place.\n" + 
+"it can reach the ForestEndlessPathway1 by going \"west\".\n" + 
+"it can reach the ForestEndlessPathway2 by going \"south\".\n" + 
+"it can reach the ForestEntrance by going \"east\".\n" + 
+"it can reach the ForestSpiritShrine by going \"north\".\n" + 
+"\n" + 
+"a ForestSpiritShrine is a kind of place.\n" + 
+"it can reach the ForestEntrance by going \"north\".\n" + 
+"it can reach the ForestEndlessPathway1 by going \"west\".\n" + 
+"it can reach the FairyGlen by going \"east\".\n" + 
+"it can reach the ForestEndlessPathway3 by going \"south\".\n" + 
+"\n" + 
+"a FairyGlen is a kind of place.\n" + 
+"it contains 1 AmuletRelic, 1 AmuletPillar.\n" + 
+"it can reach the CalmingBrook by going \"north\".\n" + 
+"it can reach the ForestSpiritShrine by going \"west\".\n" + 
+"\n" + 
+"a CalmingBrook is a kind of place.\n" + 
+"it can reach the FairyGlen by going \"south\".\n" + 
+"it can reach the BoatTransport by going \"west\".\n" + 
+"\n" + 
+"a BoatTransport is a kind of place.\n" + 
+"it can reach the CalmingBrook by going \"east\".\n" + 
+"it can reach the GrassyHill by going \"west\".\n" + 
+"\n" + 
+"a TempleDonationBox is a kind of decoration.\n" + 
+"it is described as \"The box is plain and made of sturdy wood. There's a slot on top that seems about the size of a coin and the paper reads 'Please Give What You Can'\".\n" + 
+"it is observed as \"A plain wooden box sits on the porch with a paper attached to it.\".\n" + 
+"it is also known as a \"box\".\n" + 
+"\n" + 
+"an AmuletPillar is a kind of decoration.\n" + 
+"it is described as \"The pillar looks to be made from some kind of polished stone and engraved with depictions of spirits and fairies.\".\n" + 
+"\n" + 
+"a Coin is a kind of item. \n" + 
+"it is described as \"It's a small gold coin, engraved with somebody's likeness.\".\n" + 
+"it can be grouped as CoinGroup.\n" + 
+"\n" + 
+"a CoinGroup is a kind of group.\n" + 
+"it is observed as \"You see {{count}} coins!\".\n" + 
+"it is listed as \"{{count}} gold coins\".\n" + 
+"it can contain any Coin.\n" + 
+"it is also known as a \"coins\".\n" + 
+"when it is described:\n" + 
+"    say \"It's a pile of gold coins\";\n" + 
+"and then stop.\n" + 
+"\n" + 
+"a Monk is a kind of creature.\n" + 
+"it is described as \"The monk's ancient face is lined with wrinkles but still holds a youthful energy about him.\".\n" + 
+"it is observed in the SecludedTemple as \"A monk with a bald head and plain yellowish orange robes is sweeping the entrance to the temple.\".\n" + 
+"it is observed in the SecludedTempleGarden as \"A monk with a watering can and trowel is tending to the flower beds.\".\n" + 
+"it is also known as a \"monk\", \"man\".\n" + 
+"when it is given a Coin in the SecludedTemple:\n" + 
+"    say \"He pauses sweeping and accepts the coin, placing it into a small donation box on the steps of the temple. He smiles and bows, then resumes his work.\";\n" + 
+"    move Coin to TempleDonationBox;\n" + 
+"and then stop.\n" + 
+"when it is given a Coin in the SecludedTempleGarden:\n" + 
+"    say \"He gladly accepts the coin and heads back into the temple with it, presumably to store it somewhere.\";\n" + 
+"    move Coin to TempleDonationBox;\n" + 
+"    remove it from SecludedTempleGarden;\n" + 
+"and then stop.\n" + 
+"\n" + 
+"a PlayerMenu is a kind of menu.\n" + 
+"it is described as \"What kind of player do you want to use?\".\n" + 
+"it contains options WarriorOption, MageOption, ThiefOption.\n" + 
+"when option WarriorOption is selected:\n" + 
+"    say \"\";\n" + 
+"    say \"Your character is a warrior, very strong and tough but weak to magic.\";\n" + 
+"    set the player to Warrior;\n" + 
+"    hide this;\n" + 
+"and then stop.\n" + 
+"when option MageOption is selected:\n" + 
+"    say \"\";\n" + 
+"    say \"Your character is a mage, very good with magic but not very strong or tough.\";\n" + 
+"    set the player to Mage;\n" + 
+"    hide this;\n" + 
+"and then stop.\n" + 
+"when option ThiefOption is selected:\n" + 
+"    say \"\";\n" + 
+"    say \"Your character is a thief, knows a little magic and has some strength\";\n" + 
+"    set the player to Thief;\n" + 
+"    hide this;\n" + 
+"and then stop.\n" + 
+"\n" + 
+"a WarriorOption is a kind of option.\n" + 
+"it is described as \"1) Warrior\".\n" + 
+"\n" + 
+"a MageOption is a kind of option.\n" + 
+"it is described as \"2) Mage\".\n" + 
+"\n" + 
+"a ThiefOption is a kind of option.\n" + 
+"it is described as \"3) Thief\".\n" + 
+"\n" + 
+"a MainMenu is a kind of menu.\n" + 
+"it is described as \"Main Menu\".\n" + 
+"it contains options ContinueOption, QuitOption.\n" + 
+"when option QuitOption is selected:\n" + 
+"    say \"\";\n" + 
+"    say \"I'm sorry to see you go, I hope you had fun!\";\n" + 
+"    hide this;\n" + 
+"    quit;\n" + 
+"and then stop.\n" + 
+"when option ContinueOption is selected:\n" + 
+"    say \"\";\n" + 
+"    say \"On with the adventure!\";\n" + 
+"    hide this;\n" + 
+"and then stop.\n" + 
+"\n" + 
+"a ContinueOption is a kind of option.\n" + 
+"it is described as \"1) Continue\".\n" + 
+"\n" + 
+"a QuitOption is a kind of option.\n" + 
+"it is described as \"2) Quit\".\n";
+}

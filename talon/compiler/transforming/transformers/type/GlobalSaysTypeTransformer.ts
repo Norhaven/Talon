@@ -9,22 +9,19 @@ import { ITypeTransformer } from "../../ITypeTransformer";
 import { TransformerContext } from "../../TransformerContext";
 
 export class GlobalSaysTypeTransformer implements ITypeTransformer{
-    transform(expression: Expression, context: TransformerContext): void {
+    constructor(private readonly context: TransformerContext){
+    }
+
+    transform(expression: Expression): void {
         if (!(expression instanceof ProgramExpression)){
             return;
         }
 
         const globalSaysTypeName = "~globalSays";
 
-        if (!context.typesByName.has(globalSaysTypeName)){
-            const type = new Type(globalSaysTypeName, Say.typeName);
-            context.typesByName.set(type.name, type);
-        }
+        const type = this.context.getOrAddType(globalSaysTypeName, Say.typeName);
 
         const globalSays = expression.expressions.filter(x => x instanceof SayExpression);
-
-        
-        const type = context.typesByName.get(globalSaysTypeName);
         
         const method = new Method();
         method.name = Say.typeName;

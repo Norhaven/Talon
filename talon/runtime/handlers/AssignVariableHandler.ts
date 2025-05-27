@@ -5,6 +5,11 @@ import { RuntimeError } from "../errors/RuntimeError";
 import { RuntimeInteger } from "../library/RuntimeInteger";
 import { OpCode } from "../../common/OpCode";
 import { RuntimeBoolean } from "../library/RuntimeBoolean";
+import { RuntimeWorldObject } from "../library/RuntimeWorldObject";
+import { RuntimeAny } from "../library/RuntimeAny";
+import { RuntimeVariableReference } from "../library/RuntimeVariableReference";
+import { Event } from "./internal/Event";
+import { EventType } from "../../common/EventType";
 
 export class AssignVariableHandler extends OpCodeHandler{
     public readonly code: OpCode = OpCode.Assign;
@@ -22,6 +27,19 @@ export class AssignVariableHandler extends OpCodeHandler{
             instance.value = (<RuntimeInteger>value).value;
         } else if (instance instanceof RuntimeBoolean){
             instance.value = (<RuntimeBoolean>value).value;
+        } else if (instance instanceof RuntimeVariableReference){
+
+            if (!instance.value){
+                throw new RuntimeError(`Unable to set undefined field '${instance.typeName}' to '${value}'`);
+            }
+
+            if (!value){
+                throw new RuntimeError(`Unable to set field '${instance.value.name}' to an undefined value`);
+            }
+
+            instance.value.value = value;
+
+            Event.using(thread).raiseContextual(EventType.ValueIsSet, instance.enclosingType!, value);
         } else {
             throw new RuntimeError("Encountered unsupported type on the stack");
         }

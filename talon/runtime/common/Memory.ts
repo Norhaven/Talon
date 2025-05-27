@@ -42,6 +42,7 @@ import { RuntimeTuple } from "../library/RuntimeTuple";
 import { RuntimeGroup } from "../library/RuntimeGroup";
 import { Group } from "../../library/Group";
 import { RuntimeDelegate } from "../library/RuntimeDelegate";
+import { RuntimeVariableReference } from "../library/RuntimeVariableReference";
 
 export class Memory{
     private static typesByName = new Map<string, Type>();
@@ -179,6 +180,14 @@ export class Memory{
         return new RuntimeTuple<string>(<string>items[0], <string>items[1]);
     }
 
+    static allocateVariableReference(variable:Variable, instance?:RuntimeAny){
+        return new RuntimeVariableReference(variable, instance);
+    }
+
+    static allocateEmpty(){
+        return new RuntimeEmpty();
+    }
+
     static allocate(type:Type):RuntimeAny{
         Memory.log.writeStructured("Allocating type {@type}", type);
 
@@ -206,7 +215,7 @@ export class Memory{
 
     private static constructVariableFrom(field:Field){
         if (field.type){
-            return new Variable(field.name, field.type);
+            return new Variable(field.name, field.type, undefined, field.enclosingTypeName);
         }
 
         const type = Memory.typesByName.get(field.typeName);
@@ -215,7 +224,7 @@ export class Memory{
             throw new RuntimeError(`Unable to construct unknown type '${field.typeName}'`);
         }
 
-        return new Variable(field.name, type);
+        return new Variable(field.name, type, undefined, field.enclosingTypeName);
     }
 
     private static instantiateDefaultValueFor(variable:Variable, defaultValue:Object|undefined){
@@ -239,7 +248,7 @@ export class Memory{
                 this.log.writeReadable(`Allocating an array for: '${item}'`);
 
                 const itemList = <Object[]>item;
-                const isTuple = itemList.length == 2;
+                const isTuple = itemList.length == 2 || item.length == 2;
                 const isInitializationTuple = itemList.length == 3;
 
                 const isExpandableArray = 
@@ -355,7 +364,7 @@ export class Memory{
             }
 
             for(const method of type.methods){
-                instance.methods.set(method.name, method);
+                instance.methods.set(method.signature, method);
             }
 
             return instance;

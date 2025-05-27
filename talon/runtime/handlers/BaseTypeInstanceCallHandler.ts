@@ -10,7 +10,7 @@ export class BaseTypeInstanceCallHandler extends OpCodeHandler{
     public code: OpCode = OpCode.BaseTypeInstanceCall;
 
     handle(thread:Thread){
-        const methodName = thread.currentMethod.method?.name!;
+        const methodName = thread.currentMethod.method?.signature!;
         const thisInstance = thread.currentMethod.method?.actualParameters[0];
 
         this.logInteraction(thread, methodName, thisInstance?.value?.typeName);

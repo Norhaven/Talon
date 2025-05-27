@@ -8,12 +8,19 @@ import { ITypeTransformer } from "../../ITypeTransformer";
 import { TransformerContext } from "../../TransformerContext";
 
 export class UnderstandingTypeTransformer implements ITypeTransformer{
-    transform(expression: Expression, context:TransformerContext): void {
+    constructor(private readonly context:TransformerContext){
+    }
+
+    transform(expression: Expression): void {
         if (!(expression instanceof UnderstandingDeclarationExpression)){
             return;
         }
 
-        const type = new Type(`~${Understanding.typeName}_${context.dynamicTypeCount}`, Understanding.typeName);
+        // We're using the Understanding type name for both the name and the parent because this
+        // is a dynamic type that needs to descend from the Understanding type and has no real
+        // name of its own.
+        
+        const type = this.context.addDynamicType(Understanding.typeName, Understanding.typeName);
             
         const action = new Field();
         action.name = Understanding.action;
@@ -25,9 +32,5 @@ export class UnderstandingTypeTransformer implements ITypeTransformer{
         
         type.fields.push(action);
         type.fields.push(meaning);
-
-        context.dynamicTypeCount++;
-
-        context.typesByName.set(type.name, type);
     }
 }

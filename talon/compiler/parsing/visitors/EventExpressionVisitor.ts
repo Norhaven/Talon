@@ -6,6 +6,10 @@ import { Keywords } from "../../lexing/Keywords";
 import { ActionsExpression } from "../expressions/ActionsExpression";
 
 export class EventExpressionVisitor extends ExpressionVisitor{
+    constructor(typeName?:string){
+        super(typeName);
+    }
+
     visit(context:ParseContext):Expression{
         
         const actions:Expression[] = [];

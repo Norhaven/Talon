@@ -11,6 +11,8 @@ export enum EventType{
     ItIsDescribed = "itIsDescribed",
     ItIsObserved = "itIsObserved",
     ItIsCombined = "itIsCombined",
+    ItIsHeld = "itIsHeld",
+    ItGoes = "itGoes",
     KeyIsPressed = "keyIsPressed",
     OptionIsSelected = "optionIsSelected",
     GameIsStarted = "gameIsStarted",
@@ -21,5 +23,6 @@ export enum EventType{
     PlayerFails = "playerFails",
     PlayerWins = "playerWins",
     PlayerIsSet = "playerIsSet",
+    ValueIsSet = "valueIsSet",
     RuntimeDetermined = "runtimeDetermined"
 }

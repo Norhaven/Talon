@@ -4,6 +4,15 @@ import { TypeDeclarationExpression } from "../parsing/expressions/TypeDeclaratio
 import { Token } from "../lexing/Token";
 import { TokenType } from "../lexing/TokenType";
 import { IOutput } from "../../runtime/IOutput";
+import { WorldObject } from "../../library/WorldObject";
+import { FieldDeclarationExpression } from "../parsing/expressions/FieldDeclarationExpression";
+import { List } from "../../library/List";
+import { ActionsExpression } from "../parsing/expressions/ActionsExpression";
+import { InlineMenuDeclarationExpression } from "../parsing/expressions/InlineMenuDeclarationExpression";
+import { SetVariableExpression } from "../parsing/expressions/SetVariableExpression";
+import { OptionDeclarationExpression } from "../parsing/expressions/OptionDeclarationExpression";
+import { ArrayList } from "../../common/ArrayList";
+import { IdentifierExpression } from "../parsing/expressions/IdentifierExpression";
 
 export class TalonSemanticAnalyzer{
 
@@ -49,21 +58,53 @@ export class TalonSemanticAnalyzer{
 
         const typesByName = new Map<string, TypeDeclarationExpression>(types.map(x => [x.name, x]));
 
-        for(const declaration of types){
+        this.ensureTypeHierarchyIsValidForAllTypes(typesByName);
+        this.ensureDynamicTypesReferenceEitherContextOrClosuresIfNecessary(typesByName);
+
+        return expression;
+    }
+
+    private ensureTypeHierarchyIsValidForAllTypes(types:Map<string, TypeDeclarationExpression>){        
+
+        for(const declaration of types.values()){
             const baseToken = declaration.baseTypeNameToken;
 
             if (baseToken.type == TokenType.Keyword && !baseToken.value.startsWith("~")){
                 const name = `~${baseToken.value}`;
-                declaration.baseType = typesByName.get(name);
+                declaration.baseType = types.get(name);
             } else {
-                declaration.baseType = typesByName.get(baseToken.value);
+                declaration.baseType = types.get(baseToken.value);
             }
 
             for(const field of declaration.fields){
-                field.type = typesByName.get(field.typeName);
+                field.type = types.get(field.typeName);
             }
         }
+    }
 
-        return expression;
+    private ensureDynamicTypesReferenceEitherContextOrClosuresIfNecessary(types:Map<string, TypeDeclarationExpression>){
+        const typeExpressions = types.values();
+
+        for(const type of typeExpressions){
+            for(const actions of type.events.flatMap(x => <ActionsExpression>x.actions)){
+                for(const menu of ArrayList.from(actions.actions).ofType(InlineMenuDeclarationExpression)){
+                    for(const option of menu.options){
+                        const actions = option.actions;
+                        for(let i = 0; i < option.actions.length; i++){
+                            const action = option.actions[i];
+
+                            if (action.isOfType(SetVariableExpression)){
+                                const instanceTypeName = action.variableIdentifier.instanceName || type.name;
+                                const variableName = action.variableIdentifier.variableName;
+
+                                const setExpression = new SetVariableExpression(new IdentifierExpression(instanceTypeName, variableName), action.evaluationExpression, action.isNegated);
+
+                                actions[i] = setExpression;         
+                            }                   
+                        }
+                    }
+                }
+            }
+        }
     }
 }

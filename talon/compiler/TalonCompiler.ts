@@ -79,7 +79,7 @@ export class TalonCompiler{
             Instruction.print(),
             Instruction.loadString(""),
             Instruction.print(),
-            Instruction.staticCall("~globalSays", "~say"),
+            Instruction.staticCall("~globalSays", "~say", false),
             Instruction.loadString(""),
             Instruction.print(),            
             Instruction.loadInstance(GlobalEvents.typeName),

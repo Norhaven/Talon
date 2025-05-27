@@ -8,6 +8,7 @@ export class List{
     static readonly add = "~add";
     static readonly map = "~map";
     static readonly contains = "~contains";
+    static readonly containsInstance = "~containsInstance";
     static readonly containsType = "~containsType";
     static readonly join = "~join";
     static readonly remove = "~remove";
@@ -15,6 +16,7 @@ export class List{
     static readonly getEnumerator = "~getEnumerator";
     static readonly getFirst = "~getFirst";
     static readonly group = "~group";
+    static readonly union = "~union";
 
     static readonly valueParameter = "~value";
     static readonly separatorParameter = "~separator";

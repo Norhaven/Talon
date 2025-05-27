@@ -53,7 +53,7 @@ export class HandleCommandHandler extends OpCodeHandler{
     }
 
     tryGetUnderstandingFromAction(thread:Thread, action:string){
-        const findValueForActionField = (type:Type) => <string[]>type.fields.find(field => field.name === Understanding.action)?.defaultValue!;
+        const findValueForActionField = (type:Type) => <string[]>type.getField(Understanding.action)?.defaultValue!;
         const getActionUnderstandingPair = (type:Type):readonly [string[], Type] => [findValueForActionField(type), type];
         
         const understandingActionPairs = thread.knownUnderstandings.map(getActionUnderstandingPair);
@@ -82,6 +82,7 @@ export class HandleCommandHandler extends OpCodeHandler{
             case Understanding.observing: return Meaning.Observing;
             case Understanding.combining: return Meaning.Combining;
             case Understanding.options: return Meaning.Pressing;
+            case Understanding.holding: return Meaning.Holding;
             default:
                 return Meaning.Custom;
         }
@@ -193,7 +194,11 @@ export class HandleCommandHandler extends OpCodeHandler{
             case Meaning.Combining:{                
                 action.tryCombine();
                 break;
-            }            
+            }          
+            case Meaning.Holding:{
+                action.tryHoldItem();
+                break;
+            }  
             default:
                 throw new RuntimeError("Unsupported meaning found");
         }  

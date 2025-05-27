@@ -8,19 +8,17 @@ import { ITypeTransformer } from "../../ITypeTransformer";
 import { TransformerContext } from "../../TransformerContext";
 
 export class GlobalFieldsTypeTransformer implements ITypeTransformer{
-    transform(expression: Expression, context: TransformerContext): void {
+    constructor(private readonly context: TransformerContext){
+    }
+
+    transform(expression: Expression): void {
         if (!(expression instanceof ProgramExpression)){
             return;
         }
 
         const globalFieldsTypeName = "~globalProgramFields";
 
-        if (!context.typesByName.has(globalFieldsTypeName)){
-            const type = new Type(globalFieldsTypeName, GlobalFields.typeName);
-            context.typesByName.set(type.name, type);
-        }
-        
-        const type = context.typesByName.get(globalFieldsTypeName);
+        const type = this.context.getOrAddType(globalFieldsTypeName, GlobalFields.typeName);
         
         const isCancelledField = new Field();
         isCancelledField.name = GlobalFields.canRun;

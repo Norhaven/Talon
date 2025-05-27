@@ -23,8 +23,28 @@ export class RuntimeAny{
     hasField(name:string){
         return this.fields.get(name)?.value !== undefined;
     }
-    
-    protected getFieldValueByName(name:string):RuntimeAny{
+
+    hasOrInheritsField(fieldName:string):boolean{
+        if (this.hasField(fieldName)){
+            return true;
+        }
+
+        if (this.base){
+            return this.base.hasOrInheritsField(fieldName);
+        }
+
+        return false;
+    }
+
+    getField(fieldName:string):Variable|undefined{
+        if (this.hasField(fieldName)){
+            return this.fields.get(fieldName);
+        }
+
+        return this.base?.getField(fieldName);
+    }
+
+    getFieldValueByName(name:string):RuntimeAny{
         if (!this.hasField(name)){
             if (!this.base){
                 throw new RuntimeError(`Attempted field access for unknown field '${name}'`);
@@ -92,7 +112,11 @@ export class RuntimeAny{
     }
 
     getType(){
-        return new Type(this.typeName, this.parentTypeName);
+        const type = new Type(this.typeName, this.parentTypeName);
+
+        type.base = this.base?.getType();
+
+        return type;
     }
 
     toString(){

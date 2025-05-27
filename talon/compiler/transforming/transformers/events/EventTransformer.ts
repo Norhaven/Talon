@@ -1,3 +1,4 @@
+import { ComparisonType } from "../../../../common/ComparisonType";
 import { EventType } from "../../../../common/EventType";
 import { Instruction } from "../../../../common/Instruction";
 import { Method } from "../../../../common/Method";
@@ -16,32 +17,48 @@ import { TransformerContext } from "../../TransformerContext";
 import { ExpressionTransformer } from "../expressions/ExpressionTransformer";
 
 export class EventTransformer{
-    static createEvents(expression:TypeDeclarationExpression, context:TransformerContext, type:Type){
+    static createEvents(expression:TypeDeclarationExpression|undefined, context:TransformerContext, type:Type){
         
-        for (const event of expression.events){
-            const method = this.createEventFor(event, context);
+        for (const event of expression?.events || []){
+            const method = this.createEventFor(event, context, type);
             
             type.methods.push(method);
         }
     }
 
-    static createEventFor(event:WhenDeclarationExpression, context:TransformerContext){
+    static createEventFor(event:WhenDeclarationExpression, context:TransformerContext, type:Type){
         
-        const typeDelimiter = "|";
         const possibleEventKinds = Array.from(new Set<string>(event.eventKind));
 
         const method = new Method();
 
-        method.name = `~event_${event.actor}_${possibleEventKinds.join(typeDelimiter)}`;
+        method.name = `~event`;
+        method.actorType = event.actor;
         method.eventType = possibleEventKinds.map(x => this.transformEventKind(x, event.actor));
         method.returnType = BooleanType.typeName;
 
         if (event.target){
-            method.name = `${method.name}_${event.target.join(typeDelimiter)}`;
-            
+            method.targetTypes = event.target;
+                        
+            if (event.comparisonKind && event.comparisonKind != ComparisonType.None){
+                method.comparisonType = <ComparisonType>event.comparisonKind;
+            }
+
+            if (event.locationConditions){
+                method.locationConditions.push(...event.locationConditions.locationNames);
+            }
+
             method.parameters.push(
-                new Parameter(WorldObject.contextParameter, event.target.join(typeDelimiter))
+                new Parameter(WorldObject.contextParameter, method.targetTypes.join('|'))
             );
+        }
+
+        if (event.choiceIndex){
+            method.callIndex = event.choiceIndex - 1;
+        }
+
+        if (event.closures){
+            method.closureParameters = event.closures.closureSources;
         }
 
         const instructions:Instruction[] = [];
@@ -49,7 +66,7 @@ export class EventTransformer{
         const actions = <ActionsExpression>event.actions;
 
         for(const action of actions.actions){
-            const body = ExpressionTransformer.transformExpression(action, ExpressionTransformationMode.IgnoreResultsOfSayExpression);
+            const body = ExpressionTransformer.transformExpression(action, context, ExpressionTransformationMode.IgnoreResultsOfSayExpression);
             instructions.push(
                 ...body                                    
             );
@@ -101,7 +118,9 @@ export class EventTransformer{
             case Keywords.wins: return EventType.PlayerWins;
             case Keywords.fails: return EventType.PlayerFails;
             case Keywords.completes: return EventType.GameIsCompleted;
-            case Keywords.set: return EventType.PlayerIsSet;
+            case Keywords.set: return actor == Keywords.player ? EventType.PlayerIsSet : EventType.ValueIsSet;
+            case Keywords.holds: return EventType.ItIsHeld;
+            case Keywords.goes: return EventType.ItGoes;
             default:{
                 throw new CompilationError(`Unable to transform unsupported event kind '${kind}'`);
             }

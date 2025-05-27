@@ -3,5 +3,5 @@ import { Expression } from "../parsing/expressions/Expression";
 import { TransformerContext } from "./TransformerContext";
 
 export interface ITypeTransformer{
-    transform(expression:Expression, context:TransformerContext):void;
+    transform(expression:Expression|undefined, type?:Type):void;
 }

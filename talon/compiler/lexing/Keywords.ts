@@ -32,6 +32,7 @@ export class Keywords{
     static readonly say = "say";
     static readonly directions = "directions";
     static readonly moving = "moving";
+    static readonly move = "move";
     static readonly taking = "taking";
     static readonly inventory = "inventory";
     static readonly can = "can";
@@ -101,6 +102,21 @@ export class Keywords{
     static readonly any = "any";
     static readonly listed = "listed";
     static readonly game = "game";
+    static readonly holding = "holding";
+    static readonly hold = "hold";
+    static readonly held = "held";
+    static readonly holds = "holds";
+    static readonly empty = "empty";
+    static readonly will = "will";
+    static readonly cancel = "cancel";
+    static readonly goes = "goes";
+    static readonly players = "player's";
+    static readonly in = "in";
+    static readonly remove = "remove";
+    static readonly its = "its";
+    static readonly less = "less";
+    static readonly greater = "greater";
+    static readonly than = "than";
 
     static getAll():Set<string>{
         type KeywordProperties = keyof Keywords;

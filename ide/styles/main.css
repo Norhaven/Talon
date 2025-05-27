@@ -4,7 +4,7 @@
   justify-content: center;
 }
 
-#test-container, #dev-container, #dev-views-container {
+#test-container, #dev-container, #dev-views-container, .logo-container {
   display: flex;
   flex-direction: column;
 }
@@ -25,6 +25,13 @@
 .dev-footer {
   flex-direction: row-reverse;
   justify-content: end;
+}
+
+.logo-container {
+  font-size: x-large;
+  text-align: center;
+  vertical-align: middle;
+  height: 75px;
 }
 
 #library-pane {

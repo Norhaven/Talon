@@ -1,3 +1,4 @@
+import { RuntimeString } from "../../library/RuntimeString";
 import { RuntimeWorldObject } from "../../library/RuntimeWorldObject";
 
 export class ActionContext{
@@ -21,7 +22,8 @@ export class ActionContext{
         public readonly actorSource?:RuntimeWorldObject,
         public readonly actor?:RuntimeWorldObject,
         public readonly targetSource?:RuntimeWorldObject,
-        public readonly target?:RuntimeWorldObject
+        public readonly target?:RuntimeWorldObject,
+        public readonly targetName?:string
     ){
 
     }

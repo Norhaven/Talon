@@ -17,6 +17,7 @@ import { Thread } from "../../Thread";
 import { ActionContext } from "./ActionContext";
 import { Lookup } from "./Lookup";
 import { Event } from "./Event";
+import { Place } from "../../../library/Place";
 
 export class Action{
     static using(thread:Thread, context:ActionContext, output:IOutput){
@@ -68,13 +69,25 @@ export class Action{
             const nextPlace = <RuntimePlace>target;
             const currentPlace = targetSource;
     
-            this.thread.currentPlace = nextPlace;
-            
             const describeEvent = this.createDescribeDelegate(target);
             const nextPlaceEvent = this.prepareRaiseEvent(EventType.PlayerEntersPlace, nextPlace);
             const currentPlaceEvent = this.prepareRaiseEvent(EventType.PlayerExitsPlace, currentPlace!);
-                    
-            const allDelegates = [
+
+            const moveEvent = targetSource.methods.get(WorldObject.move)!;
+
+            const currentPlaceThis = Variable.forThis(targetSource);
+
+            moveEvent.actualParameters = [
+                currentPlaceThis,
+                new Variable(WorldObject.recipientParameter, new Type(Place.typeName, Place.parentTypeName), target),
+                new Variable(WorldObject.contextParameter, new Type(WorldObject.typeName, WorldObject.parentTypeName), actor),
+                new Variable(WorldObject.directionParameter, StringType.type(), Memory.allocateString(this.context.targetName || ""))
+            ];
+
+            const move = new RuntimeDelegate(moveEvent)
+                                
+            const allDelegates:RuntimeDelegate[] = [
+                move,
                 ...currentPlaceEvent,
                 ...nextPlaceEvent,
                 describeEvent
@@ -149,6 +162,15 @@ export class Action{
         this.tryActWithTarget("give", (actorSource, actor, targetSource, target) => {
             this.transfer(actorSource, actor, targetSource, target, EventType.ItIsGiven);
         });    
+    }
+
+    tryHoldItem(){
+        this.tryActWithTarget("hold", (actorSource, actor, targetSource, target) => {            
+            
+            const contextual = this.prepareRaiseContextualItemEvents(EventType.ItIsHeld, actor, target);
+
+            Event.using(this.thread).raiseAll(...contextual);
+        });             
     }
 
     private tryAct(actionName:string, act:(actorSource:RuntimeWorldObject, actor:RuntimeWorldObject)=>void){

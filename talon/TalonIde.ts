@@ -15,7 +15,7 @@ import { Log } from "./Log";
 import { ConsoleOutput } from "./ConsoleOutput";
 import { TimeCollector } from "./TimeCollector";
 import { PerformanceRuler } from "./PerformanceRuler";
-import { getExampleLibraryCode, getExampleStoryCode } from "./TalonExamples";
+import { getExampleLibraryCode, getExampleStoryCode, getExampleAdventureCode } from "./TalonExamples";
 
 export class TalonIde{
 
@@ -31,6 +31,7 @@ export class TalonIde{
     private readonly openButton:HTMLButtonElement;
     private readonly saveButton:HTMLButtonElement;
     private readonly example1Button:HTMLButtonElement;
+    private readonly example2Button:HTMLButtonElement;
     private readonly compileButton:HTMLButtonElement;
     private readonly startNewGameButton:HTMLButtonElement;
     private readonly toggleRuntimeLogs:HTMLButtonElement;
@@ -40,6 +41,7 @@ export class TalonIde{
     private readonly showLibrary:HTMLButtonElement;
     private readonly showCodePane:HTMLButtonElement;
     private readonly disableLogsOption:HTMLInputElement;
+    private readonly clearLogsButton:HTMLButtonElement;
 
     private readonly compilationOutputPane:DefaultPaneOutput;
     private readonly runtimeOutputPane:DefaultPaneOutput;
@@ -75,6 +77,7 @@ export class TalonIde{
         this.openButton = TalonIde.getById<HTMLButtonElement>("open");
         this.saveButton = TalonIde.getById<HTMLButtonElement>("save");
         this.example1Button = TalonIde.getById<HTMLButtonElement>("example1")!;
+        this.example2Button = TalonIde.getById<HTMLButtonElement>("example2")!;
         this.compileButton = TalonIde.getById<HTMLButtonElement>("compile")!;
         this.startNewGameButton = TalonIde.getById<HTMLButtonElement>("start-new-game")!;
         this.toggleRuntimeLogs = TalonIde.getById<HTMLButtonElement>("toggle-runtime-logs");
@@ -84,16 +87,19 @@ export class TalonIde{
         this.showLibrary = TalonIde.getById<HTMLButtonElement>("show-library");
         this.showCodePane = TalonIde.getById<HTMLButtonElement>("show-code-pane");
         this.disableLogsOption = TalonIde.getById<HTMLInputElement>("disable-logs");
+        this.clearLogsButton = TalonIde.getById<HTMLButtonElement>("clear-runtime-logs");
         
         this.saveButton.addEventListener('click', async e => await this.saveCodeFile(this.codePane.innerText));
         this.openButton.addEventListener('click', async e => await this.openCodeFile(e));
-        this.example1Button.addEventListener('click', e => this.loadExample());
+        this.example1Button.addEventListener('click', e => this.loadExample1());
+        this.example2Button.addEventListener('click', e => this.loadExample2());
         this.compileButton.addEventListener('click', e => this.compile());
         this.startNewGameButton.addEventListener('click', e => this.startNewGame());
         this.toggleRuntimeLogs.addEventListener('click', e => this.toggleRuntimeLogView());
         this.sendUserCommandButton.addEventListener('click', e => this.sendUserCommand());
         this.showLibrary.addEventListener('click', e => this.toggleLibraryView());
         this.showCodePane.addEventListener('click', e => this.toggleCodePaneView());
+        this.clearLogsButton.addEventListener('click', e => this.clearLogs());
         this.userCommandText.addEventListener('keyup', e => {
             if (e.key === "Enter") { 
                 this.sendUserCommand();
@@ -103,6 +109,7 @@ export class TalonIde{
         this.allowUserToSendCommands(false);
 
         this.loadLibrary();
+        this.loadExample2();
 
         this.compilationOutputPane = new DefaultPaneOutput(this.compilationOutput);
         this.runtimeOutputPane = new DefaultPaneOutput(this.gamePane);
@@ -156,6 +163,11 @@ export class TalonIde{
         }
 
         this.areLogsReadableFormat = !this.areLogsReadableFormat;
+    }
+
+    private clearLogs(){
+        this.gameLogOutput.innerText = "";
+        this.gameLogReadableOutput.innerText = "";
     }
 
     private compile(){
@@ -225,7 +237,11 @@ export class TalonIde{
         this.libraryPane.innerText = getExampleLibraryCode();
     }
 
-    private loadExample(){
+    private loadExample1(){
         this.codePane.innerText = getExampleStoryCode();
+    }
+
+    private loadExample2(){
+        this.codePane.innerText = getExampleAdventureCode();
     }
 }

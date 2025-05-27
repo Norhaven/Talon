@@ -47,11 +47,17 @@ export class RuntimeWorldObject extends RuntimeAny{
         visible.typeName = BooleanType.typeName;
         visible.defaultValue = true;
 
+        const currentContainer = new Field();
+        currentContainer.name = WorldObject.currentContainer;
+        currentContainer.typeName = StringType.typeName;
+        currentContainer.defaultValue = "";
+
         type.fields.push(contents);
         type.fields.push(description);
         type.fields.push(aliases);
         type.fields.push(state);
         type.fields.push(visible);
+        type.fields.push(currentContainer);
 
         return type;
     }
@@ -85,7 +91,7 @@ export class RuntimeWorldObject extends RuntimeAny{
                 ...Instruction.ifTrueThen(
                     Instruction.loadString("1"),
                     Instruction.loadLocal(current),
-                    Instruction.loadField(WorldObject.name),
+                    Instruction.getTypeName(),
                     Instruction.concatenate(),
                     Instruction.setLocal(listText)
                 ),
@@ -130,5 +136,21 @@ export class RuntimeWorldObject extends RuntimeAny{
 
     getContentsField():RuntimeList{
         return this.getFieldAsList(WorldObject.contents);
-    }    
+    }
+
+    resolveContainers(){
+        const pending = this.getContentsField().items.filter(x => x.isTypeOf(WorldObject.typeName)).map(x => <RuntimeWorldObject>x);
+
+        for(const obj of pending){
+            const currentContainer = obj.getField(WorldObject.currentContainer);
+
+            if (!currentContainer){
+                throw new RuntimeError(`Unable to locate the current container field for world object '${this.typeName}'`);
+            }
+
+            currentContainer.value = Memory.allocateString(this.typeName);
+
+            obj.resolveContainers();
+        }
+    };
 }

@@ -16,6 +16,15 @@
     justify-content: end;
 }
 
+.logo-container{
+    @extend %vertical-container;
+
+    font-size: x-large;
+    text-align: center;
+    vertical-align: middle;
+    height: 75px;
+}
+
 #dev-views-container{
     @extend %vertical-container;
 }

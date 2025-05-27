@@ -17,7 +17,7 @@ export class GoToLabelHandler extends OpCodeHandler{
         const labeledInstructionIndex = thread.currentMethod.method?.body.findIndex(x => x.label == label) || -1;
 
         if (labeledInstructionIndex == -1){
-            throw new RuntimeError(`Unable to locate instruction labeled '${label}' within method '${thread.currentMethod.method?.name}'`);
+            throw new RuntimeError(`Unable to locate instruction labeled '${label}' within method '${thread.currentMethod.method?.signature}'`);
         }
 
         thread.jumpToLine(labeledInstructionIndex);

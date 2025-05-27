@@ -19,8 +19,8 @@ export class ComparisonHandler extends OpCodeHandler{
 
         const isNegated = <boolean>thread.currentInstruction?.value;
 
-        var comparand = thread.currentMethod.pop();
-        var instance = thread.currentMethod.pop();
+        const comparand = thread.currentMethod.pop();
+        const instance = thread.currentMethod.pop();
 
         this.logInteraction(thread, instance, comparand);
 
@@ -40,8 +40,7 @@ export class ComparisonHandler extends OpCodeHandler{
             thread.currentMethod.push(result);
         } else {        
             if (!instance.isSameTypeAs(comparand)){
-                const equalitySign = isNegated ? "not equals" : "equals";
-                throw new RuntimeError(`Encountered type mismatch on stack during comparison: ${instance?.typeName} ${equalitySign} ${comparand?.typeName}`);
+                thread.logReadable(`Attempted to compare instance '${instance.typeName}' with different type '${comparand.typeName}', will never be successful`);
             }
 
             let evaluationResult:RuntimeBoolean;
@@ -53,7 +52,8 @@ export class ComparisonHandler extends OpCodeHandler{
             } else if (instance.isBoolean() && comparand.isBoolean()){
                 evaluationResult = this.evaluateWith(instance, comparand, isNegated);
             } else {
-                throw new RuntimeError(`Unable to compare instances of type '${instance.typeName}' to different type '${comparand.typeName}'`);
+                const result = this.compareWith(instance, comparand, isNegated);
+                evaluationResult = Memory.allocateBoolean(result);
             }
 
             thread.currentMethod.push(evaluationResult);

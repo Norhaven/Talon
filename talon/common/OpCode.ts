@@ -20,6 +20,7 @@ export enum OpCode {
     LoadNumber = '.load.num',
     LoadField = '.load.fld',
     LoadStaticField = ".load.fld.static",
+    LoadFieldReference = ".load.fld.ref",
     LoadProperty = '.load.prop',
     LoadInstance = '.load.inst',
     LoadLocal = '.load.loc',
@@ -42,6 +43,7 @@ export enum OpCode {
     BaseTypeInstanceCall = ".call.inst.base",
     RaiseEvent = ".raise.event",
     RaiseContextualEvent = ".raise.event.ctx",
+    RaiseContextualDirectionEvent = ".raise.event.ctx.dir",
     LoadPlace = ".load.place",
     LoadPlayer = ".load.player",
     SetPlayer = ".set.player",
@@ -50,5 +52,8 @@ export enum OpCode {
     Transfer = ".transfer.inst",
     FindMethod = ".find.method",
     InterpolateString = ".interpolate.str",
-    Give = ".give"
+    Give = ".give",
+    GetTypeName = ".get.typename",
+    Move = ".move",
+    LocalExists = ".local.exists"
 }

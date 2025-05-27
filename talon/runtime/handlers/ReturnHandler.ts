@@ -19,11 +19,11 @@ export class ReturnHandler extends OpCodeHandler{
             if (size == 0){
                 throw new RuntimeError("Expected return value from method but found no instance on the stack");
             } else if (size > 1){
-                throw new RuntimeError(`Stack Imbalance! Returning from '${current.method?.name}' found '${size}' instances left but expected one.`);
+                throw new RuntimeError(`Stack Imbalance! Returning from '${current.method?.signature}' found '${size}' instances left but expected one.`);
             }
         } else {
             if (size > 0){
-                const error = new RuntimeError(`Stack Imbalance! Returning from '${current.method?.name}' found '${size}' instances left but expected zero.`);
+                const error = new RuntimeError(`Stack Imbalance! Returning from '${current.method?.signature}' found '${size}' instances left but expected zero.`);
 
                 thread.log.writeStructuredError(error, "Stack Imbalance! {@Stack}", thread.currentMethod.stack);
 

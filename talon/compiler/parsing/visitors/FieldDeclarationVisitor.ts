@@ -16,6 +16,7 @@ import { TokenType } from "../../lexing/TokenType";
 import { NumberType } from "../../../library/NumberType";
 import { Group } from "../../../library/Group";
 import { Any } from "../../../library/Any";
+import { LocationConditionExpression } from "../expressions/LocationConditionExpression";
 
 export class FieldDeclarationVisitor extends Visitor{
     visit(context: ParseContext): Expression {
@@ -43,6 +44,18 @@ export class FieldDeclarationVisitor extends Visitor{
 
             } else if (context.is(Keywords.observed)){
                 context.expect(Keywords.observed);
+
+                let locationCondition:LocationConditionExpression|undefined;
+
+                if (context.is(Keywords.in)){
+                    context.consumeCurrentToken();
+                    context.expect(Keywords.the);
+
+                    const locationNames = context.expectOneOrMoreIdentifiers();
+
+                    locationCondition = new LocationConditionExpression(locationNames.map(x => x.value));
+                }
+
                 context.expect(Keywords.as);
 
                 const observation = context.expectString();
@@ -50,6 +63,7 @@ export class FieldDeclarationVisitor extends Visitor{
                 field.name = WorldObject.observation;
                 field.typeName = StringType.typeName;
                 field.initialValue = observation.value;
+                field.locationCondition = locationCondition;
 
             } else if (context.is(Keywords.listed)){
                 context.expect(Keywords.listed);
@@ -153,7 +167,27 @@ export class FieldDeclarationVisitor extends Visitor{
             } else if (context.isTypeOf(TokenType.Boolean)){
                 field.typeName = BooleanType.typeName;
                 field.initialValue = context.expectBoolean().value;
-            } else {
+            } else if (context.is(Keywords.empty)) {
+                context.consumeCurrentToken();
+
+                if (context.is(Keywords.and)){
+                    context.expect(Keywords.and);
+                    context.expect(Keywords.can);
+                    context.expect(Keywords.hold);
+
+                    if (context.isAnyOf(Keywords.a, Keywords.an)){
+                        context.consumeCurrentToken();
+                    }
+
+                    const typeName = context.expectIdentifier();
+
+                    field.typeName = typeName.value;
+                    field.initialValue = undefined;
+                } else {
+                    field.typeName = Any.typeName;
+                    field.initialValue = undefined;
+                }
+            }else {
                 throw new CompilationError(`Expected a string, number, or boolean but found '${context.currentToken.value}' of type '${context.currentToken.type}'`);
             }
                 

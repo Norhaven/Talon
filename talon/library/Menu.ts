@@ -7,6 +7,8 @@ export class Menu{
     static readonly describe = "~describe";
     static readonly show = "~show";
     static readonly hide = "~hide";
-    static readonly visible = "~visible";
     static readonly main = "~menuMain";
+    
+    static readonly visible = "~visible";
+    static readonly itClosures = "~itClosures";
 }

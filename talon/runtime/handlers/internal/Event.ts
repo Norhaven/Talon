@@ -42,6 +42,10 @@ export class Event{
         this.raise(resolver => resolver.resolve(eventType, actor, target));
     }
 
+    raiseContextualDirection(eventType:EventType, actor:RuntimeAny, target:RuntimeAny, direction:RuntimeString){
+        this.raise(resolver => resolver.resolve(eventType, actor, target, direction));
+    }
+
     raiseNonContextual(eventType:EventType, target:RuntimeWorldObject){
         this.raise(resolver => resolver.resolve(eventType, target));
     }

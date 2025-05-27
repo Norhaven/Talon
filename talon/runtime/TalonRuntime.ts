@@ -74,6 +74,13 @@ import { LoadPlayerHandler } from "./handlers/LoadPlayerHandler";
 import { GoToLabelHandler } from "./handlers/GoToLabelHandler";
 import { SetPlayerHandler } from "./handlers/SetPlayerHandler";
 import { GiveHandler } from "./handlers/GiveHandler";
+import { GetTypeNameHandler } from "./handlers/GetTypeHandler";
+import { RaiseContextualDirectionEventHandler } from "./handlers/RaiseContextualDirectionEventHandler";
+import { MoveHandler } from "./handlers/MoveHandler";
+import { RuntimeWorldObject } from "./library/RuntimeWorldObject";
+import { WorldObject } from "../library/WorldObject";
+import { LoadFieldReferenceHandler } from "./handlers/LoadFieldReferenceHandler";
+import { LocalExistsHandler } from "./handlers/LocalExistsHandler";
 
 export class TalonRuntime{
 
@@ -135,7 +142,12 @@ export class TalonRuntime{
             new AssignStaticFieldHandler(),
             new InterpolateStringHandler(),
             new SetPlayerHandler(),
-            new GiveHandler()
+            new GiveHandler(),
+            new GetTypeNameHandler(),
+            new RaiseContextualDirectionEventHandler(),
+            new MoveHandler(),
+            new LoadFieldReferenceHandler(),
+            new LocalExistsHandler()
         ];
 
         this.handlers = new Map<OpCode, OpCodeHandler>(handlerInstances.map(x => [x.code, x]));
@@ -188,6 +200,10 @@ export class TalonRuntime{
                             .filter(x => x.baseTypeName == Place.typeName)
                             .map(x => <RuntimePlace>Memory.allocate(x));
 
+            for(const place of places){
+                place.resolveContainers();
+            }
+
             const getPlayerStart = (place:RuntimePlace) => <RuntimeBoolean>(place.fields.get(Place.isPlayerStart)?.value);
             const isPlayerStart = (place:RuntimePlace) => getPlayerStart(place)?.value === true;
             const getDefaultPlayer = () => this.thread?.knownTypes.get(Player.typeName);
@@ -198,7 +214,7 @@ export class TalonRuntime{
             
             const types = new Map<string, Type>(this.thread.allTypes.map(x => [x.name, x]));
         
-            const knownCustomPlayers = this.thread.allTypes.filter(x => x.name != Player.typeName && x.inheritsFromType(types, Player.typeName)) || [];
+            const knownCustomPlayers = this.thread.allTypes.filter(x => x.name != Player.typeName && x.isTypeOf(Player.typeName)) || [];
 
             const useDefaultPlayer = !knownCustomPlayers || knownCustomPlayers.length != 1;
 
@@ -209,6 +225,8 @@ export class TalonRuntime{
             }
 
             this.thread.currentPlayer = <RuntimePlayer>Memory.allocate(player);
+
+            this.thread.currentPlayer.resolveContainers();
 
             return this.runWith("");
         });

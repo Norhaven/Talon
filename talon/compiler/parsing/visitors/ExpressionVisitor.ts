@@ -7,7 +7,6 @@ import { CompilationError } from "../../exceptions/CompilationError";
 import { ContainsExpression } from "../expressions/ContainsExpression";
 import { SayExpression } from "../expressions/SayExpression";
 import { TokenType } from "../../lexing/TokenType";
-import { SetVariableExpression } from "../expressions/SetVariableExpression";
 import { LiteralExpression } from "../expressions/LiteralExpression";
 import { NumberType } from "../../../library/NumberType";
 import { StringType } from "../../../library/StringType";
@@ -29,8 +28,16 @@ import { SetPlayerExpression } from "../expressions/SetPlayerExpression";
 import { GiveExpression } from "../expressions/GiveExpression";
 import { Player } from "../../../library/Player";
 import { TypeCountExpression } from "../expressions/TypeCountExpression";
+import { InlineMenuDeclarationVisitor } from "./InlineMenuDeclarationVisitor";
+import { MoveExpression } from "../expressions/MoveExpression";
+import { RemoveExpression } from "../expressions/RemoveExpression";
+import { SetExpressionVisitor } from "./SetExpressionVisitor";
 
 export class ExpressionVisitor extends Visitor{
+    constructor(private readonly typeName?:string){
+        super();
+    }
+
     visit(context: ParseContext): Expression {
         if (context.is(Keywords.if)){
             const visitor = new IfExpressionVisitor();
@@ -65,42 +72,9 @@ export class ExpressionVisitor extends Visitor{
                 const visitor = new ComparisonExpressionVisitor();
                 return visitor.visit(context);
             }
-        } else if (context.is(Keywords.set)){
-            context.expect(Keywords.set);
-
-            let variableName:string;
-
-            if (context.isTypeOf(TokenType.Identifier)){
-                variableName = context.expectIdentifier().value;
-            } else if (context.is(Keywords.it)){
-                context.expect(Keywords.it);
-                variableName = "~it";
-            } else if (context.is(Keywords.the)){
-                context.expect(Keywords.the);
-                context.expect(Keywords.player);
-                context.expect(Keywords.to);
-
-                const playerType = context.expectIdentifier();
-
-                return new SetPlayerExpression(playerType.value);
-            } else {
-                // TODO: Support dereferencing arbitrary instances.
-                throw new CompilationError("Currently unable to dereference a field, planned for a future release");
-            }
-
-            context.expect(Keywords.to);
-
-            let isNegated = false;
-
-            if (context.is(Keywords.not)){
-                context.expect(Keywords.not);
-                isNegated = true;
-            }
-
-            const visitor = new ExpressionVisitor();
-            const value = visitor.visit(context);
-
-            return new SetVariableExpression(undefined, variableName, value, isNegated);
+        } else if (context.consumeIf(Keywords.set)){
+            const visitor = new SetExpressionVisitor();
+            return visitor.visit(context);            
         } else if (context.is(Keywords.say)){
             context.expect(Keywords.say);
             
@@ -142,9 +116,15 @@ export class ExpressionVisitor extends Visitor{
             return visitor.visit(context);
         } else if (context.is(Keywords.show)){
             const action = context.consumeCurrentToken();
-            const target = context.expectIdentifier();
 
-            return new VisibilityExpression(action.value, target.value);
+            if (context.is(Keywords.menu)){
+                const visitor = new InlineMenuDeclarationVisitor(this.typeName);
+                return visitor.visit(context);
+            } else {
+                const target = context.expectIdentifier();
+
+                return new VisibilityExpression(action.value, target.value);
+            }
         } else if (context.is(Keywords.hide)){
             const action = context.consumeCurrentToken();
             context.expect(Keywords.this);
@@ -154,12 +134,9 @@ export class ExpressionVisitor extends Visitor{
             context.consumeCurrentToken();
 
             return new QuitExpression();
-        } else if (context.is(Keywords.the)){
-            context.consumeCurrentToken();
+        } else if (context.consumeIf(Keywords.the)){
 
-            if (context.is(Keywords.player)){
-                context.consumeCurrentToken();
-
+            if (context.consumeIf(Keywords.player)){
                 if (context.isAnyOf(Keywords.fails, Keywords.wins)){
                     const action = context.consumeCurrentToken();
                     const eventType = action.value == Keywords.fails ? EventType.PlayerFails : EventType.PlayerWins;
@@ -171,9 +148,10 @@ export class ExpressionVisitor extends Visitor{
             } else if (context.is(Keywords.game)) {
                 context.consumeCurrentToken();
 
-                if (context.is(Keywords.completes)){
-                    context.consumeCurrentToken();
+                if (context.consumeIf(Keywords.completes)){
                     return new GameCompletionExpression(EventType.GameIsCompleted);
+                } else if (context.consumeIf(Keywords.ends)){
+                    return new GameCompletionExpression();
                 } else {
                     throw new CompilationError(`Unable to determine a valid action for the game with token '${context.consumeCurrentToken()}'`);
                 }
@@ -185,17 +163,43 @@ export class ExpressionVisitor extends Visitor{
 
             const incrementValue = context.expectNumber();
             context.expect(Keywords.to);
+
+            let instance:string|null = null;
+
+            if (context.is(Keywords.the)){
+                context.consumeCurrentToken();
+
+                if (context.is(Keywords.players)){
+                    context.consumeCurrentToken();
+
+                    instance = Player.typeName;
+                }
+            }
+
             const variableName = context.expectIdentifier();
 
-            return new IncrementDecrementExpression(Number(incrementValue.value), variableName.value);
+            return new IncrementDecrementExpression(Number(incrementValue.value), instance, variableName.value);
         } else if (context.is(Keywords.subtract)){
             context.consumeCurrentToken();
 
             const subtractionValue = context.expectNumber();
             context.expect(Keywords.from);
+
+            let instance:string|null = null;
+
+            if (context.is(Keywords.the)){
+                context.consumeCurrentToken();
+
+                if (context.is(Keywords.players)){
+                    context.consumeCurrentToken();
+
+                    instance = Player.typeName;
+                }
+            }
+
             const variableName = context.expectIdentifier();
 
-            return new IncrementDecrementExpression(-Number(subtractionValue.value), variableName.value);
+            return new IncrementDecrementExpression(-Number(subtractionValue.value), instance, variableName.value);
         } else if (context.is(Keywords.give)){
             context.consumeCurrentToken();
 
@@ -232,6 +236,46 @@ export class ExpressionVisitor extends Visitor{
 
                 return new GiveExpression(identifier.value, items);
             }
+        } else if (context.is(Keywords.move)){
+            context.consumeCurrentToken();
+
+            let actor:string;
+
+            if (context.is(Keywords.it)){
+                context.consumeCurrentToken();
+
+                actor = "~it";
+            } else if (context.is(Keywords.the)){
+                context.consumeCurrentToken();
+                context.expect(Keywords.player);
+
+                actor = Player.typeName;
+            } else {
+                actor = context.expectIdentifier().value;
+            }
+
+            context.expect(Keywords.to);
+
+            const target = context.expectIdentifier();
+
+            return new MoveExpression(actor, target.value);
+        } else if (context.is(Keywords.remove)){
+            context.consumeCurrentToken();
+
+            let actor:string;
+
+            if (context.is(Keywords.it)){
+                context.consumeCurrentToken();
+                actor = "~it";
+            } else {
+                actor = context.expectIdentifier().value;
+            }
+
+            context.expect(Keywords.from);
+
+            const target = context.expectIdentifier();
+
+            return new RemoveExpression(actor, target.value);
         } else {
             throw new CompilationError(`Unable to parse expression at ${context.currentToken}`);
         }

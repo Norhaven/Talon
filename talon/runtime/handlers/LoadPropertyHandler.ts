@@ -6,52 +6,54 @@ import { InstanceCallHandler } from "./InstanceCallHandler";
 import { LoadThisHandler } from "./LoadThisHandler";
 import { EvaluationResult } from "../EvaluationResult";
 import { OpCode } from "../../common/OpCode";
+import { RuntimeError } from "../errors/RuntimeError";
 
 export class LoadPropertyHandler extends OpCodeHandler{
     public readonly code: OpCode = OpCode.LoadProperty;
 
-    constructor(private fieldName?:string){
+    constructor(){
         super();
     }
 
     handle(thread:Thread){
 
+        const fieldName = <string>thread.currentInstruction?.value!;
+
         const instance = thread.currentMethod.pop();
 
-        if (!this.fieldName){
-            this.fieldName = <string>thread.currentInstruction?.value!;
+        if (!instance){
+            throw new RuntimeError(`Unable to load property '${fieldName}' without an instance`);
         }
 
-        try{
-            const field = instance?.fields.get(this.fieldName);
-            const value = field?.value!;
-            const getField = instance?.methods.get(`~get_${this.fieldName}`);
+        const locationSpecificFieldName = `${fieldName}@${thread.currentPlace?.getType().name}`;
 
-            this.logInteraction(thread, `${instance?.typeName}::${this.fieldName}`, `{get=${getField != undefined}}`, '//', value);
+        const actualFieldName = instance.hasOrInheritsField(locationSpecificFieldName) ? locationSpecificFieldName : fieldName;
 
-            if (getField){
-                thread.currentMethod.push(value);
+        const value = instance.getFieldValueByName(actualFieldName);
+        const getField = instance.methods.get(`~get_${actualFieldName}`);
 
-                const loadThis = new LoadThisHandler();
-                const result = loadThis.handle(thread);
+        this.logInteraction(thread, `${instance.typeName}::${actualFieldName}`, `{get=${getField != undefined}}`, '//', value);
 
-                if (result != EvaluationResult.Continue){
-                    return result;
-                }
-                
-                const handler = new InstanceCallHandler(getField.name);
-                handler.handle(thread);
+        if (getField){
+            thread.currentMethod.push(value);
 
-                //getField.actualParameters.push(new Variable("~value", field?.type!, value));
+            const loadThis = new LoadThisHandler();
+            const result = loadThis.handle(thread);
 
-                //thread.activateMethod(getField);
-            } else {
-                thread.currentMethod.push(value);
+            if (result != EvaluationResult.Continue){
+                return result;
             }
+            
+            const handler = new InstanceCallHandler(getField.name);
+            handler.handle(thread);
 
-            return super.handle(thread);
-        } finally{
-            this.fieldName = undefined;
+            //getField.actualParameters.push(new Variable("~value", field?.type!, value));
+
+            //thread.activateMethod(getField);
+        } else {
+            thread.currentMethod.push(value);
         }
+
+        return super.handle(thread);
     }
 }

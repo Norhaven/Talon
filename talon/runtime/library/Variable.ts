@@ -7,7 +7,8 @@ export class Variable{
 
     constructor(public readonly name:string, 
                 public readonly type:Type,
-                public value?:RuntimeAny){
+                public value?:RuntimeAny,
+                public enclosingTypeName?:string){
     }
 
     static forThis(value:RuntimeAny){

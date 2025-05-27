@@ -12,6 +12,7 @@ export class InterpolateStringHandler extends OpCodeHandler{
     private readonly openVariable = "{{";
     private readonly closeVariable = "}}";
     private readonly variableRegex = new RegExp(/\{{2}(.+)\}{2}/g);
+    private readonly typeQualifierRegex = new RegExp(/the (player|\w+|\d+)'s\s+(.+)/g);
 
     public readonly code: OpCode = OpCode.InterpolateString;
 
@@ -31,7 +32,7 @@ export class InterpolateStringHandler extends OpCodeHandler{
             const matches = value?.matchAll(this.variableRegex) || [];
 
             for(const match of matches){
-                const currentFieldValue = this.getFieldValue(instance, match[1]);
+                const currentFieldValue = this.getFieldValue(thread, instance, match[1]);
                 
                 if (!currentFieldValue){
                     continue;
@@ -50,14 +51,29 @@ export class InterpolateStringHandler extends OpCodeHandler{
         return super.handle(thread);
     }
 
-    private getFieldValue(instance:RuntimeAny, fieldName:string){
-        let field = instance?.fields.get(fieldName);
+    private getFieldValue(thread:Thread, instance:RuntimeAny, fieldName:string){
+        const typeQualifiedMatch = fieldName.matchAll(this.typeQualifierRegex) || [];
+
+        for(const match of typeQualifiedMatch){        
+            const typeName = match[1];
+            
+            if (typeName == "player"){
+                instance = thread.currentPlayer!;
+            } else {
+                instance = Memory.findInstanceByName(typeName);
+            }
+
+            fieldName = match[2];
+            break;
+        }
+
+        let field = instance?.getField(fieldName);
 
         if (field){
             return field.value;
         }
 
-        field = instance?.fields.get(`~${fieldName}`);
+        field = instance?.getField(`~${fieldName}`);
 
         if (field){
             return field.value;

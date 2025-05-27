@@ -16,7 +16,7 @@ export class LoadStaticFieldHandler extends OpCodeHandler{
         const fieldName = parts[1];
 
         const type = Memory.findTypeByName(typeName)!;
-        const field = type.fields.find(x => x.name.toLowerCase() === fieldName.toLowerCase());
+        const field = type.getField(fieldName.toLowerCase());
 
         const value = field?.defaultValue;
 

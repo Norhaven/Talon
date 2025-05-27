@@ -1,6 +1,8 @@
 import { Delegate } from "../library/Delegate";
 import { Enumerator } from "../library/Enumerator";
+import { GlobalFields } from "../library/GlobalFields";
 import { List } from "../library/List";
+import { WorldObject } from "../library/WorldObject";
 import { EventType } from "./EventType";
 import { OpCode } from "./OpCode";
 
@@ -21,7 +23,7 @@ export class Instruction{
         return new Instruction(OpCode.InvokeDelegate);
     }
 
-    static isTypeOf(typeName:string){
+    static isTypeOf(typeName?:string){
         return new Instruction(OpCode.TypeOf, typeName);
     }
 
@@ -37,12 +39,16 @@ export class Instruction{
         return new Instruction(OpCode.LoadString, value);
     }
 
-    static loadInstance(typeName:string){
+    static loadInstance(typeName?:string){
         return new Instruction(OpCode.LoadInstance, typeName);
     }
 
     static loadField(fieldName:string){
         return new Instruction(OpCode.LoadField, fieldName);
+    }
+
+    static loadFieldReference(fieldName:string){
+        return new Instruction(OpCode.LoadFieldReference, fieldName);
     }
 
     static loadProperty(fieldName:string){
@@ -51,6 +57,10 @@ export class Instruction{
 
     static loadLocal(localName:string){
         return new Instruction(OpCode.LoadLocal, localName);
+    }
+
+    static localExists(localName:string){
+        return new Instruction(OpCode.LocalExists, localName);
     }
 
     static loadThis(){
@@ -65,6 +75,18 @@ export class Instruction{
         return new Instruction(OpCode.LoadPlayer, typeName);
     }
 
+    static loadCurrentContainer(instanceInstruction:Instruction){
+        const instructions:Instruction[] = [];
+
+        instructions.push(
+            instanceInstruction,
+            Instruction.loadField(WorldObject.currentContainer),
+            Instruction.loadInstance(),
+        );
+
+        return instructions;
+    }
+
     static instanceCall(methodName:string){
         return new Instruction(OpCode.InstanceCall, methodName);
     }
@@ -73,8 +95,8 @@ export class Instruction{
         return new Instruction(OpCode.Concatenate);
     }
 
-    static staticCall(typeName:string, methodName:string){
-        return new Instruction(OpCode.StaticCall, `${typeName}.${methodName}`);
+    static staticCall(typeName:string, methodName:string, hasContextParameter:boolean){
+        return new Instruction(OpCode.StaticCall, `${typeName}.${methodName}.${hasContextParameter}`);
     }
 
     static externalCall(methodName:string){
@@ -201,6 +223,14 @@ export class Instruction{
         return new Instruction(OpCode.RaiseContextualEvent, eventType);
     }
 
+    static raiseContextualDirectionEvent(eventType:EventType){
+        return new Instruction(OpCode.RaiseContextualDirectionEvent, eventType);
+    }
+
+    static move(){
+        return new Instruction(OpCode.Move);
+    }
+
     static interpolateString(){
         return new Instruction(OpCode.InterpolateString);
     }
@@ -211,6 +241,36 @@ export class Instruction{
 
     static markAsLabel(label:string){
         return new Instruction(OpCode.NoOp, undefined, label);
+    }
+
+    static getTypeName(){
+        return new Instruction(OpCode.GetTypeName);
+    }
+
+    static assignToFieldReference(fieldName:string){
+        const result:Instruction[] = [];
+
+        // This includes a potential abort if assigning to the field reference came 
+        // back with a failure.The reason that might happen is that assigning to the
+        // field may inadvertently trigger a value change event on the instance it's 
+        // assigning to and that might fail (or end the game entirely), so we want to 
+        // handle that case appropriately. We don't need to care about unbalancing the
+        // stack with this because it works out to the same logic as an abort expression
+        // as long as we're not front-loading the stack with things intended to resolve
+        // themselves afterwards. It's a bit of a risk, but ideally due diligence handles 
+        // that during the IL generation.
+
+        result.push(
+            Instruction.loadFieldReference(fieldName),
+            Instruction.assign(),
+            ...Instruction.raiseAllEvents(false),
+            ...Instruction.ifFalseThen(
+                Instruction.loadBoolean(false),
+                Instruction.return()
+            )
+        );
+
+        return result;
     }
 
     static ifTrueThen(...instructions:Instruction[]){
@@ -332,7 +392,8 @@ export class Instruction{
             ...Instruction.forEach(
                 Instruction.instanceCall(mappedFunctionName),
                 Instruction.loadLocal(resultsLocalName),
-                Instruction.instanceCall(List.add)
+                Instruction.instanceCall(List.add),
+                Instruction.ignore()
             )
         );
 
@@ -396,9 +457,22 @@ export class Instruction{
                     Instruction.setLocal(eventsRaisedLocal),
                     Instruction.goToLabel(endLabel)
                 ),     
+                
+                // We have at least one event to invoke so we'll assume that everything will succeed
+                // and then fail and early out if any of those don't meet that expectation.
+                
+                Instruction.loadBoolean(true),
+                Instruction.setLocal(eventsRaisedLocal),
+
                 Instruction.loadLocal(availableEventsLocal),
-                ...Instruction.forEach(
+                ...Instruction.forEach(                    
                     Instruction.invokeDelegate(),
+                    ...Instruction.ifFalseThen(
+                        Instruction.loadBoolean(false),
+                        Instruction.setLocal(eventsRaisedLocal),
+                        Instruction.goToLabel(endLabel)
+                    ),
+                    Instruction.loadStaticField("~globalProgramFields", GlobalFields.canRun),
                     ...Instruction.ifFalseThen(
                         Instruction.loadBoolean(false),
                         Instruction.setLocal(eventsRaisedLocal),

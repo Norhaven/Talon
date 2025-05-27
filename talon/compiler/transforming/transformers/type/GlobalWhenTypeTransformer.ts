@@ -12,24 +12,22 @@ import { TransformerContext } from "../../TransformerContext";
 import { EventTransformer } from "../events/EventTransformer";
 
 export class GlobalWhenTypeTransformer implements ITypeTransformer{
-    transform(expression: Expression, context: TransformerContext): void {
+    constructor(private readonly context: TransformerContext){
+    }
+
+    transform(expression: Expression): void {
         if (!(expression instanceof ProgramExpression)){
             return;
         }
 
-        if (!context.typesByName.has(GlobalEvents.typeName)){
-            const type = new Type(GlobalEvents.typeName, GlobalEvents.parentTypeName);
-            context.typesByName.set(type.name, type);
-        }
+        const type = this.context.getOrAddType(GlobalEvents.typeName, GlobalEvents.parentTypeName);
 
         const globalEvents = expression.expressions.filter(x => x instanceof WhenDeclarationExpression);
         
-        const type = context.typesByName.get(GlobalEvents.typeName)!;
-        
         for(const event of globalEvents){
-            const method = EventTransformer.createEventFor(<WhenDeclarationExpression>event, context);
+            const method = EventTransformer.createEventFor(<WhenDeclarationExpression>event, this.context, type);
 
-            type?.methods.push(method);
+            type.methods.push(method);
         }        
     }
 }

@@ -39,7 +39,7 @@ export class TypeDeclarationVisitor extends Visitor{
             whenVisitor = new OptionWhenDeclarationVisitor();
         } else {
             fieldVisitor = new FieldDeclarationVisitor();
-            whenVisitor = new WhenDeclarationVisitor();
+            whenVisitor = new WhenDeclarationVisitor(name.value);
         }
         
         const fields:FieldDeclarationExpression[] = [];

@@ -55,8 +55,8 @@ export class Thread{
         const activation = new MethodActivation(method);
         const current = this.currentMethod;
 
-        this.logFormatted(`${current.method?.name} => ${method.name}`);
-        this.logStructured("Method {name} activated from caller {callerName}: {@method}", method.name, current.method?.name, method);
+        this.logFormatted(`${current.method?.signature} => ${method.signature}`);
+        this.logStructured("Method {name} activated from caller {callerName}: {@method}", method.signature, current.method?.signature, method);
 
         this.methods.push(activation);
     }
@@ -73,8 +73,8 @@ export class Thread{
         const expectReturnType = this.currentMethod.method!.returnType != "";
         const returnedMethod = this.methods.pop();
 
-        this.logFormatted(`${this.currentMethod?.method?.name} <= ${returnedMethod?.method?.name}`);
-        this.logStructured("Method {name}'s activation has completed, returning to {callerName}", returnedMethod?.method?.name, this.currentMethod?.method?.name);
+        this.logFormatted(`${this.currentMethod?.method?.signature} <= ${returnedMethod?.method?.signature}`);
+        this.logStructured("Method {name}'s activation has completed, returning to {callerName}", returnedMethod?.method?.signature, this.currentMethod?.method?.signature);
 
         if (!expectReturnType){
             return new RuntimeEmpty();
