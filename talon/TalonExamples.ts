@@ -56,7 +56,7 @@ export function getExampleLibraryCode(){
 "it is also known as a \"lockpicks\".\n";
 }
 
-export function getExampleStoryCode(){
+export function getExamplePlaygroundCode(){
     return "say \"This is the start.\".\n" + 
 "\n" + 
 "understand \"look\" as describing. \n" + 
@@ -301,7 +301,8 @@ export function getExampleStoryCode(){
 }
 
 export function getExampleAdventureCode(){
-    return "understand \"look\" as describing. \n" + 
+    return "###GLOBAL###\n" + 
+"understand \"look\" as describing. \n" + 
 "understand \"north\", \"south\", \"east\", \"west\", \"up\", \"down\" as directions. \n" + 
 "understand \"go\" as moving. \n" + 
 "understand \"take\" as taking. \n" + 
@@ -350,6 +351,58 @@ export function getExampleAdventureCode(){
 "    show MainMenu;\n" + 
 "and then stop.\n" + 
 "\n" + 
+"a PlayerMenu is a kind of menu.\n" + 
+"it is described as \"What kind of player do you want to use?\".\n" + 
+"it contains options WarriorOption, MageOption, ThiefOption.\n" + 
+"when option WarriorOption is selected:\n" + 
+"    say \"\";\n" + 
+"    say \"Your character is a warrior, very strong and tough but weak to magic.\";\n" + 
+"    set the player to Warrior;\n" + 
+"    hide this;\n" + 
+"and then stop.\n" + 
+"when option MageOption is selected:\n" + 
+"    say \"\";\n" + 
+"    say \"Your character is a mage, very good with magic but not very strong or tough.\";\n" + 
+"    set the player to Mage;\n" + 
+"    hide this;\n" + 
+"and then stop.\n" + 
+"when option ThiefOption is selected:\n" + 
+"    say \"\";\n" + 
+"    say \"Your character is a thief, knows a little magic and has some strength\";\n" + 
+"    set the player to Thief;\n" + 
+"    hide this;\n" + 
+"and then stop.\n" + 
+"\n" + 
+"a WarriorOption is a kind of option.\n" + 
+"it is described as \"1) Warrior\".\n" + 
+"\n" + 
+"a MageOption is a kind of option.\n" + 
+"it is described as \"2) Mage\".\n" + 
+"\n" + 
+"a ThiefOption is a kind of option.\n" + 
+"it is described as \"3) Thief\".\n" + 
+"\n" + 
+"a MainMenu is a kind of menu.\n" + 
+"it is described as \"Main Menu\".\n" + 
+"it contains options ContinueOption, QuitOption.\n" + 
+"when option QuitOption is selected:\n" + 
+"    say \"\";\n" + 
+"    say \"I'm sorry to see you go, I hope you had fun!\";\n" + 
+"    hide this;\n" + 
+"    quit;\n" + 
+"and then stop.\n" + 
+"when option ContinueOption is selected:\n" + 
+"    say \"\";\n" + 
+"    say \"On with the adventure!\";\n" + 
+"    hide this;\n" + 
+"and then stop.\n" + 
+"\n" + 
+"a ContinueOption is a kind of option.\n" + 
+"it is described as \"1) Continue\".\n" + 
+"\n" + 
+"a QuitOption is a kind of option.\n" + 
+"it is described as \"2) Quit\".\n" + 
+"\n" + 
 "a Character is a kind of player.\n" + 
 "it contains 10 Coin.\n" + 
 "it has a value called currentHitpoints that is 20.\n" + 
@@ -389,44 +442,7 @@ export function getExampleAdventureCode(){
 "\n" + 
 "a Thief is a kind of Character.\n" + 
 "\n" + 
-"a Relic is a kind of item.\n" + 
-"it has a value called worthAmount that is 10.\n" + 
-"\n" + 
-"a StatueRelic is a kind of Relic.\n" + 
-"it is described as \"It's a small jade figurine, beautifully cut and sparkles slightly in the light. It looks old and expensive.\".\n" + 
-"it is observed as \"You see a small jade statue on the ground.\".\n" + 
-"\n" + 
-"an AmuletRelic is a kind of Relic.\n" + 
-"it is described as \"It's an amulet on a thin golden chain with a brilliant emerald embedded in the middle.\".\n" + 
-"it is observed as \"You see what appears to be an amulet laying on a pedestal at the center of the clearing.\".\n" + 
-"\n" + 
-"a RelicPouch is a kind of item.\n" + 
-"it is described as \"It's a small leather pouch with a drawstring at the top. Nothing special.\".\n" + 
-"it is observed as \"You see a small leather pouch on the ground.\".\n" + 
-"it contains 1 StatueRelic.\n" + 
-"\n" + 
-"an Armor is a kind of item.\n" + 
-"it is observed as \"There is a piece of armor on the ground.\".\n" + 
-"it has a value called protectionAmount that is 1.\n" + 
-"it is also known as an \"armor\".\n" + 
-"\n" + 
-"a LeatherArmor is a kind of Armor.\n" + 
-"it is observed as \"There is a set of leather armor on the ground.\".\n" + 
-"it has a value called protectionAmount that is 3.\n" + 
-"\n" + 
-"a Weapon is a kind of item.\n" + 
-"it has a value called damageAmount that is 1.\n" + 
-"\n" + 
-"a Sword is a kind of Weapon.\n" + 
-"it is observed as \"There is a sword laying on the ground.\".\n" + 
-"it has a value called damageAmount that is 3.\n" + 
-"it is also known as a \"sword\".\n" + 
-"\n" + 
-"a Staff is a kind of Weapon.\n" + 
-"\n" + 
-"a Dagger is a kind of Weapon.\n" + 
-"it has a value called damageAmount that is 2.\n" + 
-"\n" + 
+"###PLACES###\n" + 
 "a WindingRoad is a kind of place.\n" + 
 "it is where the player starts.\n" + 
 "it contains 1 Sword, 1 Armor.\n" + 
@@ -448,12 +464,12 @@ export function getExampleAdventureCode(){
 "\n" + 
 "a CliffBottom is a kind of place.\n" + 
 "it is described as \"The bottom of the cliff is a small rocky beach, small waves crashing against it. To the north there appears to be a staircase cut into the rock.\".\n" + 
-"it contains 1 RelicPouch, 1 Sword, 1 LeatherArmor.\n" + 
+"it contains 1 WaterloggedCorpse, 1 RelicPouch, 1 LeatherArmor.\n" + 
 "it can reach the SecludedTempleStaircaseBottom by going \"north\".\n" + 
 "\n" + 
 "a SecludedTemple is a kind of place.\n" + 
 "it is described as \"You arrive at a small temple nearly hidden by some trees. A path runs around the temple to the north, whereas to the east looks to be a grassy hill. To the west you can see that the path curves away.\".\n" + 
-"it contains 1 TempleDonationBox, 1 Monk.\n" + 
+"it contains 1 TempleDonationBox, 1 TempleDonationBoxPaper, 1 Monk.\n" + 
 "it can reach the ScenicCliff by going \"west\".\n" + 
 "it can reach the SecludedTempleGarden by going \"north\".\n" + 
 "it can reach the GrassyHill by going \"east\".\n" + 
@@ -522,13 +538,46 @@ export function getExampleAdventureCode(){
 "it can reach the CalmingBrook by going \"east\".\n" + 
 "it can reach the GrassyHill by going \"west\".\n" + 
 "\n" + 
-"a TempleDonationBox is a kind of decoration.\n" + 
-"it is described as \"The box is plain and made of sturdy wood. There's a slot on top that seems about the size of a coin and the paper reads 'Please Give What You Can'\".\n" + 
-"it is observed as \"A plain wooden box sits on the porch with a paper attached to it.\".\n" + 
-"it is also known as a \"box\".\n" + 
+"###ITEMS###\n" + 
+"a Relic is a kind of item.\n" + 
+"it has a value called worthAmount that is 10.\n" + 
 "\n" + 
-"an AmuletPillar is a kind of decoration.\n" + 
-"it is described as \"The pillar looks to be made from some kind of polished stone and engraved with depictions of spirits and fairies.\".\n" + 
+"a StatueRelic is a kind of Relic.\n" + 
+"it is described as \"It's a small jade figurine, beautifully cut and sparkles slightly in the light. It looks old and expensive.\".\n" + 
+"it is observed as \"You see a small jade statue on the ground.\".\n" + 
+"\n" + 
+"an AmuletRelic is a kind of Relic.\n" + 
+"it is described as \"It's an amulet on a thin golden chain with a brilliant emerald embedded in the middle.\".\n" + 
+"it is observed as \"You see what appears to be an amulet laying on a pedestal at the center of the clearing.\".\n" + 
+"\n" + 
+"a RelicPouch is a kind of item.\n" + 
+"it is described as \"It's a small leather pouch with a drawstring at the top. Nothing special.\".\n" + 
+"it is observed as \"You see a small leather pouch on the ground.\".\n" + 
+"it contains 1 StatueRelic.\n" + 
+"it is also known as a \"pouch\".\n" + 
+"\n" + 
+"an Armor is a kind of item.\n" + 
+"it is observed as \"There is a piece of armor on the ground.\".\n" + 
+"it has a value called protectionAmount that is 1.\n" + 
+"it is also known as an \"armor\".\n" + 
+"\n" + 
+"a LeatherArmor is a kind of Armor.\n" + 
+"it is observed as \"There is a set of leather armor on the ground.\".\n" + 
+"it has a value called protectionAmount that is 3.\n" + 
+"it is also known as an \"armor\".\n" + 
+"\n" + 
+"a Weapon is a kind of item.\n" + 
+"it has a value called damageAmount that is 1.\n" + 
+"\n" + 
+"a Sword is a kind of Weapon.\n" + 
+"it is observed as \"There is a sword laying on the ground.\".\n" + 
+"it has a value called damageAmount that is 3.\n" + 
+"it is also known as a \"sword\".\n" + 
+"\n" + 
+"a Staff is a kind of Weapon.\n" + 
+"\n" + 
+"a Dagger is a kind of Weapon.\n" + 
+"it has a value called damageAmount that is 2.\n" + 
 "\n" + 
 "a Coin is a kind of item. \n" + 
 "it is described as \"It's a small gold coin, engraved with somebody's likeness.\".\n" + 
@@ -543,6 +592,7 @@ export function getExampleAdventureCode(){
 "    say \"It's a pile of gold coins\";\n" + 
 "and then stop.\n" + 
 "\n" + 
+"###CREATURES###\n" + 
 "a Monk is a kind of creature.\n" + 
 "it is described as \"The monk's ancient face is lined with wrinkles but still holds a youthful energy about him.\".\n" + 
 "it is observed in the SecludedTemple as \"A monk with a bald head and plain yellowish orange robes is sweeping the entrance to the temple.\".\n" + 
@@ -553,60 +603,36 @@ export function getExampleAdventureCode(){
 "    move Coin to TempleDonationBox;\n" + 
 "and then stop.\n" + 
 "when it is given a Coin in the SecludedTempleGarden:\n" + 
-"    say \"He gladly accepts the coin and heads back into the temple with it, presumably to store it somewhere.\";\n" + 
+"    say \"He gladly accepts the coin with a kind smile, and then heads back into the temple with it, presumably to store it somewhere.\";\n" + 
 "    move Coin to TempleDonationBox;\n" + 
 "    remove it from SecludedTempleGarden;\n" + 
 "and then stop.\n" + 
 "\n" + 
-"a PlayerMenu is a kind of menu.\n" + 
-"it is described as \"What kind of player do you want to use?\".\n" + 
-"it contains options WarriorOption, MageOption, ThiefOption.\n" + 
-"when option WarriorOption is selected:\n" + 
-"    say \"\";\n" + 
-"    say \"Your character is a warrior, very strong and tough but weak to magic.\";\n" + 
-"    set the player to Warrior;\n" + 
-"    hide this;\n" + 
+"###DECORATIONS###\n" + 
+"a TempleDonationBox is a kind of Container.\n" + 
+"it is described as \"The box is plain and made of sturdy wood. There's a slot on top that seems about the size of a coin. The paper attached to the front reads 'Please Give What You Can'\".\n" + 
+"it is observed as \"A plain wooden box sits on the porch with a paper attached to it.\".\n" + 
+"it is \"locked\".\n" + 
+"it is also known as a \"box\".\n" + 
+"when it is opened:\n" + 
+"    if it is \"locked\" then\n" + 
+"        say \"The box appears to have a small lock that's keeping it shut.\";\n" + 
+"        abort event;\n" + 
+"    and then continue;\n" + 
 "and then stop.\n" + 
-"when option MageOption is selected:\n" + 
-"    say \"\";\n" + 
-"    say \"Your character is a mage, very good with magic but not very strong or tough.\";\n" + 
-"    set the player to Mage;\n" + 
-"    hide this;\n" + 
-"and then stop.\n" + 
-"when option ThiefOption is selected:\n" + 
-"    say \"\";\n" + 
-"    say \"Your character is a thief, knows a little magic and has some strength\";\n" + 
-"    set the player to Thief;\n" + 
-"    hide this;\n" + 
+"when it is used with a Coin:\n" + 
+"    say \"The monk sees you put the coin in the box and smiles his thanks to you.\";\n" + 
+"    move Coin to it;\n" + 
 "and then stop.\n" + 
 "\n" + 
-"a WarriorOption is a kind of option.\n" + 
-"it is described as \"1) Warrior\".\n" + 
+"a TempleDonationBoxPaper is a kind of decoration.\n" + 
+"it is described as \"The paper is faded and yellowing from age. Somebody has written 'Please Give What You Can' on it\".\n" + 
+"it is also known as a \"paper\".\n" + 
 "\n" + 
-"a MageOption is a kind of option.\n" + 
-"it is described as \"2) Mage\".\n" + 
+"a WaterloggedCorpse is a kind of decoration.\n" + 
+"it is described as \"The body seems to have taken on a lot of water over time and begun to decay. It has a disgusting stench.\".\n" + 
+"it is observed in the CliffBottom as \"There appears to be the remains of a human body that's washed up on the beach, dressed in the remains of its clothing.\".\n" + 
 "\n" + 
-"a ThiefOption is a kind of option.\n" + 
-"it is described as \"3) Thief\".\n" + 
-"\n" + 
-"a MainMenu is a kind of menu.\n" + 
-"it is described as \"Main Menu\".\n" + 
-"it contains options ContinueOption, QuitOption.\n" + 
-"when option QuitOption is selected:\n" + 
-"    say \"\";\n" + 
-"    say \"I'm sorry to see you go, I hope you had fun!\";\n" + 
-"    hide this;\n" + 
-"    quit;\n" + 
-"and then stop.\n" + 
-"when option ContinueOption is selected:\n" + 
-"    say \"\";\n" + 
-"    say \"On with the adventure!\";\n" + 
-"    hide this;\n" + 
-"and then stop.\n" + 
-"\n" + 
-"a ContinueOption is a kind of option.\n" + 
-"it is described as \"1) Continue\".\n" + 
-"\n" + 
-"a QuitOption is a kind of option.\n" + 
-"it is described as \"2) Quit\".\n";
+"an AmuletPillar is a kind of decoration.\n" + 
+"it is described as \"The pillar looks to be made from some kind of polished stone and engraved with depictions of spirits and fairies.\".\n";
 }

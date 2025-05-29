@@ -1,3 +1,4 @@
+###GLOBAL###
 understand "look" as describing. 
 understand "north", "south", "east", "west", "up", "down" as directions. 
 understand "go" as moving. 
@@ -47,6 +48,58 @@ when the player presses "Q":
     show MainMenu;
 and then stop.
 
+a PlayerMenu is a kind of menu.
+it is described as "What kind of player do you want to use?".
+it contains options WarriorOption, MageOption, ThiefOption.
+when option WarriorOption is selected:
+    say "";
+    say "Your character is a warrior, very strong and tough but weak to magic.";
+    set the player to Warrior;
+    hide this;
+and then stop.
+when option MageOption is selected:
+    say "";
+    say "Your character is a mage, very good with magic but not very strong or tough.";
+    set the player to Mage;
+    hide this;
+and then stop.
+when option ThiefOption is selected:
+    say "";
+    say "Your character is a thief, knows a little magic and has some strength";
+    set the player to Thief;
+    hide this;
+and then stop.
+
+a WarriorOption is a kind of option.
+it is described as "1) Warrior".
+
+a MageOption is a kind of option.
+it is described as "2) Mage".
+
+a ThiefOption is a kind of option.
+it is described as "3) Thief".
+
+a MainMenu is a kind of menu.
+it is described as "Main Menu".
+it contains options ContinueOption, QuitOption.
+when option QuitOption is selected:
+    say "";
+    say "I'm sorry to see you go, I hope you had fun!";
+    hide this;
+    quit;
+and then stop.
+when option ContinueOption is selected:
+    say "";
+    say "On with the adventure!";
+    hide this;
+and then stop.
+
+a ContinueOption is a kind of option.
+it is described as "1) Continue".
+
+a QuitOption is a kind of option.
+it is described as "2) Quit".
+
 a Character is a kind of player.
 it contains 10 Coin.
 it has a value called currentHitpoints that is 20.
@@ -86,44 +139,7 @@ it has a value called maxHitpoints that is 15.
 
 a Thief is a kind of Character.
 
-a Relic is a kind of item.
-it has a value called worthAmount that is 10.
-
-a StatueRelic is a kind of Relic.
-it is described as "It's a small jade figurine, beautifully cut and sparkles slightly in the light. It looks old and expensive.".
-it is observed as "You see a small jade statue on the ground.".
-
-an AmuletRelic is a kind of Relic.
-it is described as "It's an amulet on a thin golden chain with a brilliant emerald embedded in the middle.".
-it is observed as "You see what appears to be an amulet laying on a pedestal at the center of the clearing.".
-
-a RelicPouch is a kind of item.
-it is described as "It's a small leather pouch with a drawstring at the top. Nothing special.".
-it is observed as "You see a small leather pouch on the ground.".
-it contains 1 StatueRelic.
-
-an Armor is a kind of item.
-it is observed as "There is a piece of armor on the ground.".
-it has a value called protectionAmount that is 1.
-it is also known as an "armor".
-
-a LeatherArmor is a kind of Armor.
-it is observed as "There is a set of leather armor on the ground.".
-it has a value called protectionAmount that is 3.
-
-a Weapon is a kind of item.
-it has a value called damageAmount that is 1.
-
-a Sword is a kind of Weapon.
-it is observed as "There is a sword laying on the ground.".
-it has a value called damageAmount that is 3.
-it is also known as a "sword".
-
-a Staff is a kind of Weapon.
-
-a Dagger is a kind of Weapon.
-it has a value called damageAmount that is 2.
-
+###PLACES###
 a WindingRoad is a kind of place.
 it is where the player starts.
 it contains 1 Sword, 1 Armor.
@@ -145,12 +161,12 @@ and then stop.
 
 a CliffBottom is a kind of place.
 it is described as "The bottom of the cliff is a small rocky beach, small waves crashing against it. To the north there appears to be a staircase cut into the rock.".
-it contains 1 RelicPouch, 1 Sword, 1 LeatherArmor.
+it contains 1 WaterloggedCorpse, 1 RelicPouch, 1 LeatherArmor.
 it can reach the SecludedTempleStaircaseBottom by going "north".
 
 a SecludedTemple is a kind of place.
 it is described as "You arrive at a small temple nearly hidden by some trees. A path runs around the temple to the north, whereas to the east looks to be a grassy hill. To the west you can see that the path curves away.".
-it contains 1 TempleDonationBox, 1 Monk.
+it contains 1 TempleDonationBox, 1 TempleDonationBoxPaper, 1 Monk.
 it can reach the ScenicCliff by going "west".
 it can reach the SecludedTempleGarden by going "north".
 it can reach the GrassyHill by going "east".
@@ -219,13 +235,46 @@ a BoatTransport is a kind of place.
 it can reach the CalmingBrook by going "east".
 it can reach the GrassyHill by going "west".
 
-a TempleDonationBox is a kind of decoration.
-it is described as "The box is plain and made of sturdy wood. There's a slot on top that seems about the size of a coin and the paper reads 'Please Give What You Can'".
-it is observed as "A plain wooden box sits on the porch with a paper attached to it.".
-it is also known as a "box".
+###ITEMS###
+a Relic is a kind of item.
+it has a value called worthAmount that is 10.
 
-an AmuletPillar is a kind of decoration.
-it is described as "The pillar looks to be made from some kind of polished stone and engraved with depictions of spirits and fairies.".
+a StatueRelic is a kind of Relic.
+it is described as "It's a small jade figurine, beautifully cut and sparkles slightly in the light. It looks old and expensive.".
+it is observed as "You see a small jade statue on the ground.".
+
+an AmuletRelic is a kind of Relic.
+it is described as "It's an amulet on a thin golden chain with a brilliant emerald embedded in the middle.".
+it is observed as "You see what appears to be an amulet laying on a pedestal at the center of the clearing.".
+
+a RelicPouch is a kind of item.
+it is described as "It's a small leather pouch with a drawstring at the top. Nothing special.".
+it is observed as "You see a small leather pouch on the ground.".
+it contains 1 StatueRelic.
+it is also known as a "pouch".
+
+an Armor is a kind of item.
+it is observed as "There is a piece of armor on the ground.".
+it has a value called protectionAmount that is 1.
+it is also known as an "armor".
+
+a LeatherArmor is a kind of Armor.
+it is observed as "There is a set of leather armor on the ground.".
+it has a value called protectionAmount that is 3.
+it is also known as an "armor".
+
+a Weapon is a kind of item.
+it has a value called damageAmount that is 1.
+
+a Sword is a kind of Weapon.
+it is observed as "There is a sword laying on the ground.".
+it has a value called damageAmount that is 3.
+it is also known as a "sword".
+
+a Staff is a kind of Weapon.
+
+a Dagger is a kind of Weapon.
+it has a value called damageAmount that is 2.
 
 a Coin is a kind of item. 
 it is described as "It's a small gold coin, engraved with somebody's likeness.".
@@ -240,6 +289,7 @@ when it is described:
     say "It's a pile of gold coins";
 and then stop.
 
+###CREATURES###
 a Monk is a kind of creature.
 it is described as "The monk's ancient face is lined with wrinkles but still holds a youthful energy about him.".
 it is observed in the SecludedTemple as "A monk with a bald head and plain yellowish orange robes is sweeping the entrance to the temple.".
@@ -250,59 +300,35 @@ when it is given a Coin in the SecludedTemple:
     move Coin to TempleDonationBox;
 and then stop.
 when it is given a Coin in the SecludedTempleGarden:
-    say "He gladly accepts the coin and heads back into the temple with it, presumably to store it somewhere.";
+    say "He gladly accepts the coin with a kind smile, and then heads back into the temple with it, presumably to store it somewhere.";
     move Coin to TempleDonationBox;
     remove it from SecludedTempleGarden;
 and then stop.
 
-a PlayerMenu is a kind of menu.
-it is described as "What kind of player do you want to use?".
-it contains options WarriorOption, MageOption, ThiefOption.
-when option WarriorOption is selected:
-    say "";
-    say "Your character is a warrior, very strong and tough but weak to magic.";
-    set the player to Warrior;
-    hide this;
+###DECORATIONS###
+a TempleDonationBox is a kind of Container.
+it is described as "The box is plain and made of sturdy wood. There's a slot on top that seems about the size of a coin. The paper attached to the front reads 'Please Give What You Can'.".
+it is observed as "A plain wooden box sits on the porch with a paper attached to it.".
+it is "locked".
+it is also known as a "box".
+when it is opened:
+    if it is "locked" then
+        say "The box appears to have a small lock that's keeping it shut.";
+        abort event;
+    and then continue;
 and then stop.
-when option MageOption is selected:
-    say "";
-    say "Your character is a mage, very good with magic but not very strong or tough.";
-    set the player to Mage;
-    hide this;
-and then stop.
-when option ThiefOption is selected:
-    say "";
-    say "Your character is a thief, knows a little magic and has some strength";
-    set the player to Thief;
-    hide this;
+when it is used with a Coin:
+    say "The monk sees you put the coin in the box and smiles his thanks to you.";
+    move Coin to it;
 and then stop.
 
-a WarriorOption is a kind of option.
-it is described as "1) Warrior".
+a TempleDonationBoxPaper is a kind of decoration.
+it is described as "The paper is faded and yellowing from age. Somebody has written 'Please Give What You Can' on it.".
+it is also known as a "paper".
 
-a MageOption is a kind of option.
-it is described as "2) Mage".
+a WaterloggedCorpse is a kind of decoration.
+it is described as "The body seems to have taken on a lot of water over time and begun to decay. It has a disgusting stench.".
+it is observed in the CliffBottom as "There appears to be the remains of a human body that's washed up on the beach, dressed in the remains of its clothing.".
 
-a ThiefOption is a kind of option.
-it is described as "3) Thief".
-
-a MainMenu is a kind of menu.
-it is described as "Main Menu".
-it contains options ContinueOption, QuitOption.
-when option QuitOption is selected:
-    say "";
-    say "I'm sorry to see you go, I hope you had fun!";
-    hide this;
-    quit;
-and then stop.
-when option ContinueOption is selected:
-    say "";
-    say "On with the adventure!";
-    hide this;
-and then stop.
-
-a ContinueOption is a kind of option.
-it is described as "1) Continue".
-
-a QuitOption is a kind of option.
-it is described as "2) Quit".
+an AmuletPillar is a kind of decoration.
+it is described as "The pillar looks to be made from some kind of polished stone and engraved with depictions of spirits and fairies.".

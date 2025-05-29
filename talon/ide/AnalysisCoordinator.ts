@@ -1,11 +1,11 @@
 import { IPaneAnalyzer } from "./analyzers/IPaneAnalyzer";
 
 export class AnalysisCoordinator {
-    constructor(private readonly analyzer: IPaneAnalyzer, 
-                private readonly output: HTMLDivElement) {                    
-        
-        analyzer.currentPane.addEventListener("keyup", e => this.update());
-        analyzer.currentPane.addEventListener("click", e => this.update());
+    constructor(private readonly analyzer: IPaneAnalyzer, private readonly output: HTMLDivElement) {                    
+        for(const pane of this.analyzer.panes){
+            pane.addEventListener("keyup", e => this.update());
+            pane.addEventListener("click", e => this.update());
+        }
     }
 
     private update(){

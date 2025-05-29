@@ -256,6 +256,10 @@ export class ExpressionVisitor extends Visitor{
 
             context.expect(Keywords.to);
 
+            if (context.consumeIf(Keywords.it)){
+                return new MoveExpression(actor, "~it");
+            }
+            
             const target = context.expectIdentifier();
 
             return new MoveExpression(actor, target.value);

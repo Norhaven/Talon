@@ -15,15 +15,29 @@ import { Log } from "./Log";
 import { ConsoleOutput } from "./ConsoleOutput";
 import { TimeCollector } from "./TimeCollector";
 import { PerformanceRuler } from "./PerformanceRuler";
-import { getExampleLibraryCode, getExampleStoryCode, getExampleAdventureCode } from "./TalonExamples";
+import { getExampleLibraryCode, getExamplePlaygroundCode, getExampleAdventureCode } from "./TalonExamples";
 
 export class TalonIde{
 
     private static readonly TalonCodeFileDescription = "Talon Code";
     private static readonly TalonCodeFileExtension = ".tln";
 
-    private readonly codePane:HTMLDivElement;
-    private readonly libraryPane:HTMLDivElement;
+    private static readonly GlobalPane = "global-code-pane";
+    private static readonly PlacesPane = "places-code-pane";
+    private static readonly ItemsPane = "items-code-pane";
+    private static readonly CreaturesPane = "creatures-code-pane";
+    private static readonly DecorationsPane = "decorations-code-pane";
+    private static readonly LibraryPane = "library-code-pane";
+
+    private static readonly GlobalButton = "show-global-code-pane";
+    private static readonly PlacesButton = "show-places-code-pane";
+    private static readonly ItemsButton = "show-items-code-pane";
+    private static readonly CreaturesButton = "show-creatures-code-pane";
+    private static readonly DecorationsButton = "show-decorations-code-pane";
+    private static readonly LibraryButton = "show-library-code-pane";
+
+    private readonly codePanes = new Map<string, HTMLDivElement>();
+
     private readonly gamePane:HTMLDivElement;
     private readonly compilationOutput:HTMLDivElement;
     private readonly gameLogOutput:HTMLDivElement;
@@ -38,8 +52,6 @@ export class TalonIde{
     private readonly userCommandText:HTMLInputElement;
     private readonly sendUserCommandButton:HTMLButtonElement;
     private readonly caretPosition:HTMLDivElement;
-    private readonly showLibrary:HTMLButtonElement;
-    private readonly showCodePane:HTMLButtonElement;
     private readonly disableLogsOption:HTMLInputElement;
     private readonly clearLogsButton:HTMLButtonElement;
 
@@ -53,7 +65,7 @@ export class TalonIde{
     private readonly codePaneAnalyzer:CodePaneAnalyzer;
     private readonly analysisCoordinator:AnalysisCoordinator;
 
-    private readonly codePaneStyleFormatter:CodePaneStyleFormatter;
+    //private readonly codePaneStyleFormatter:CodePaneStyleFormatter;
 
     private readonly compiler:TalonCompiler;
     private readonly runtime:TalonRuntime;
@@ -62,14 +74,25 @@ export class TalonIde{
     
     private compiledTypes:Type[] = [];
 
+    private activeCodePane!:HTMLDivElement;
+
     private static getById<T extends HTMLElement>(name:string){
         return <T>document.getElementById(name);
     }
 
     constructor(){
         
-        this.codePane = TalonIde.getById<HTMLDivElement>("code-pane")!;
-        this.libraryPane = TalonIde.getById<HTMLDivElement>("library-pane")!;
+        this.loadCodePaneFor(
+            [TalonIde.GlobalPane, TalonIde.GlobalButton],
+            [TalonIde.PlacesPane, TalonIde.PlacesButton],
+            [TalonIde.ItemsPane, TalonIde.ItemsButton],
+            [TalonIde.CreaturesPane, TalonIde.CreaturesButton],
+            [TalonIde.DecorationsPane, TalonIde.DecorationsButton],
+            [TalonIde.LibraryPane, TalonIde.LibraryButton]
+        );
+
+        this.toggleCodePaneView(TalonIde.GlobalPane);
+
         this.gamePane = TalonIde.getById<HTMLDivElement>("game-pane")!;
         this.compilationOutput = TalonIde.getById<HTMLDivElement>("compilation-output")!;
         this.gameLogOutput = TalonIde.getById<HTMLDivElement>("log-pane")!;
@@ -84,12 +107,10 @@ export class TalonIde{
         this.userCommandText = TalonIde.getById<HTMLInputElement>("user-command-text")!;
         this.sendUserCommandButton = TalonIde.getById<HTMLButtonElement>("send-user-command");
         this.caretPosition = TalonIde.getById<HTMLDivElement>("caret-position");
-        this.showLibrary = TalonIde.getById<HTMLButtonElement>("show-library");
-        this.showCodePane = TalonIde.getById<HTMLButtonElement>("show-code-pane");
         this.disableLogsOption = TalonIde.getById<HTMLInputElement>("disable-logs");
         this.clearLogsButton = TalonIde.getById<HTMLButtonElement>("clear-runtime-logs");
         
-        this.saveButton.addEventListener('click', async e => await this.saveCodeFile(this.codePane.innerText));
+        this.saveButton.addEventListener('click', async e => await this.saveCodeFile(this.activeCodePane.innerText));
         this.openButton.addEventListener('click', async e => await this.openCodeFile(e));
         this.example1Button.addEventListener('click', e => this.loadExample1());
         this.example2Button.addEventListener('click', e => this.loadExample2());
@@ -97,8 +118,6 @@ export class TalonIde{
         this.startNewGameButton.addEventListener('click', e => this.startNewGame());
         this.toggleRuntimeLogs.addEventListener('click', e => this.toggleRuntimeLogView());
         this.sendUserCommandButton.addEventListener('click', e => this.sendUserCommand());
-        this.showLibrary.addEventListener('click', e => this.toggleLibraryView());
-        this.showCodePane.addEventListener('click', e => this.toggleCodePaneView());
         this.clearLogsButton.addEventListener('click', e => this.clearLogs());
         this.userCommandText.addEventListener('keyup', e => {
             if (e.key === "Enter") { 
@@ -107,8 +126,6 @@ export class TalonIde{
         });
 
         this.allowUserToSendCommands(false);
-
-        this.loadLibrary();
         this.loadExample2();
 
         this.compilationOutputPane = new DefaultPaneOutput(this.compilationOutput);
@@ -116,10 +133,10 @@ export class TalonIde{
         this.runtimeLogOutputPane = new RuntimeDebugPaneOutput(this.gameLogOutput, this.disableLogsOption);
         this.runtimeLogReadableOutputPane = new DefaultPaneOutput(this.gameLogReadableOutput, this.disableLogsOption);
 
-        this.codePaneAnalyzer = new CodePaneAnalyzer(this.codePane);
+        this.codePaneAnalyzer = new CodePaneAnalyzer(Array.from(this.codePanes.values()));
         this.analysisCoordinator = new AnalysisCoordinator(this.codePaneAnalyzer, this.caretPosition);
 
-        this.codePaneStyleFormatter = new CodePaneStyleFormatter(this.codePane);
+        //this.codePaneStyleFormatter = new CodePaneStyleFormatter(this.codePane);
 
         this.logOutput = new LogOutput();
         this.log = new Log(this.runtimeLogOutputPane, this.logOutput, this.runtimeLogReadableOutputPane, new ConsoleOutput());
@@ -143,14 +160,46 @@ export class TalonIde{
         this.sendUserCommandButton.disabled = !allow;
     }
 
-    private toggleLibraryView(){
-        this.codePane.style.display = 'none';
-        this.libraryPane.style.display = 'block';
+    private loadCodePaneFor(...paneNames:[string, string][]){
+        for(const [name, buttonName] of paneNames){
+            const pane = TalonIde.getById<HTMLDivElement>(name);
+            const button = TalonIde.getById<HTMLButtonElement>(buttonName);
+
+            button.addEventListener('click', e => this.toggleCodePaneView(name));
+
+            this.codePanes.set(name, pane);
+        }
     }
 
-    private toggleCodePaneView(){
-        this.codePane.style.display = 'block';
-        this.libraryPane.style.display = 'none';
+    private clearAllCodePanes(){
+        for(const [_, pane] of this.codePanes){
+            pane.innerText = "";
+        }
+    }
+
+    private setCodePaneTextFor(paneName:string, text:string){
+        const pane = this.codePanes.get(paneName);
+
+        if (!pane){
+            return;
+        }
+
+        pane.innerText = text;
+    }
+
+    private getCodePaneTextFor(paneName:string){
+        return this.codePanes.get(paneName)?.innerText;
+    }
+
+    toggleCodePaneView(paneName:string){
+        for(const [name, pane] of this.codePanes){
+            if (name == paneName){
+                pane.style.display = 'block';
+                this.activeCodePane = pane;
+            } else {
+                pane.style.display = 'none';
+            }
+        }
     }
 
     private toggleRuntimeLogView(){
@@ -171,10 +220,16 @@ export class TalonIde{
     }
 
     private compile(){
-        const library = this.libraryPane.innerText;
-        const code = this.codePane.innerText;
+        const sources = [
+            this.getCodePaneTextFor(TalonIde.GlobalPane),
+            this.getCodePaneTextFor(TalonIde.PlacesPane),
+            this.getCodePaneTextFor(TalonIde.ItemsPane),
+            this.getCodePaneTextFor(TalonIde.CreaturesPane),
+            this.getCodePaneTextFor(TalonIde.DecorationsPane),
+            this.getCodePaneTextFor(TalonIde.LibraryPane)
+        ];
 
-        const source = `${library} ${code}`;
+        const source = sources.join('\n\n\n');
 
         this.compilationOutputPane.clear();
         this.compiledTypes = this.compiler.compile(source);
@@ -212,7 +267,7 @@ export class TalonIde{
         const handles = await (window as any).showOpenFilePicker(options);
         const file = await handles[0].getFile();
 
-        this.codePane.innerText = await file.text();
+        this.activeCodePane.innerText = await file.text();
     }
 
     private async saveCodeFile(contents:string) {
@@ -233,15 +288,45 @@ export class TalonIde{
         await writable.close();
     }
 
-    private loadLibrary(){
-        this.libraryPane.innerText = getExampleLibraryCode();
-    }
-
     private loadExample1(){
-        this.codePane.innerText = getExampleStoryCode();
+        this.clearAllCodePanes();
+        this.setCodePaneTextFor(TalonIde.LibraryPane, getExampleLibraryCode());
+        this.setCodePaneTextFor(TalonIde.GlobalPane, getExamplePlaygroundCode());
     }
 
     private loadExample2(){
-        this.codePane.innerText = getExampleAdventureCode();
+        this.clearAllCodePanes();
+        this.setCodePaneTextFor(TalonIde.LibraryPane, getExampleLibraryCode());
+
+        const adventureCode = getExampleAdventureCode();
+
+        const sectionsRegex = new RegExp(/###(\w+)###/g);
+        const sections = Array.from(adventureCode.matchAll(sectionsRegex));
+        const sectionsByHeaderAndIndex = sections.map(x => [x.index, x[1]]);
+
+        for(let i = 0, j = 1; i < sectionsByHeaderAndIndex.length; i++, j++){
+            const first = sectionsByHeaderAndIndex[i];
+            const second = j >= sectionsByHeaderAndIndex.length ? [adventureCode.length - 1] : sectionsByHeaderAndIndex[j];
+
+            const section = adventureCode.substring(Number(first[0]), Number(second[0]));
+            const headerEndIndex = section.indexOf("\n") + 1;
+            const content = section.substring(headerEndIndex);            
+            const paneName = this.getPaneNameFor(first[1].toString());
+
+            this.setCodePaneTextFor(paneName, content);
+        }
+    }
+
+    private getPaneNameFor(name:string){
+        switch(name){
+            case "GLOBAL": return TalonIde.GlobalPane;
+            case "PLACES": return TalonIde.PlacesPane;
+            case "ITEMS": return TalonIde.ItemsPane;
+            case "CREATURES": return TalonIde.CreaturesPane;
+            case "DECORATIONS": return TalonIde.DecorationsPane;
+            case "LIBRARY": return TalonIde.LibraryPane;
+            default:
+                throw new Error(`Unable to get header name for '${name}'`);
+        }
     }
 }

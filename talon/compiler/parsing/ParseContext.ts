@@ -18,6 +18,20 @@ export class ParseContext{
         return this.tokens[this.index + 1];
     }
 
+    get snapshotOfPreviousTokenValues(){
+        
+        const previousIndex = this.index - 5;
+        const snapshotIndex = previousIndex >= 0 ? previousIndex : 0;
+
+        const results = [];
+
+        for(let currentIndex = snapshotIndex; currentIndex <= this.index; currentIndex++){
+            results.push(this.tokens[currentIndex].value);
+        }
+
+        return results.join(' ');
+    }
+
     constructor(private readonly tokens:Token[], private readonly out:IOutput){
         this.out.write(`${tokens.length} tokens discovered, parsing...`);
     }
@@ -172,6 +186,6 @@ export class ParseContext{
     }
 
     private createCompilationErrorForCurrentToken(message:string):CompilationError{
-        return new CompilationError(`${message}: ${this.currentToken}`);
+        return new CompilationError(`${message}: ${this.currentToken}. Last read '${this.snapshotOfPreviousTokenValues}'`);
     }
 }

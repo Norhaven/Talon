@@ -9,13 +9,15 @@ export class CodePaneAnalyzer implements IPaneAnalyzer{
         return new CaretPosition(this.caretRow, this.caretColumn);
     }
 
-    get currentPane():HTMLDivElement{
-        return this.pane;
+    get panes(){
+        return this.analyzablePanes;
     }
 
-    constructor(private readonly pane:HTMLDivElement){
-        pane.addEventListener("keyup", e => this.updateCurrentCaretPosition());
-        pane.addEventListener("click", e => this.updateCurrentCaretPosition());
+    constructor(private readonly analyzablePanes:HTMLDivElement[]){
+        for(const pane of analyzablePanes){
+            pane.addEventListener("keyup", e => this.updateCurrentCaretPosition());
+            pane.addEventListener("click", e => this.updateCurrentCaretPosition());
+        }
     }
 
     private updateCurrentCaretPosition(){
